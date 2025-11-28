@@ -9,6 +9,5 @@ repos:
     rev: v1.3.5
     hooks:
       - id: clang-format
-        exclude: |
-          ^(hpc/hal/Drivers/|hpc/hal/Middlewares/)
+        exclude: 'hpc/hal/.*'
       - id: clang-tidy
