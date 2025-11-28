@@ -9,4 +9,4 @@ services:
     volumes:
       - ${PWD}:${PWD}:Z
     working_dir: ${PWD}
-    entrypoint: "/bin/bash -c pre-commit install && pre-commit run --all"
+    entrypoint: ["/bin/bash", "-c", "pre-commit run --all"]

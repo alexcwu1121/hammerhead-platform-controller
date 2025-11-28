@@ -10,5 +10,5 @@ repos:
     hooks:
       - id: clang-format
         exclude: |
-          ^(Drivers/|Middlewares/)
+          ^(hpc/hal/Drivers/|hpc/hal/Middlewares/)
       - id: clang-tidy
