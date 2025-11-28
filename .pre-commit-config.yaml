@@ -3,8 +3,11 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: 'hpc/hal/.*'
       - id: end-of-file-fixer
+        exclude: 'hpc/hal/.*'
       - id: check-yaml
+        exclude: 'hpc/hal/.*'
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:
