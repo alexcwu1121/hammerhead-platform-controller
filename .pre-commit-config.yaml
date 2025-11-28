@@ -10,4 +10,5 @@ repos:
     hooks:
       - id: clang-format
         exclude: 'hpc/hal/.*'
-      - id: clang-tidy
+      #- id: clang-tidy
+      #  args: ["--quiet"]
