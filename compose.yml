@@ -4,9 +4,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: hpc-dev:latest
-    container_name: hpc-dev
     volumes:
       - ${PWD}:${PWD}:Z
     working_dir: ${PWD}
     entrypoint: ["/bin/bash", "-c", "pre-commit run --all"]
+
+  build-debug:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${PWD}:${PWD}:Z
+    working_dir: ${PWD}
+    entrypoint: ["/bin/bash", "-c", "cmake --preset Debug && cmake --build --preset Debug"]
+
+  build-release:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${PWD}:${PWD}:Z
+    working_dir: ${PWD}
+    entrypoint: ["/bin/bash", "-c", "cmake --preset Release && cmake --build --preset Release"]

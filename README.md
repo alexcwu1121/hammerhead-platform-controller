@@ -1,17 +1,15 @@
 # hammerhead-platform-controller
 
-Containerize
--
+Install podman and podman-compose to run pre-commit, builds, tests
+`podman-compose run --build pre-commit`
+`podman-compose run --build build-debug`
+`podman-compose run --build build-release`
 
-Host dependencies
-- sudo apt install openocd binutils-multiarch gdb-multiarch gcc-arm-none-eabi
-
-vscode - install cortex-debug extension
+For interactive debugging, install cortex-debug VSCode extension and the following dependencies
+`sudo apt install build-essential cmake openocd binutils-multiarch gdb-multiarch gcc-arm-none-eabi`
 
 TODO
-- pre-commit with clang format and whitespace remover - ignore generated code
 - Integrate QPCPP
-- Add cli
-- write eeprom driver and parameter system
-- write motor drivers
--
+- Add uart CLI
+- Add motor drivers
+- Add EEPROM driver and parameter system

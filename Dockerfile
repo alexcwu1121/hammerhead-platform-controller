@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     ca-certificates \
     gcc-arm-none-eabi \
+    libstdc++-arm-none-eabi-newlib \
     gdb-multiarch \
     openocd \
     binutils-multiarch \
