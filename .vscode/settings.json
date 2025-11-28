@@ -1,0 +1,10 @@
+{
+    "C_Cpp.intelliSenseEngine": "Tag Parser",
+    "cmake.configureOnOpen": false,
+    "cmake.generator": "Unix Makefiles",
+    "cmake.toolchain": "${workspaceFolder}/cmake/gcc-arm-none-eabi.cmake",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "files.associations": {
+        "typeinfo": "cpp"
+    }
+}
