@@ -24,5 +24,5 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 
 # Set options
 
-# Build hpc
+# Build
 add_subdirectory(hpc)
