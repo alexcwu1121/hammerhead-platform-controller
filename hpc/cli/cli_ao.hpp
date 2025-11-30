@@ -30,7 +30,10 @@ class CLIAO : public QP::QActive
     void Start(const QP::QPrioSpec priority);
 
     /// @brief Get active fault
-    Fault GetFault() const;
+    Fault GetFault() const
+    {
+        return _fault;
+    }
 
     /// @brief Attempt to clear fault and reinitialize
     void ClearFault();
@@ -44,29 +47,37 @@ class CLIAO : public QP::QActive
     void ReceiveChar(UART_HandleTypeDef* huart);
 
    private:
-    static constexpr uint16_t _queueSize          = 128;
-    static constexpr uint16_t _cliBufSize         = 2048;
-    static constexpr uint16_t _cliRxBufSize       = 16;
-    static constexpr uint16_t _cliCmdBufSize      = 32;
-    static constexpr uint16_t _cliHistorySize     = 32;
-    static constexpr uint16_t _cliMaxBindingCount = 32;
-    static constexpr uint16_t _cliPrintBufSize    = 240;
-    static constexpr uint16_t _uartRxBufSize      = 1;
+    /// @brief CLI total memory size
+    static constexpr uint16_t _cliBufSize = 1048U;
+    /// @brief CLI receive buffer size
+    static constexpr uint16_t _cliRxBufSize = 16U;
+    /// @brief CLI staged command buffer size
+    static constexpr uint16_t _cliCmdBufSize = 64U;
+    /// @brief CLI command history size
+    static constexpr uint16_t _cliHistorySize = 64U;
+    /// @brief Maximum number of CLI bindings
+    static constexpr uint16_t _cliMaxBindingCount = 32U;
+    /// @brief Maximum size of string to print
+    static constexpr uint16_t _cliPrintBufSize = 240U;
+    /// @brief UART Rx buffer size (one char at a time)
+    static constexpr uint16_t _uartRxBufSize = 1U;
+    /// @brief CLI memory buffer
+    CLI_UINT _cliBuf[BYTES_TO_CLI_UINTS(_cliBufSize)];
+    /// @brief UART buffer
+    uint8_t _uartRxBuf[_uartRxBufSize] = {0};
+    /// @brief UART peripheral
+    static constexpr UART_HandleTypeDef* _uartCliPeriph = &huart1;
+    /// @brief Ptr to embedded CLI instance
+    EmbeddedCli* _cli;
+
+    /// @brief Event queue size
+    static constexpr uint16_t _queueSize = 128U;
+    /// @brief Event queue storage
+    QP::QEvtPtr _queue[_queueSize] = {0};
     /// @brief CLI process interval in ticks
     static constexpr uint32_t _processInterval = bsp::TICKS_PER_SEC / 100;
     /// @brief CLI recovery retry interval in ticks
     static constexpr uint32_t _retryInterval = bsp::TICKS_PER_SEC;
-
-    /// @brief UART peripheral
-    static constexpr UART_HandleTypeDef* _uartCliPeriph = &huart1;
-    /// @brief Event queue storage
-    QP::QEvtPtr _queue[_queueSize] = {0};
-    /// @brief UART buffer
-    uint8_t _uartRxBuf[_uartRxBufSize] = {0};
-    /// @brief CLI buffer
-    CLI_UINT _cliBuf[BYTES_TO_CLI_UINTS(_cliBufSize)];
-    /// @brief Embedded CLI instance
-    EmbeddedCli* _cli;
     /// @brief Flag indicating if AO has executed initial transition
     bool _isStarted = false;
     /// @brief CLI process timed event
@@ -75,9 +86,6 @@ class CLIAO : public QP::QActive
     QP::QTimeEvt _retryTimer;
     /// @brief Last fault
     Fault _fault;
-
-    /// @brief Initialize CLI bindings
-    void InitBindings();
 
    private:
     /// @brief Private CLIAO signals
@@ -90,7 +98,7 @@ class CLIAO : public QP::QActive
         RX_CHAR_SIG,
         PROCESS_SIG,
         RETRY_SIG,
-        MAX_PUB_SIG
+        MAX_PRIV_SIG
     };
 
     /// @brief Print string evt

@@ -30,11 +30,6 @@ void cli::CLIAO::Start(const QP::QPrioSpec priority)
     _isStarted = true;
 }
 
-cli::CLIAO::Fault cli::CLIAO::GetFault() const
-{
-    return _fault;
-}
-
 void cli::CLIAO::ClearFault()
 {
     if (_isStarted)
@@ -78,25 +73,6 @@ void cli::CLIAO::ReceiveChar(UART_HandleTypeDef* huart)
         static QP::QEvt evt(PrivateSignals::RX_CHAR_SIG);
         POST(&evt, this);
     }
-}
-
-void cli::CLIAO::InitBindings()
-{
-    // Command binding for the clear command
-    CliCommandBinding clear_binding = {.name         = "clear",
-                                       .help         = "Clears the console",
-                                       .tokenizeArgs = true,
-                                       .context      = NULL,
-                                       .binding      = onClear};
-    embeddedCliAddBinding(_cli, clear_binding);
-
-    // Command binding for the led command
-    CliCommandBinding led_binding = {.name         = "get-led",
-                                     .help         = "Get led status",
-                                     .tokenizeArgs = true,
-                                     .context      = NULL,
-                                     .binding      = onLed};
-    embeddedCliAddBinding(_cli, led_binding);
 }
 
 Q_STATE_DEF(cli::CLIAO, initial)
@@ -182,7 +158,7 @@ Q_STATE_DEF(cli::CLIAO, initializing)
     case PrivateSignals::INITIALIZED_SIG:
     {
         // Add all the initial command bindings
-        InitBindings();
+        InitBindings(_cli);
         // Clear the cli
         onClear(_cli, NULL, NULL);
         status_ = tran(&active);
