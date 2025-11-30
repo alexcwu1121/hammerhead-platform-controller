@@ -13,3 +13,6 @@ TODO
 - Add uart CLI
 - Add motor drivers
 - Add EEPROM driver and parameter system
+- Add hall current sensors
+- Add fault LED
+- Add external i2c pullups

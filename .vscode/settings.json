@@ -5,6 +5,9 @@
     "cmake.toolchain": "${workspaceFolder}/cmake/gcc-arm-none-eabi.cmake",
     "cmake.buildDirectory": "${workspaceFolder}/build",
     "files.associations": {
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "stdlib.h": "c",
+        "cli_binding.h": "c",
+        "cstdio": "cpp"
     }
 }

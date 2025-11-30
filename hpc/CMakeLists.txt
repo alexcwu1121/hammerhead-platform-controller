@@ -3,20 +3,34 @@ cmake_minimum_required(VERSION 3.22)
 # Build the HAL
 add_subdirectory(hal)
 
+# Build QPCPP
+set(QPCPP_CFG_KERNEL QK)
+set(QPCPP_CFG_PORT arm-cm)
+add_subdirectory(qpcpp)
+target_link_libraries(qpcpp
+    PUBLIC
+        hal
+)
+
 # Build hpc application
 add_executable(${CMAKE_PROJECT_NAME})
 target_include_directories(${CMAKE_PROJECT_NAME}
     PRIVATE
         ./
+        cli/
 )
 target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE
         startup_stm32f103xb.s
+        bsp.cpp
         main.cpp
+        cli/cli_ao.cpp
+        cli/cli_binding.cpp
+        cli/embedded_cli.c
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE
-        hal
+        qpcpp
 )
 target_compile_definitions(${CMAKE_PROJECT_NAME}
     PUBLIC
