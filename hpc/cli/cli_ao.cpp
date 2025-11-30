@@ -1,9 +1,10 @@
 #include "cli_ao.hpp"
 
-#include "cli_binding.hpp"
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
+
+#include "cli_binding.hpp"
 
 // Define UART interrupt callback function to handle a received character with CLI
 extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
@@ -13,26 +14,30 @@ extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
 
 cli::CLIAO::CLIAO()
     : QP::QActive(&initial),
-    _processTimer(this, PrivateSignals::PROCESS_SIG, 0U),
-    _retryTimer(this, PrivateSignals::RETRY_SIG, 0U),
-    _fault(Fault::NO_FAULT) { }
+      _processTimer(this, PrivateSignals::PROCESS_SIG, 0U),
+      _retryTimer(this, PrivateSignals::RETRY_SIG, 0U),
+      _fault(Fault::NO_FAULT)
+{
+}
 
 void cli::CLIAO::Start(const QP::QPrioSpec priority)
 {
-    this->start(
-        priority, // QP prio. of the AO
-        _queue, // event queue storage
-        _queueSize, // queue size [events]
-        nullptr, 0U); // no stack storage
+    this->start(priority,      // QP prio. of the AO
+                _queue,        // event queue storage
+                _queueSize,    // queue size [events]
+                nullptr, 0U);  // no stack storage
 
     _isStarted = true;
 }
 
-cli::CLIAO::Fault cli::CLIAO::GetFault() const { return _fault; }
+cli::CLIAO::Fault cli::CLIAO::GetFault() const
+{
+    return _fault;
+}
 
 void cli::CLIAO::ClearFault()
 {
-    if(_isStarted)
+    if (_isStarted)
     {
         // Clear fault
         _fault = Fault::NO_FAULT;
@@ -41,9 +46,9 @@ void cli::CLIAO::ClearFault()
     }
 }
 
-void cli::CLIAO::Printf(const char *format, ...)
+void cli::CLIAO::Printf(const char* format, ...)
 {
-    if(_isStarted)
+    if (_isStarted)
     {
         PrintEvt* evt = Q_NEW(PrintEvt, PrivateSignals::PRINT_SIG);
 
@@ -54,10 +59,11 @@ void cli::CLIAO::Printf(const char *format, ...)
         va_end(args);
 
         // Check if string fits in buffer
-        if(length > 0)
+        if (length > 0)
         {
             POST(evt, this);
-        } else
+        }
+        else
         {
             // otherwise, gc the event so it doesn't leak
             QP::QF::gc(evt);
@@ -67,7 +73,7 @@ void cli::CLIAO::Printf(const char *format, ...)
 
 void cli::CLIAO::ReceiveChar(UART_HandleTypeDef* huart)
 {
-    if(huart == _uartCliPeriph && _isStarted)
+    if (huart == _uartCliPeriph && _isStarted)
     {
         static QP::QEvt evt(PrivateSignals::RX_CHAR_SIG);
         POST(&evt, this);
@@ -77,23 +83,19 @@ void cli::CLIAO::ReceiveChar(UART_HandleTypeDef* huart)
 void cli::CLIAO::InitBindings()
 {
     // Command binding for the clear command
-    CliCommandBinding clear_binding = {
-            .name = "clear",
-            .help = "Clears the console",
-            .tokenizeArgs = true,
-            .context = NULL,
-            .binding = onClear
-    };
+    CliCommandBinding clear_binding = {.name         = "clear",
+                                       .help         = "Clears the console",
+                                       .tokenizeArgs = true,
+                                       .context      = NULL,
+                                       .binding      = onClear};
     embeddedCliAddBinding(_cli, clear_binding);
 
     // Command binding for the led command
-    CliCommandBinding led_binding = {
-            .name = "get-led",
-            .help = "Get led status",
-            .tokenizeArgs = true,
-            .context = NULL,
-            .binding = onLed
-    };
+    CliCommandBinding led_binding = {.name         = "get-led",
+                                     .help         = "Get led status",
+                                     .tokenizeArgs = true,
+                                     .context      = NULL,
+                                     .binding      = onLed};
     embeddedCliAddBinding(_cli, led_binding);
 }
 
@@ -130,19 +132,19 @@ Q_STATE_DEF(cli::CLIAO, initializing)
     case Q_ENTRY_SIG:
     {
         // Initialize the CLI configuration settings
-        EmbeddedCliConfig *config = embeddedCliDefaultConfig();
-        config->cliBuffer = _cliBuf;
-        config->cliBufferSize = _cliBufSize;
-        config->rxBufferSize = _cliRxBufSize;
-        config->cmdBufferSize = _cliCmdBufSize;
+        EmbeddedCliConfig* config = embeddedCliDefaultConfig();
+        config->cliBuffer         = _cliBuf;
+        config->cliBufferSize     = _cliBufSize;
+        config->rxBufferSize      = _cliRxBufSize;
+        config->cmdBufferSize     = _cliCmdBufSize;
         config->historyBufferSize = _cliHistorySize;
-        config->maxBindingCount = _cliMaxBindingCount;
+        config->maxBindingCount   = _cliMaxBindingCount;
 
         // Create new CLI instance
         _cli = embeddedCliNew(config);
 
         // Define lambda to write char to cli
-        auto write_char_to_cli = [](EmbeddedCli *embeddedCli, char c)
+        auto write_char_to_cli = [](EmbeddedCli* embeddedCli, char c)
         {
             uint8_t char_to_send = c;
             HAL_UART_Transmit(_uartCliPeriph, &char_to_send, 1, 100);
@@ -157,11 +159,12 @@ Q_STATE_DEF(cli::CLIAO, initializing)
         // You can get required buffer size by calling
         // uint16_t requiredSize = embeddedCliRequiredSize(config);
         // Then check its value in debugger
-        if(_cli == NULL)
+        if (_cli == NULL)
         {
             static QP::QEvt evt(PrivateSignals::FAULT_SIG);
             POST(&evt, this);
-        } else
+        }
+        else
         {
             static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
             POST(&evt, this);
@@ -172,11 +175,11 @@ Q_STATE_DEF(cli::CLIAO, initializing)
     }
     case PrivateSignals::FAULT_SIG:
     {
-        _fault = Fault::INIT_FAILED;
+        _fault  = Fault::INIT_FAILED;
         status_ = tran(&error);
         break;
     }
-    case PrivateSignals::INITIALIZED_SIG: 
+    case PrivateSignals::INITIALIZED_SIG:
     {
         // Add all the initial command bindings
         InitBindings();
@@ -224,7 +227,7 @@ Q_STATE_DEF(cli::CLIAO, active)
     }
     case PrivateSignals::PROCESS_SIG:
     {
-	    embeddedCliProcess(_cli);
+        embeddedCliProcess(_cli);
         status_ = Q_RET_HANDLED;
         break;
     }

@@ -1,8 +1,8 @@
+#include "embedded_cli.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-
-#include "embedded_cli.h"
 
 #define CLI_TOKEN_NPOS 0xffff
 
@@ -10,8 +10,7 @@
 #define UNUSED(x) (void)x
 #endif
 
-#define PREPARE_IMPL(t) \
-  EmbeddedCliImpl* impl = (EmbeddedCliImpl*)t->_impl
+#define PREPARE_IMPL(t) EmbeddedCliImpl *impl = (EmbeddedCliImpl *)t->_impl
 
 #define IS_FLAG_SET(flags, flag) (((flags) & (flag)) != 0)
 
@@ -60,21 +59,22 @@
 #define CLI_FLAG_AUTOCOMPLETE_ENABLED 0x20u
 
 /**
-* Indicates that cursor direction should be forward
-*/
+ * Indicates that cursor direction should be forward
+ */
 #define CURSOR_DIRECTION_FORWARD true
 
 /**
-* Indicates that cursor direction should be backward
-*/
+ * Indicates that cursor direction should be backward
+ */
 #define CURSOR_DIRECTION_BACKWARD false
 
-typedef struct EmbeddedCliImpl EmbeddedCliImpl;
+typedef struct EmbeddedCliImpl      EmbeddedCliImpl;
 typedef struct AutocompletedCommand AutocompletedCommand;
-typedef struct FifoBuf FifoBuf;
-typedef struct CliHistory CliHistory;
+typedef struct FifoBuf              FifoBuf;
+typedef struct CliHistory           CliHistory;
 
-struct FifoBuf {
+struct FifoBuf
+{
     char *buf;
     /**
      * Position of first element in buffer. From this position elements are taken
@@ -90,7 +90,8 @@ struct FifoBuf {
     uint16_t size;
 };
 
-struct CliHistory {
+struct CliHistory
+{
     /**
      * Items in buffer are separated by null-chars
      */
@@ -115,7 +116,8 @@ struct CliHistory {
     uint16_t itemsCount;
 };
 
-struct EmbeddedCliImpl {
+struct EmbeddedCliImpl
+{
     /**
      * Invitation string. Is printed at the beginning of each line with user
      * input
@@ -173,13 +175,14 @@ struct EmbeddedCliImpl {
     uint8_t flags;
 
     /**
-     * Cursor position for current command from right to left 
+     * Cursor position for current command from right to left
      * 0 = end of command
      */
     uint16_t cursorPos;
 };
 
-struct AutocompletedCommand {
+struct AutocompletedCommand
+{
     /**
      * Name of autocompleted command (or first candidate for autocompletion if
      * there are multiple candidates).
@@ -211,8 +214,8 @@ static const uint16_t cliInternalBindingCount = 1;
 
 static const char *lineBreak = "\r\n";
 
-/* References for VT100 escape sequences: 
- * https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences 
+/* References for VT100 escape sequences:
+ * https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
  * https://ecma-international.org/publications-and-standards/standards/ecma-48/
  */
 
@@ -345,7 +348,7 @@ static void writeToOutput(EmbeddedCli *cli, const char *str);
  * @param count
  * @param direction: true = forward (right), false = backward (left)
  */
-static void moveCursor(EmbeddedCli* cli, uint16_t count, bool direction);
+static void moveCursor(EmbeddedCli *cli, uint16_t count, bool direction);
 
 /**
  * Returns true if provided char is a supported control char:
@@ -426,44 +429,50 @@ static void historyRemove(CliHistory *history, const char *str);
  */
 static uint16_t getTokenPosition(const char *tokenizedStr, uint16_t pos);
 
-EmbeddedCliConfig *embeddedCliDefaultConfig(void) {
-    defaultConfig.rxBufferSize = 64;
-    defaultConfig.cmdBufferSize = 64;
-    defaultConfig.historyBufferSize = 128;
-    defaultConfig.cliBuffer = NULL;
-    defaultConfig.cliBufferSize = 0;
-    defaultConfig.maxBindingCount = 8;
+EmbeddedCliConfig *embeddedCliDefaultConfig(void)
+{
+    defaultConfig.rxBufferSize       = 64;
+    defaultConfig.cmdBufferSize      = 64;
+    defaultConfig.historyBufferSize  = 128;
+    defaultConfig.cliBuffer          = NULL;
+    defaultConfig.cliBufferSize      = 0;
+    defaultConfig.maxBindingCount    = 8;
     defaultConfig.enableAutoComplete = true;
-    defaultConfig.invitation = "> ";
+    defaultConfig.invitation         = "> ";
     return &defaultConfig;
 }
 
-uint16_t embeddedCliRequiredSize(EmbeddedCliConfig *config) {
-    uint16_t bindingCount = (uint16_t) (config->maxBindingCount + cliInternalBindingCount);
-    return (uint16_t) (CLI_UINT_SIZE * (
-            BYTES_TO_CLI_UINTS(sizeof(EmbeddedCli)) +
-            BYTES_TO_CLI_UINTS(sizeof(EmbeddedCliImpl)) +
-            BYTES_TO_CLI_UINTS(config->rxBufferSize * sizeof(char)) +
-            BYTES_TO_CLI_UINTS(config->cmdBufferSize * sizeof(char)) +
-            BYTES_TO_CLI_UINTS(config->historyBufferSize * sizeof(char)) +
-            BYTES_TO_CLI_UINTS(bindingCount * sizeof(CliCommandBinding)) +
-            BYTES_TO_CLI_UINTS(bindingCount * sizeof(uint8_t))));
+uint16_t embeddedCliRequiredSize(EmbeddedCliConfig *config)
+{
+    uint16_t bindingCount = (uint16_t)(config->maxBindingCount + cliInternalBindingCount);
+    return (uint16_t)(CLI_UINT_SIZE
+                      * (BYTES_TO_CLI_UINTS(sizeof(EmbeddedCli))
+                         + BYTES_TO_CLI_UINTS(sizeof(EmbeddedCliImpl))
+                         + BYTES_TO_CLI_UINTS(config->rxBufferSize * sizeof(char))
+                         + BYTES_TO_CLI_UINTS(config->cmdBufferSize * sizeof(char))
+                         + BYTES_TO_CLI_UINTS(config->historyBufferSize * sizeof(char))
+                         + BYTES_TO_CLI_UINTS(bindingCount * sizeof(CliCommandBinding))
+                         + BYTES_TO_CLI_UINTS(bindingCount * sizeof(uint8_t))));
 }
 
-EmbeddedCli *embeddedCliNew(EmbeddedCliConfig *config) {
+EmbeddedCli *embeddedCliNew(EmbeddedCliConfig *config)
+{
     EmbeddedCli *cli = NULL;
 
-    uint16_t bindingCount = (uint16_t) (config->maxBindingCount + cliInternalBindingCount);
+    uint16_t bindingCount = (uint16_t)(config->maxBindingCount + cliInternalBindingCount);
 
     size_t totalSize = embeddedCliRequiredSize(config);
 
     bool allocated = false;
-    if (config->cliBuffer == NULL) {
-        config->cliBuffer = (CLI_UINT *) malloc(totalSize); // malloc guarantees alignment.
+    if (config->cliBuffer == NULL)
+    {
+        config->cliBuffer = (CLI_UINT *)malloc(totalSize);  // malloc guarantees alignment.
         if (config->cliBuffer == NULL)
             return NULL;
         allocated = true;
-    } else if (config->cliBufferSize < totalSize) {
+    }
+    else if (config->cliBufferSize < totalSize)
+    {
         return NULL;
     }
 
@@ -471,26 +480,26 @@ EmbeddedCli *embeddedCliNew(EmbeddedCliConfig *config) {
 
     memset(buf, 0, totalSize);
 
-    cli = (EmbeddedCli *) buf;
+    cli = (EmbeddedCli *)buf;
     buf += BYTES_TO_CLI_UINTS(sizeof(EmbeddedCli));
 
-    cli->_impl = (EmbeddedCliImpl *) buf;
+    cli->_impl = (EmbeddedCliImpl *)buf;
     buf += BYTES_TO_CLI_UINTS(sizeof(EmbeddedCliImpl));
 
     PREPARE_IMPL(cli);
-    impl->rxBuffer.buf = (char *) buf;
+    impl->rxBuffer.buf = (char *)buf;
     buf += BYTES_TO_CLI_UINTS(config->rxBufferSize * sizeof(char));
 
-    impl->cmdBuffer = (char *) buf;
+    impl->cmdBuffer = (char *)buf;
     buf += BYTES_TO_CLI_UINTS(config->cmdBufferSize * sizeof(char));
 
-    impl->bindings = (CliCommandBinding *) buf;
+    impl->bindings = (CliCommandBinding *)buf;
     buf += BYTES_TO_CLI_UINTS(bindingCount * sizeof(CliCommandBinding));
 
-    impl->bindingsFlags = (uint8_t *) buf;
+    impl->bindingsFlags = (uint8_t *)buf;
     buf += BYTES_TO_CLI_UINTS(bindingCount);
 
-    impl->history.buf = (char *) buf;
+    impl->history.buf        = (char *)buf;
     impl->history.bufferSize = config->historyBufferSize;
 
     if (allocated)
@@ -499,56 +508,68 @@ EmbeddedCli *embeddedCliNew(EmbeddedCliConfig *config) {
     if (config->enableAutoComplete)
         SET_FLAG(impl->flags, CLI_FLAG_AUTOCOMPLETE_ENABLED);
 
-    impl->rxBuffer.size = config->rxBufferSize;
-    impl->rxBuffer.front = 0;
-    impl->rxBuffer.back = 0;
-    impl->cmdMaxSize = config->cmdBufferSize;
-    impl->bindingsCount = 0;
-    impl->maxBindingsCount = (uint16_t) (config->maxBindingCount + cliInternalBindingCount);
-    impl->lastChar = '\0';
-    impl->invitation = config->invitation;
-    impl->cursorPos = 0;
+    impl->rxBuffer.size    = config->rxBufferSize;
+    impl->rxBuffer.front   = 0;
+    impl->rxBuffer.back    = 0;
+    impl->cmdMaxSize       = config->cmdBufferSize;
+    impl->bindingsCount    = 0;
+    impl->maxBindingsCount = (uint16_t)(config->maxBindingCount + cliInternalBindingCount);
+    impl->lastChar         = '\0';
+    impl->invitation       = config->invitation;
+    impl->cursorPos        = 0;
 
     initInternalBindings(cli);
 
     return cli;
 }
 
-EmbeddedCli *embeddedCliNewDefault(void) {
+EmbeddedCli *embeddedCliNewDefault(void)
+{
     return embeddedCliNew(embeddedCliDefaultConfig());
 }
 
-void embeddedCliReceiveChar(EmbeddedCli *cli, char c) {
+void embeddedCliReceiveChar(EmbeddedCli *cli, char c)
+{
     PREPARE_IMPL(cli);
 
-    if (!fifoBufPush(&impl->rxBuffer, c)) {
+    if (!fifoBufPush(&impl->rxBuffer, c))
+    {
         SET_FLAG(impl->flags, CLI_FLAG_OVERFLOW);
     }
 }
 
-void embeddedCliProcess(EmbeddedCli *cli) {
+void embeddedCliProcess(EmbeddedCli *cli)
+{
     if (cli->writeChar == NULL)
         return;
 
     PREPARE_IMPL(cli);
 
-
-    if (!IS_FLAG_SET(impl->flags, CLI_FLAG_INIT_COMPLETE)) {
+    if (!IS_FLAG_SET(impl->flags, CLI_FLAG_INIT_COMPLETE))
+    {
         SET_FLAG(impl->flags, CLI_FLAG_INIT_COMPLETE);
         writeToOutput(cli, impl->invitation);
     }
 
-    while (fifoBufAvailable(&impl->rxBuffer)) {
+    while (fifoBufAvailable(&impl->rxBuffer))
+    {
         char c = fifoBufPop(&impl->rxBuffer);
 
-        if (IS_FLAG_SET(impl->flags, CLI_FLAG_ESCAPE_MODE)) {
+        if (IS_FLAG_SET(impl->flags, CLI_FLAG_ESCAPE_MODE))
+        {
             onEscapedInput(cli, c);
-        } else if (impl->lastChar == 0x1B && c == '[') {
-            //enter escape mode
+        }
+        else if (impl->lastChar == 0x1B && c == '[')
+        {
+            // enter escape mode
             SET_FLAG(impl->flags, CLI_FLAG_ESCAPE_MODE);
-        } else if (isControlChar(c)) {
+        }
+        else if (isControlChar(c))
+        {
             onControlInput(cli, c);
-        } else if (isDisplayableChar(c)) {
+        }
+        else if (isDisplayableChar(c))
+        {
             onCharInput(cli, c);
         }
 
@@ -558,14 +579,16 @@ void embeddedCliProcess(EmbeddedCli *cli) {
     }
 
     // discard unfinished command if overflow happened
-    if (IS_FLAG_SET(impl->flags, CLI_FLAG_OVERFLOW)) {
-        impl->cmdSize = 0;
+    if (IS_FLAG_SET(impl->flags, CLI_FLAG_OVERFLOW))
+    {
+        impl->cmdSize                  = 0;
         impl->cmdBuffer[impl->cmdSize] = '\0';
         UNSET_U8FLAG(impl->flags, CLI_FLAG_OVERFLOW);
     }
 }
 
-bool embeddedCliAddBinding(EmbeddedCli *cli, CliCommandBinding binding) {
+bool embeddedCliAddBinding(EmbeddedCli *cli, CliCommandBinding binding)
+{
     PREPARE_IMPL(cli);
     if (impl->bindingsCount == impl->maxBindingsCount)
         return false;
@@ -576,7 +599,8 @@ bool embeddedCliAddBinding(EmbeddedCli *cli, CliCommandBinding binding) {
     return true;
 }
 
-void embeddedCliPrint(EmbeddedCli *cli, const char *string) {
+void embeddedCliPrint(EmbeddedCli *cli, const char *string)
+{
     if (cli->writeChar == NULL)
         return;
 
@@ -597,7 +621,8 @@ void embeddedCliPrint(EmbeddedCli *cli, const char *string) {
     writeToOutput(cli, lineBreak);
 
     // print current command back to screen
-    if (!IS_FLAG_SET(impl->flags, CLI_FLAG_DIRECT_PRINT)) {
+    if (!IS_FLAG_SET(impl->flags, CLI_FLAG_DIRECT_PRINT))
+    {
         writeToOutput(cli, impl->invitation);
         writeToOutput(cli, impl->cmdBuffer);
         impl->inputLineLength = impl->cmdSize;
@@ -607,15 +632,18 @@ void embeddedCliPrint(EmbeddedCli *cli, const char *string) {
     }
 }
 
-void embeddedCliFree(EmbeddedCli *cli) {
+void embeddedCliFree(EmbeddedCli *cli)
+{
     PREPARE_IMPL(cli);
-    if (IS_FLAG_SET(impl->flags, CLI_FLAG_ALLOCATED)) {
+    if (IS_FLAG_SET(impl->flags, CLI_FLAG_ALLOCATED))
+    {
         // allocation is done in single call to malloc, so need only single free
         free(cli);
     }
 }
 
-void embeddedCliTokenizeArgs(char *args) {
+void embeddedCliTokenizeArgs(char *args)
+{
     if (args == NULL)
         return;
 
@@ -626,38 +654,48 @@ void embeddedCliTokenizeArgs(char *args) {
     bool quotesEnabled = false;
     // indicates that previous char was a slash, so next char is copied as is
     bool escapeActivated = false;
-    int insertPos = 0;
+    int  insertPos       = 0;
 
-    int i = 0;
+    int  i = 0;
     char currentChar;
-    while ((currentChar = args[i]) != '\0') {
+    while ((currentChar = args[i]) != '\0')
+    {
         ++i;
 
-        if (escapeActivated) {
+        if (escapeActivated)
+        {
             escapeActivated = false;
-        } else if (currentChar == '\\') {
+        }
+        else if (currentChar == '\\')
+        {
             escapeActivated = true;
             continue;
-        } else if (currentChar == '"') {
+        }
+        else if (currentChar == '"')
+        {
             quotesEnabled = !quotesEnabled;
-            currentChar = '\0';
-        } else if (!quotesEnabled && strchr(separators, currentChar) != NULL) {
+            currentChar   = '\0';
+        }
+        else if (!quotesEnabled && strchr(separators, currentChar) != NULL)
+        {
             currentChar = '\0';
         }
 
         // null chars are only copied once and not copied to the beginning
-        if (currentChar != '\0' || (insertPos > 0 && args[insertPos - 1] != '\0')) {
+        if (currentChar != '\0' || (insertPos > 0 && args[insertPos - 1] != '\0'))
+        {
             args[insertPos] = currentChar;
             ++insertPos;
         }
     }
 
     // make args double null-terminated source buffer must be big enough to contain extra spaces
-    args[insertPos] = '\0';
+    args[insertPos]     = '\0';
     args[insertPos + 1] = '\0';
 }
 
-const char *embeddedCliGetToken(const char *tokenizedStr, uint16_t pos) {
+const char *embeddedCliGetToken(const char *tokenizedStr, uint16_t pos)
+{
     uint16_t i = getTokenPosition(tokenizedStr, pos);
 
     if (i != CLI_TOKEN_NPOS)
@@ -666,7 +704,8 @@ const char *embeddedCliGetToken(const char *tokenizedStr, uint16_t pos) {
         return NULL;
 }
 
-char *embeddedCliGetTokenVariable(char *tokenizedStr, uint16_t pos) {
+char *embeddedCliGetTokenVariable(char *tokenizedStr, uint16_t pos)
+{
     uint16_t i = getTokenPosition(tokenizedStr, pos);
 
     if (i != CLI_TOKEN_NPOS)
@@ -675,12 +714,14 @@ char *embeddedCliGetTokenVariable(char *tokenizedStr, uint16_t pos) {
         return NULL;
 }
 
-uint16_t embeddedCliFindToken(const char *tokenizedStr, const char *token) {
+uint16_t embeddedCliFindToken(const char *tokenizedStr, const char *token)
+{
     if (tokenizedStr == NULL || token == NULL)
         return 0;
 
     uint16_t size = embeddedCliGetTokenCount(tokenizedStr);
-    for (uint16_t i = 1; i <= size; ++i) {
+    for (uint16_t i = 1; i <= size; ++i)
+    {
         if (strcmp(embeddedCliGetToken(tokenizedStr, i), token) == 0)
             return i;
     }
@@ -688,14 +729,17 @@ uint16_t embeddedCliFindToken(const char *tokenizedStr, const char *token) {
     return 0;
 }
 
-uint16_t embeddedCliGetTokenCount(const char *tokenizedStr) {
+uint16_t embeddedCliGetTokenCount(const char *tokenizedStr)
+{
     if (tokenizedStr == NULL || tokenizedStr[0] == '\0')
         return 0;
 
-    int i = 0;
+    int      i          = 0;
     uint16_t tokenCount = 1;
-    while (true) {
-        if (tokenizedStr[i] == '\0') {
+    while (true)
+    {
+        if (tokenizedStr[i] == '\0')
+        {
             if (tokenizedStr[i + 1] == '\0')
                 break;
             ++tokenCount;
@@ -706,11 +750,12 @@ uint16_t embeddedCliGetTokenCount(const char *tokenizedStr) {
     return tokenCount;
 }
 
-static void navigateHistory(EmbeddedCli *cli, bool navigateUp) {
+static void navigateHistory(EmbeddedCli *cli, bool navigateUp)
+{
     PREPARE_IMPL(cli);
-    if (impl->history.itemsCount == 0 ||
-        (navigateUp && impl->history.current == impl->history.itemsCount) ||
-        (!navigateUp && impl->history.current == 0))
+    if (impl->history.itemsCount == 0
+        || (navigateUp && impl->history.current == impl->history.itemsCount)
+        || (!navigateUp && impl->history.current == 0))
         return;
 
     clearCurrentLine(cli);
@@ -726,44 +771,50 @@ static void navigateHistory(EmbeddedCli *cli, bool navigateUp) {
     // simple way to handle empty command the same way as others
     if (item == NULL)
         item = "";
-    uint16_t len = (uint16_t) strlen(item);
+    uint16_t len = (uint16_t)strlen(item);
     memcpy(impl->cmdBuffer, item, len);
     impl->cmdBuffer[len] = '\0';
-    impl->cmdSize = len;
+    impl->cmdSize        = len;
 
     writeToOutput(cli, impl->cmdBuffer);
     impl->inputLineLength = impl->cmdSize;
-    impl->cursorPos = 0;
+    impl->cursorPos       = 0;
 
     printLiveAutocompletion(cli);
 }
 
-static void onEscapedInput(EmbeddedCli *cli, char c) {
+static void onEscapedInput(EmbeddedCli *cli, char c)
+{
     PREPARE_IMPL(cli);
 
-    if (c >= 64 && c <= 126) {
+    if (c >= 64 && c <= 126)
+    {
         // handle escape sequence
         UNSET_U8FLAG(impl->flags, CLI_FLAG_ESCAPE_MODE);
 
-        if (c == 'A' || c == 'B') {
+        if (c == 'A' || c == 'B')
+        {
             // treat \e[..A as cursor up and \e[..B as cursor down
             // there might be extra chars between [ and A/B, just ignore them
             navigateHistory(cli, c == 'A');
         }
 
-        if (c == 'C' && impl->cursorPos > 0) {
+        if (c == 'C' && impl->cursorPos > 0)
+        {
             impl->cursorPos--;
             writeToOutput(cli, escSeqCursorRight);
         }
 
-        if (c == 'D' && impl->cursorPos < strlen(impl->cmdBuffer)) {
+        if (c == 'D' && impl->cursorPos < strlen(impl->cmdBuffer))
+        {
             impl->cursorPos++;
             writeToOutput(cli, escSeqCursorLeft);
         }
     }
 }
 
-static void onCharInput(EmbeddedCli *cli, char c) {
+static void onCharInput(EmbeddedCli *cli, char c)
+{
     PREPARE_IMPL(cli);
 
     // have to reserve two extra chars for command ending (used in tokenization)
@@ -779,20 +830,21 @@ static void onCharInput(EmbeddedCli *cli, char c) {
     impl->cmdBuffer[insertPos] = c;
 
     if (impl->cursorPos > 0)
-        writeToOutput(cli, escSeqInsertChar); // Insert Character
+        writeToOutput(cli, escSeqInsertChar);  // Insert Character
 
     cli->writeChar(cli, c);
 }
 
-static void onControlInput(EmbeddedCli *cli, char c) {
+static void onControlInput(EmbeddedCli *cli, char c)
+{
     PREPARE_IMPL(cli);
 
     // process \r\n and \n\r as single \r\n command
-    if ((impl->lastChar == '\r' && c == '\n') ||
-        (impl->lastChar == '\n' && c == '\r'))
+    if ((impl->lastChar == '\r' && c == '\n') || (impl->lastChar == '\n' && c == '\r'))
         return;
 
-    if (c == '\r' || c == '\n') {
+    if (c == '\r' || c == '\n')
+    {
         // try to autocomplete command and then process it
         onAutocompleteRequest(cli);
 
@@ -800,34 +852,40 @@ static void onControlInput(EmbeddedCli *cli, char c) {
 
         if (impl->cmdSize > 0)
             parseCommand(cli);
-        impl->cmdSize = 0;
+        impl->cmdSize                  = 0;
         impl->cmdBuffer[impl->cmdSize] = '\0';
-        impl->inputLineLength = 0;
-        impl->history.current = 0;
-        impl->cursorPos = 0;
+        impl->inputLineLength          = 0;
+        impl->history.current          = 0;
+        impl->cursorPos                = 0;
 
         writeToOutput(cli, impl->invitation);
-    } else if ((c == '\b' || c == 0x7F) && ((impl->cmdSize - impl->cursorPos) > 0)) {
+    }
+    else if ((c == '\b' || c == 0x7F) && ((impl->cmdSize - impl->cursorPos) > 0))
+    {
         // remove char from screen
-        writeToOutput(cli, escSeqCursorLeft); // Move cursor to left
-        writeToOutput(cli, escSeqDeleteChar); // And remove character
+        writeToOutput(cli, escSeqCursorLeft);  // Move cursor to left
+        writeToOutput(cli, escSeqDeleteChar);  // And remove character
         // and from buffer
         size_t insertPos = strlen(impl->cmdBuffer) - impl->cursorPos;
         memmove(&impl->cmdBuffer[insertPos - 1], &impl->cmdBuffer[insertPos], impl->cursorPos + 1);
         --impl->cmdSize;
-    } else if (c == '\t') {
+    }
+    else if (c == '\t')
+    {
         onAutocompleteRequest(cli);
     }
-
 }
 
-static void parseCommand(EmbeddedCli *cli) {
+static void parseCommand(EmbeddedCli *cli)
+{
     PREPARE_IMPL(cli);
 
     bool isEmpty = true;
 
-    for (int i = 0; i < impl->cmdSize; ++i) {
-        if (impl->cmdBuffer[i] != ' ') {
+    for (int i = 0; i < impl->cmdSize; ++i)
+    {
+        if (impl->cmdBuffer[i] != ' ')
+        {
             isEmpty = false;
             break;
         }
@@ -838,25 +896,30 @@ static void parseCommand(EmbeddedCli *cli) {
     // push command to history before buffer is modified
     historyPut(&impl->history, impl->cmdBuffer);
 
-    char *cmdName = NULL;
-    char *cmdArgs = NULL;
-    bool nameFinished = false;
+    char *cmdName      = NULL;
+    char *cmdArgs      = NULL;
+    bool  nameFinished = false;
 
     // find command name and command args inside command buffer
-    for (int i = 0; i < impl->cmdSize; ++i) {
+    for (int i = 0; i < impl->cmdSize; ++i)
+    {
         char c = impl->cmdBuffer[i];
 
-        if (c == ' ') {
+        if (c == ' ')
+        {
             // all spaces between name and args are filled with zeros
             // so name is a correct null-terminated string
             if (cmdArgs == NULL)
                 impl->cmdBuffer[i] = '\0';
             if (cmdName != NULL)
                 nameFinished = true;
-
-        } else if (cmdName == NULL) {
+        }
+        else if (cmdName == NULL)
+        {
             cmdName = &impl->cmdBuffer[i];
-        } else if (cmdArgs == NULL && nameFinished) {
+        }
+        else if (cmdArgs == NULL && nameFinished)
+        {
             cmdArgs = &impl->cmdBuffer[i];
         }
     }
@@ -869,8 +932,10 @@ static void parseCommand(EmbeddedCli *cli) {
         return;
 
     // try to find command in bindings
-    for (int i = 0; i < impl->bindingsCount; ++i) {
-        if (strcmp(cmdName, impl->bindings[i].name) == 0) {
+    for (int i = 0; i < impl->bindingsCount; ++i)
+    {
+        if (strcmp(cmdName, impl->bindings[i].name) == 0)
+        {
             if (impl->bindings[i].binding == NULL)
                 break;
 
@@ -879,9 +944,12 @@ static void parseCommand(EmbeddedCli *cli) {
             // currently, output is blank line, so we can just print directly
             SET_FLAG(impl->flags, CLI_FLAG_DIRECT_PRINT);
             // check if help was requested (help is printed when no other options are set)
-            if (cmdArgs != NULL && (strcmp(cmdArgs, "-h") == 0 || strcmp(cmdArgs, "--help") == 0)) {
+            if (cmdArgs != NULL && (strcmp(cmdArgs, "-h") == 0 || strcmp(cmdArgs, "--help") == 0))
+            {
                 printBindingHelp(cli, &impl->bindings[i]);
-            } else {
+            }
+            else
+            {
                 impl->bindings[i].binding(cli, cmdArgs, impl->bindings[i].context);
             }
             UNSET_U8FLAG(impl->flags, CLI_FLAG_DIRECT_PRINT);
@@ -891,7 +959,8 @@ static void parseCommand(EmbeddedCli *cli) {
 
     // command not found in bindings or binding was null
     // try to call default callback
-    if (cli->onCommand != NULL) {
+    if (cli->onCommand != NULL)
+    {
         CliCommand command;
         command.name = cmdName;
         command.args = cmdArgs;
@@ -900,87 +969,103 @@ static void parseCommand(EmbeddedCli *cli) {
         SET_FLAG(impl->flags, CLI_FLAG_DIRECT_PRINT);
         cli->onCommand(cli, &command);
         UNSET_U8FLAG(impl->flags, CLI_FLAG_DIRECT_PRINT);
-    } else {
+    }
+    else
+    {
         onUnknownCommand(cli, cmdName);
     }
 }
 
-static void printBindingHelp(EmbeddedCli *cli, CliCommandBinding *binding) {
-    if (binding->help != NULL) {
+static void printBindingHelp(EmbeddedCli *cli, CliCommandBinding *binding)
+{
+    if (binding->help != NULL)
+    {
         cli->writeChar(cli, '\t');
         writeToOutput(cli, binding->help);
         writeToOutput(cli, lineBreak);
     }
 }
 
-static void initInternalBindings(EmbeddedCli *cli) {
-    CliCommandBinding b = {
-            "help",
-            "Print list of commands",
-            true,
-            NULL,
-            onHelp
-    };
+static void initInternalBindings(EmbeddedCli *cli)
+{
+    CliCommandBinding b = {"help", "Print list of commands", true, NULL, onHelp};
     embeddedCliAddBinding(cli, b);
 }
 
-static void onHelp(EmbeddedCli *cli, char *tokens, void *context) {
+static void onHelp(EmbeddedCli *cli, char *tokens, void *context)
+{
     UNUSED(context);
     PREPARE_IMPL(cli);
 
-    if (impl->bindingsCount == 0) {
+    if (impl->bindingsCount == 0)
+    {
         writeToOutput(cli, "Help is not available");
         writeToOutput(cli, lineBreak);
         return;
     }
 
     uint16_t tokenCount = embeddedCliGetTokenCount(tokens);
-    if (tokenCount == 0) {
-        for (int i = 0; i < impl->bindingsCount; ++i) {
+    if (tokenCount == 0)
+    {
+        for (int i = 0; i < impl->bindingsCount; ++i)
+        {
             writeToOutput(cli, " * ");
             writeToOutput(cli, impl->bindings[i].name);
             writeToOutput(cli, lineBreak);
             printBindingHelp(cli, &impl->bindings[i]);
         }
-    } else if (tokenCount == 1) {
+    }
+    else if (tokenCount == 1)
+    {
         // try find command
         const char *helpStr = NULL;
         const char *cmdName = embeddedCliGetToken(tokens, 1);
-        bool found = false;
-        for (int i = 0; i < impl->bindingsCount; ++i) {
-            if (strcmp(impl->bindings[i].name, cmdName) == 0) {
+        bool        found   = false;
+        for (int i = 0; i < impl->bindingsCount; ++i)
+        {
+            if (strcmp(impl->bindings[i].name, cmdName) == 0)
+            {
                 helpStr = impl->bindings[i].help;
-                found = true;
+                found   = true;
                 break;
             }
         }
-        if (found && helpStr != NULL) {
+        if (found && helpStr != NULL)
+        {
             writeToOutput(cli, " * ");
             writeToOutput(cli, cmdName);
             writeToOutput(cli, lineBreak);
             cli->writeChar(cli, '\t');
             writeToOutput(cli, helpStr);
             writeToOutput(cli, lineBreak);
-        } else if (found) {
+        }
+        else if (found)
+        {
             writeToOutput(cli, "Help is not available");
             writeToOutput(cli, lineBreak);
-        } else {
+        }
+        else
+        {
             onUnknownCommand(cli, cmdName);
         }
-    } else {
+    }
+    else
+    {
         writeToOutput(cli, "Command \"help\" receives one or zero arguments");
         writeToOutput(cli, lineBreak);
     }
 }
 
-static void onUnknownCommand(EmbeddedCli *cli, const char *name) {
+static void onUnknownCommand(EmbeddedCli *cli, const char *name)
+{
     writeToOutput(cli, "Unknown command: \"");
     writeToOutput(cli, name);
     writeToOutput(cli, "\". Write \"help\" for a list of available commands");
     writeToOutput(cli, lineBreak);
 }
 
-static AutocompletedCommand getAutocompletedCommand(EmbeddedCli *cli, const char *prefix) {
+static AutocompletedCommand getAutocompletedCommand(EmbeddedCli *cli, const char *prefix)
+{
     AutocompletedCommand cmd = {NULL, 0, 0};
 
     size_t prefixLen = strlen(prefix);
@@ -989,10 +1074,10 @@ static AutocompletedCommand getAutocompletedCommand(EmbeddedCli *cli, const char
     if (impl->bindingsCount == 0 || prefixLen == 0)
         return cmd;
 
-
-    for (int i = 0; i < impl->bindingsCount; ++i) {
+    for (int i = 0; i < impl->bindingsCount; ++i)
+    {
         const char *name = impl->bindings[i].name;
-        size_t len = strlen(name);
+        size_t      len  = strlen(name);
 
         // unset autocomplete flag
         UNSET_U8FLAG(impl->bindingsFlags[i], BINDING_FLAG_AUTOCOMPLETE);
@@ -1002,8 +1087,10 @@ static AutocompletedCommand getAutocompletedCommand(EmbeddedCli *cli, const char
 
         // check if this command is candidate for autocomplete
         bool isCandidate = true;
-        for (size_t j = 0; j < prefixLen; ++j) {
-            if (prefix[j] != name[j]) {
+        for (size_t j = 0; j < prefixLen; ++j)
+        {
+            if (prefix[j] != name[j])
+            {
                 isCandidate = false;
                 break;
             }
@@ -1014,18 +1101,21 @@ static AutocompletedCommand getAutocompletedCommand(EmbeddedCli *cli, const char
         impl->bindingsFlags[i] |= BINDING_FLAG_AUTOCOMPLETE;
 
         if (cmd.candidateCount == 0 || len < cmd.autocompletedLen)
-            cmd.autocompletedLen = (uint16_t) len;
+            cmd.autocompletedLen = (uint16_t)len;
 
         ++cmd.candidateCount;
 
-        if (cmd.candidateCount == 1) {
+        if (cmd.candidateCount == 1)
+        {
             cmd.firstCandidate = name;
             continue;
         }
 
-        for (size_t j = impl->cmdSize; j < cmd.autocompletedLen; ++j) {
-            if (cmd.firstCandidate[j] != name[j]) {
-                cmd.autocompletedLen = (uint16_t) j;
+        for (size_t j = impl->cmdSize; j < cmd.autocompletedLen; ++j)
+        {
+            if (cmd.firstCandidate[j] != name[j])
+            {
+                cmd.autocompletedLen = (uint16_t)j;
                 break;
             }
         }
@@ -1034,7 +1124,8 @@ static AutocompletedCommand getAutocompletedCommand(EmbeddedCli *cli, const char
     return cmd;
 }
 
-static void printLiveAutocompletion(EmbeddedCli *cli) {
+static void printLiveAutocompletion(EmbeddedCli *cli)
+{
     PREPARE_IMPL(cli);
 
     if (!IS_FLAG_SET(impl->flags, CLI_FLAG_AUTOCOMPLETE_ENABLED))
@@ -1042,7 +1133,8 @@ static void printLiveAutocompletion(EmbeddedCli *cli) {
 
     AutocompletedCommand cmd = getAutocompletedCommand(cli, impl->cmdBuffer);
 
-    if (cmd.candidateCount == 0) {
+    if (cmd.candidateCount == 0)
+    {
         cmd.autocompletedLen = impl->cmdSize;
     }
 
@@ -1052,11 +1144,13 @@ static void printLiveAutocompletion(EmbeddedCli *cli) {
     moveCursor(cli, impl->cursorPos, CURSOR_DIRECTION_FORWARD);
 
     // print live autocompletion (or nothing, if it doesn't exist)
-    for (size_t i = impl->cmdSize; i < cmd.autocompletedLen; ++i) {
+    for (size_t i = impl->cmdSize; i < cmd.autocompletedLen; ++i)
+    {
         cli->writeChar(cli, cmd.firstCandidate[i]);
     }
     // replace with spaces previous autocompletion
-    for (size_t i = cmd.autocompletedLen; i < impl->inputLineLength; ++i) {
+    for (size_t i = cmd.autocompletedLen; i < impl->inputLineLength; ++i)
+    {
         cli->writeChar(cli, ' ');
     }
     impl->inputLineLength = cmd.autocompletedLen;
@@ -1065,7 +1159,8 @@ static void printLiveAutocompletion(EmbeddedCli *cli) {
     writeToOutput(cli, escSeqCursorRestore);
 }
 
-static void onAutocompleteRequest(EmbeddedCli *cli) {
+static void onAutocompleteRequest(EmbeddedCli *cli)
+{
     PREPARE_IMPL(cli);
 
     AutocompletedCommand cmd = getAutocompletedCommand(cli, impl->cmdBuffer);
@@ -1073,19 +1168,21 @@ static void onAutocompleteRequest(EmbeddedCli *cli) {
     if (cmd.candidateCount == 0)
         return;
 
-    if (cmd.candidateCount == 1 || cmd.autocompletedLen > impl->cmdSize) {
+    if (cmd.candidateCount == 1 || cmd.autocompletedLen > impl->cmdSize)
+    {
         // can copy from index cmdSize, but prefix is the same, so copy everything
         memcpy(impl->cmdBuffer, cmd.firstCandidate, cmd.autocompletedLen);
-        if (cmd.candidateCount == 1) {
+        if (cmd.candidateCount == 1)
+        {
             impl->cmdBuffer[cmd.autocompletedLen] = ' ';
             ++cmd.autocompletedLen;
         }
         impl->cmdBuffer[cmd.autocompletedLen] = '\0';
 
         writeToOutput(cli, &impl->cmdBuffer[impl->cmdSize - impl->cursorPos]);
-        impl->cmdSize = cmd.autocompletedLen;
+        impl->cmdSize         = cmd.autocompletedLen;
         impl->inputLineLength = impl->cmdSize;
-        impl->cursorPos = 0; // Cursor has been moved to the end
+        impl->cursorPos       = 0;  // Cursor has been moved to the end
         return;
     }
 
@@ -1094,7 +1191,8 @@ static void onAutocompleteRequest(EmbeddedCli *cli) {
     // we need to completely clear current line since it begins with invitation
     clearCurrentLine(cli);
 
-    for (int i = 0; i < impl->bindingsCount; ++i) {
+    for (int i = 0; i < impl->bindingsCount; ++i)
+    {
         // autocomplete flag is set for all candidates by last call to
         // getAutocompletedCommand
         if (!(impl->bindingsFlags[i] & BINDING_FLAG_AUTOCOMPLETE))
@@ -1112,12 +1210,14 @@ static void onAutocompleteRequest(EmbeddedCli *cli) {
     impl->inputLineLength = impl->cmdSize;
 }
 
-static void clearCurrentLine(EmbeddedCli *cli) {
+static void clearCurrentLine(EmbeddedCli *cli)
+{
     PREPARE_IMPL(cli);
     size_t len = impl->inputLineLength + strlen(impl->invitation);
 
     cli->writeChar(cli, '\r');
-    for (size_t i = 0; i < len; ++i) {
+    for (size_t i = 0; i < len; ++i)
+    {
         cli->writeChar(cli, ' ');
     }
     cli->writeChar(cli, '\r');
@@ -1126,61 +1226,72 @@ static void clearCurrentLine(EmbeddedCli *cli) {
     impl->cursorPos = 0;
 }
 
-static void writeToOutput(EmbeddedCli *cli, const char *str) {
+static void writeToOutput(EmbeddedCli *cli, const char *str)
+{
     size_t len = strlen(str);
 
-    for (size_t i = 0; i < len; ++i) {
+    for (size_t i = 0; i < len; ++i)
+    {
         cli->writeChar(cli, str[i]);
     }
 }
 
-static void moveCursor(EmbeddedCli* cli, uint16_t count, bool direction) {
+static void moveCursor(EmbeddedCli *cli, uint16_t count, bool direction)
+{
     // Check if we need to send any command
     if (count == 0)
         return;
 
     // 5 = uint16_t max, 3 = escape sequence, 1 = string termination
-    char escBuffer[5 + 3 + 1] = { 0 };
-    char dirChar = direction ? escSeqCursorRight[2] : escSeqCursorLeft[2];
+    char escBuffer[5 + 3 + 1] = {0};
+    char dirChar              = direction ? escSeqCursorRight[2] : escSeqCursorLeft[2];
     sprintf(escBuffer, "\x1B[%u%c", count, dirChar);
     writeToOutput(cli, escBuffer);
 }
 
-static bool isControlChar(char c) {
+static bool isControlChar(char c)
+{
     return c == '\r' || c == '\n' || c == '\b' || c == '\t' || c == 0x7F;
 }
 
-static bool isDisplayableChar(char c) {
+static bool isDisplayableChar(char c)
+{
     return (c >= 32 && c <= 126);
 }
 
-static uint16_t fifoBufAvailable(FifoBuf *buffer) {
+static uint16_t fifoBufAvailable(FifoBuf *buffer)
+{
     if (buffer->back >= buffer->front)
-        return (uint16_t) (buffer->back - buffer->front);
+        return (uint16_t)(buffer->back - buffer->front);
     else
-        return (uint16_t) (buffer->size - buffer->front + buffer->back);
+        return (uint16_t)(buffer->size - buffer->front + buffer->back);
 }
 
-static char fifoBufPop(FifoBuf *buffer) {
+static char fifoBufPop(FifoBuf *buffer)
+{
     char a = '\0';
-    if (buffer->front != buffer->back) {
-        a = buffer->buf[buffer->front];
-        buffer->front = (uint16_t) (buffer->front + 1) % buffer->size;
+    if (buffer->front != buffer->back)
+    {
+        a             = buffer->buf[buffer->front];
+        buffer->front = (uint16_t)(buffer->front + 1) % buffer->size;
     }
     return a;
 }
 
-static bool fifoBufPush(FifoBuf *buffer, char a) {
-    uint16_t newBack = (uint16_t) (buffer->back + 1) % buffer->size;
-    if (newBack != buffer->front) {
+static bool fifoBufPush(FifoBuf *buffer, char a)
+{
+    uint16_t newBack = (uint16_t)(buffer->back + 1) % buffer->size;
+    if (newBack != buffer->front)
+    {
         buffer->buf[buffer->back] = a;
-        buffer->back = newBack;
+        buffer->back              = newBack;
         return true;
     }
     return false;
 }
 
-static bool historyPut(CliHistory *history, const char *str) {
+static bool historyPut(CliHistory *history, const char *str)
+{
     size_t len = strlen(str);
     // each item is ended with \0 so, need to have that much space at least
     if (history->bufferSize < len + 1)
@@ -1191,10 +1302,11 @@ static bool historyPut(CliHistory *history, const char *str) {
 
     size_t usedSize;
     // remove old items if new one can't fit into buffer
-    while (history->itemsCount > 0) {
-        const char *item = historyGet(history, history->itemsCount);
-        size_t itemLen = strlen(item);
-        usedSize = ((size_t) (item - history->buf)) + itemLen + 1;
+    while (history->itemsCount > 0)
+    {
+        const char *item    = historyGet(history, history->itemsCount);
+        size_t      itemLen = strlen(item);
+        usedSize            = ((size_t)(item - history->buf)) + itemLen + 1;
 
         size_t freeSpace = history->bufferSize - usedSize;
 
@@ -1204,7 +1316,8 @@ static bool historyPut(CliHistory *history, const char *str) {
         // space not enough, remove last element
         --history->itemsCount;
     }
-    if (history->itemsCount > 0) {
+    if (history->itemsCount > 0)
+    {
         // when history not empty, shift elements so new item is first
         memmove(&history->buf[len + 1], history->buf, usedSize);
     }
@@ -1214,7 +1327,8 @@ static bool historyPut(CliHistory *history, const char *str) {
     return true;
 }
 
-static const char *historyGet(CliHistory *history, uint16_t item) {
+static const char *historyGet(CliHistory *history, uint16_t item)
+{
     if (item == 0 || item > history->itemsCount)
         return NULL;
 
@@ -1223,16 +1337,19 @@ static const char *historyGet(CliHistory *history, uint16_t item) {
     return embeddedCliGetToken(history->buf, item);
 }
 
-static void historyRemove(CliHistory *history, const char *str) {
+static void historyRemove(CliHistory *history, const char *str)
+{
     if (str == NULL || history->itemsCount == 0)
         return;
-    char *item = NULL;
+    char    *item = NULL;
     uint16_t itemPosition;
-    for (itemPosition = 1; itemPosition <= history->itemsCount; ++itemPosition) {
+    for (itemPosition = 1; itemPosition <= history->itemsCount; ++itemPosition)
+    {
         // items are stored in the same way (separated by \0 and counted from 1),
         // so can use this call
         item = embeddedCliGetTokenVariable(history->buf, itemPosition);
-        if (strcmp(item, str) == 0) {
+        if (strcmp(item, str) == 0)
+        {
             break;
         }
         item = NULL;
@@ -1241,27 +1358,31 @@ static void historyRemove(CliHistory *history, const char *str) {
         return;
 
     --history->itemsCount;
-    if (itemPosition == (history->itemsCount + 1)) {
+    if (itemPosition == (history->itemsCount + 1))
+    {
         // if this is a last element, nothing is remaining to move
         return;
     }
 
-    size_t len = strlen(item);
-    size_t remaining = (size_t) (history->bufferSize - (item + len + 1 - history->buf));
+    size_t len       = strlen(item);
+    size_t remaining = (size_t)(history->bufferSize - (item + len + 1 - history->buf));
     // move everything to the right of found item
     memmove(item, &item[len + 1], remaining);
 }
 
-static uint16_t getTokenPosition(const char *tokenizedStr, uint16_t pos) {
+static uint16_t getTokenPosition(const char *tokenizedStr, uint16_t pos)
+{
     if (tokenizedStr == NULL || pos == 0)
         return CLI_TOKEN_NPOS;
-    uint16_t i = 0;
+    uint16_t i          = 0;
     uint16_t tokenCount = 1;
-    while (true) {
+    while (true)
+    {
         if (tokenCount == pos)
             break;
 
-        if (tokenizedStr[i] == '\0') {
+        if (tokenizedStr[i] == '\0')
+        {
             ++tokenCount;
             if (tokenizedStr[i + 1] == '\0')
                 break;

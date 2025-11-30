@@ -3,14 +3,14 @@
 
 #include "bsp.hpp"
 #include "embedded_cli.h"
-#include "usart.h"
 #include "qpcpp.hpp"
+#include "usart.h"
 
 namespace cli
 {
 class CLIAO : public QP::QActive
 {
-public:
+   public:
     CLIAO();
     static CLIAO& Inst()
     {
@@ -26,7 +26,7 @@ public:
     };
 
     /// @brief Start CLIAO
-    /// @param priority 
+    /// @param priority
     void Start(const QP::QPrioSpec priority);
 
     /// @brief Get active fault
@@ -38,22 +38,22 @@ public:
     /// @brief Print formatted string to CLI
     /// @param format format string
     /// @param args
-    void Printf(const char *format, ...);
+    void Printf(const char* format, ...);
 
     /// @brief Receive an incoming character
     void ReceiveChar(UART_HandleTypeDef* huart);
 
-private:
-    static constexpr uint16_t _queueSize = 128;
-    static constexpr uint16_t _cliBufSize = 2048;
-    static constexpr uint16_t _cliRxBufSize = 16;
-    static constexpr uint16_t _cliCmdBufSize = 32;
-    static constexpr uint16_t _cliHistorySize = 32;
+   private:
+    static constexpr uint16_t _queueSize          = 128;
+    static constexpr uint16_t _cliBufSize         = 2048;
+    static constexpr uint16_t _cliRxBufSize       = 16;
+    static constexpr uint16_t _cliCmdBufSize      = 32;
+    static constexpr uint16_t _cliHistorySize     = 32;
     static constexpr uint16_t _cliMaxBindingCount = 32;
-    static constexpr uint16_t _cliPrintBufSize = 240;
-    static constexpr uint16_t _uartRxBufSize = 1;
+    static constexpr uint16_t _cliPrintBufSize    = 240;
+    static constexpr uint16_t _uartRxBufSize      = 1;
     /// @brief CLI process interval in ticks
-    static constexpr uint32_t _processInterval = bsp::TICKS_PER_SEC/100;
+    static constexpr uint32_t _processInterval = bsp::TICKS_PER_SEC / 100;
     /// @brief CLI recovery retry interval in ticks
     static constexpr uint32_t _retryInterval = bsp::TICKS_PER_SEC;
 
@@ -79,7 +79,7 @@ private:
     /// @brief Initialize CLI bindings
     void InitBindings();
 
-private:
+   private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {
@@ -96,22 +96,22 @@ private:
     /// @brief Print string evt
     class PrintEvt : public QP::QEvt
     {
-    public:
+       public:
         char buf[_cliPrintBufSize];
     };
-    
-    /// @brief Initial state 
+
+    /// @brief Initial state
     Q_STATE_DECL(initial);
-    /// @brief Root state 
+    /// @brief Root state
     Q_STATE_DECL(root);
     /// @brief Register interrupts, callbacks
     Q_STATE_DECL(initializing);
-    /// @brief Process CLI events 
+    /// @brief Process CLI events
     Q_STATE_DECL(active);
-    /// @brief Fault 
+    /// @brief Fault
     Q_STATE_DECL(error);
 };  // class CLIAO
 
 }  // namespace cli
 
-#endif // CLI_AO_HPP_
+#endif  // CLI_AO_HPP_
