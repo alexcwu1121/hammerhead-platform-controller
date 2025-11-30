@@ -12,39 +12,26 @@ Q_NORETURN Q_onError(char const * const module, int_t const id)
     QS_ASSERTION(module, id, 10000U); // report assertion to QS
 
     // Reset
+    // Breakpoint here
     NVIC_SystemReset();
-    for (;;) { // explicitly "no-return"
-    }
+    for (;;) { }
 }
 
-void SysTick_Handler(void); // prototype
-void SysTick_Handler(void) {
-    QK_ISR_ENTRY();   // inform QK about entering an ISR
-
-    QP::QTimeEvt::TICK_X(0U, nullptr); // process time events at rate 0
-
-#ifdef Q_SPY
-    std::uint32_t volatile tmp = SysTick->CTRL; // clear CTRL_COUNTFLAG
-    QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
-    Q_UNUSED_PAR(tmp);
-#endif
-
-    QK_ISR_EXIT();  // inform QK about exiting an ISR
-}
-
-#ifdef USE_FULL_ASSERT
-/**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
-void assert_failed(uint8_t *file, uint32_t line)
+/// @brief SysTick callback
+void SysTick_Handler(void);
+void SysTick_Handler(void)
 {
-    Q_onError(module, id);
+    QK_ISR_ENTRY(); // Inform QK about entering an ISR
+    HAL_IncTick(); // Increment global timebase
+    QP::QTimeEvt::TICK_X(0U, nullptr); // Process QP time events at rate 0
+    QK_ISR_EXIT();  // Inform QK about exiting an ISR
 }
-#endif /* USE_FULL_ASSERT */
+
+/// @brief QP assertion callback
+/// @param module source file/module of the assert
+/// @param id assert code
+void assert_failed(char const * const module, int_t const id);
+void assert_failed(char const * const module, int_t const id) { Q_onError(module, id); }
 }
 
 namespace QP
@@ -52,24 +39,32 @@ namespace QP
 /// @brief QF startup callback
 void QF::onStartup()
 {
-    // set up the SysTick timer to fire at bsp::TICKS_PER_SEC rate
+    // Set up the SysTick timer to fire at bsp::TICKS_PER_SEC rate
     SysTick_Config(SystemCoreClock / bsp::TICKS_PER_SEC);
 
-    HAL_NVIC_SetPriority(USART1_IRQn, 1U, 1U);
+    // Assign all priority bits for preemption-prio. And none to sub-prio.
+    NVIC_SetPriorityGrouping(0U);
+
+    // Set up interrupt priorities
+    HAL_NVIC_SetPriority(USART1_IRQn, 4U, 4U);
+
+    // Enable interrupts
     HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 
 /// @brief QF idle callback
-void QK::onIdle()
-{
-    __WFI(); // Wait-For-Interrupt
-}
+void QK::onIdle() { }
 }
 
-/**
- * @brief System Clock Configuration
- * @retval None
- */
+/// @brief USART1 interrupt handler
+extern "C" void USART1_IRQHandler(void)
+{
+  QK_ISR_ENTRY();
+  HAL_UART_IRQHandler(&huart1);
+  QK_ISR_EXIT();
+}
+
+/// @brief System clock configuration
 void SystemClock_Config(void)
 {
     RCC_OscInitTypeDef       RCC_OscInitStruct = {0};
@@ -112,17 +107,9 @@ void SystemClock_Config(void)
     }
 }
 
-/**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+/// @brief Application error handler callback
 void Error_Handler(void)
 {
-    /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
     __disable_irq();
-    while (1)
-    {
-    }
-    /* USER CODE END Error_Handler_Debug */
+    for (;;) { }
 }

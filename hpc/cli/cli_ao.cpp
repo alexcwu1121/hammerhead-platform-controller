@@ -5,13 +5,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-// Define UART callback function to handle a received character with CLI
+// Define UART interrupt callback function to handle a received character with CLI
 extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
 {
-    if (huart->Instance == USART1)
-    {
-        cli::CLIAO::Inst().ReceiveChar();
-    }
+    cli::CLIAO::Inst().ReceiveChar(huart);
 }
 
 cli::CLIAO::CLIAO()
@@ -60,13 +57,17 @@ void cli::CLIAO::Printf(const char *format, ...)
         if(length > 0)
         {
             POST(evt, this);
+        } else
+        {
+            // otherwise, gc the event so it doesn't leak
+            QP::QF::gc(evt);
         }
     }
 }
 
-void cli::CLIAO::ReceiveChar()
+void cli::CLIAO::ReceiveChar(UART_HandleTypeDef* huart)
 {
-    if(_isStarted)
+    if(huart == _uartCliPeriph && _isStarted)
     {
         static QP::QEvt evt(PrivateSignals::RX_CHAR_SIG);
         POST(&evt, this);
@@ -128,11 +129,6 @@ Q_STATE_DEF(cli::CLIAO, initializing)
     {
     case Q_ENTRY_SIG:
     {
-        // Initialize CLI
-        
-        // UART interrupt
-        HAL_UART_Receive_IT(_uartCliPeriph, _uartRxBuf, _uartRxBufSize);
-
         // Initialize the CLI configuration settings
         EmbeddedCliConfig *config = embeddedCliDefaultConfig();
         config->cliBuffer = _cliBuf;
@@ -205,12 +201,16 @@ Q_STATE_DEF(cli::CLIAO, active)
     {
     case Q_ENTRY_SIG:
     {
+        // Arm uart receive interrupt
+        HAL_UART_Receive_IT(_uartCliPeriph, _uartRxBuf, _uartRxBufSize);
+        // Arm cli process timer
         _processTimer.armX(_processInterval, _processInterval);
         status_ = Q_RET_HANDLED;
         break;
     }
     case Q_EXIT_SIG:
     {
+        // Disarm cli process timer
         _processTimer.disarm();
         status_ = Q_RET_HANDLED;
         break;

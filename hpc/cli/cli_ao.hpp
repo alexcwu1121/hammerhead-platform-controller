@@ -41,7 +41,7 @@ public:
     void Printf(const char *format, ...);
 
     /// @brief Receive an incoming character
-    void ReceiveChar();
+    void ReceiveChar(UART_HandleTypeDef* huart);
 
 private:
     static constexpr uint16_t _queueSize = 128;
@@ -53,7 +53,7 @@ private:
     static constexpr uint16_t _cliPrintBufSize = 240;
     static constexpr uint16_t _uartRxBufSize = 1;
     /// @brief CLI process interval in ticks
-    static constexpr uint32_t _processInterval = bsp::TICKS_PER_SEC/1000;
+    static constexpr uint32_t _processInterval = bsp::TICKS_PER_SEC/100;
     /// @brief CLI recovery retry interval in ticks
     static constexpr uint32_t _retryInterval = bsp::TICKS_PER_SEC;
 
