@@ -9,6 +9,7 @@ For interactive debugging, install cortex-debug VSCode extension and the followi
 `sudo apt install build-essential cmake openocd binutils-multiarch gdb-multiarch gcc-arm-none-eabi`
 
 TODO
+- Add IMU
 - Add first and second order motor driver slew rates
 - Add hall effect current sensors
 - Add fault LED
