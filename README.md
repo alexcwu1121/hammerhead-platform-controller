@@ -9,10 +9,9 @@ For interactive debugging, install cortex-debug VSCode extension and the followi
 `sudo apt install build-essential cmake openocd binutils-multiarch gdb-multiarch gcc-arm-none-eabi`
 
 TODO
-- Integrate QPCPP
-- Add uart CLI
 - Add motor drivers
-- Add EEPROM driver and parameter system
+- (DROPPED) Add EEPROM driver and parameter system
+- Add flash parameter system
 - Add hall current sensors
 - Add fault LED
 - Add external i2c pullups

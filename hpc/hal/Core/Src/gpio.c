@@ -53,8 +53,8 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, P_M1_DIR_Pin|P_M2_DIR_Pin|P_EEPROM_WP_Pin|P_SPARE_GPIO_1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, P_M2_EN_Pin|P_SPARE_GPIO_2_Pin|P_SPARE_GPIO_3_Pin|P_SPARE_GPIO_4_Pin
-                          |P_SPARE_GPIO_5_Pin|P_M1_EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, P_M2_EN_Pin|P_EEPROM_CS_Pin|P_SPARE_GPIO_2_Pin|P_SPARE_GPIO_3_Pin
+                          |P_SPARE_GPIO_4_Pin|P_SPARE_GPIO_5_Pin|P_M1_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : P_M1_DIR_Pin P_M2_DIR_Pin P_EEPROM_WP_Pin P_SPARE_GPIO_1_Pin */
   GPIO_InitStruct.Pin = P_M1_DIR_Pin|P_M2_DIR_Pin|P_EEPROM_WP_Pin|P_SPARE_GPIO_1_Pin;
@@ -69,10 +69,10 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(P_M1_FAULT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : P_M2_EN_Pin P_SPARE_GPIO_2_Pin P_SPARE_GPIO_3_Pin P_SPARE_GPIO_4_Pin
-                           P_SPARE_GPIO_5_Pin P_M1_EN_Pin */
-  GPIO_InitStruct.Pin = P_M2_EN_Pin|P_SPARE_GPIO_2_Pin|P_SPARE_GPIO_3_Pin|P_SPARE_GPIO_4_Pin
-                          |P_SPARE_GPIO_5_Pin|P_M1_EN_Pin;
+  /*Configure GPIO pins : P_M2_EN_Pin P_EEPROM_CS_Pin P_SPARE_GPIO_2_Pin P_SPARE_GPIO_3_Pin
+                           P_SPARE_GPIO_4_Pin P_SPARE_GPIO_5_Pin P_M1_EN_Pin */
+  GPIO_InitStruct.Pin = P_M2_EN_Pin|P_EEPROM_CS_Pin|P_SPARE_GPIO_2_Pin|P_SPARE_GPIO_3_Pin
+                          |P_SPARE_GPIO_4_Pin|P_SPARE_GPIO_5_Pin|P_M1_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

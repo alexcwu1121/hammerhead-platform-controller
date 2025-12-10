@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "cli_binding.hpp"
+#include "hpc_parameters.hpp"
 
 // Define UART interrupt callback function to handle a received character with CLI
 extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
@@ -26,7 +27,6 @@ void cli::CLIAO::Start(const QP::QPrioSpec priority)
                 _queue,        // event queue storage
                 _queueSize,    // queue size [events]
                 nullptr, 0U);  // no stack storage
-
     _isStarted = true;
 }
 
@@ -54,13 +54,15 @@ void cli::CLIAO::Printf(const char* format, ...)
         va_end(args);
 
         // Check if string fits in buffer
+        // TODO: automatically blockify and inject multiple events if
+        //  buffer size exceeded
         if (length > 0)
         {
             POST(evt, this);
         }
         else
         {
-            // otherwise, gc the event so it doesn't leak
+            // Otherwise, gc the event so it doesn't leak
             QP::QF::gc(evt);
         }
     }
@@ -129,14 +131,10 @@ Q_STATE_DEF(cli::CLIAO, initializing)
         // Assign character write function
         _cli->writeChar = write_char_to_cli;
 
-        // CLI init failed. Is there not enough memory allocated to the CLI?
-        // Please increase the 'CLI_BUFFER_SIZE' in header file.
-        // Or decrease max binding / history size.
-        // You can get required buffer size by calling
-        // uint16_t requiredSize = embeddedCliRequiredSize(config);
-        // Then check its value in debugger
+        // CLI init failed - most likely not enough memory
         if (_cli == NULL)
         {
+            _fault = Fault::INIT_FAILED;
             static QP::QEvt evt(PrivateSignals::FAULT_SIG);
             POST(&evt, this);
         }
@@ -151,7 +149,6 @@ Q_STATE_DEF(cli::CLIAO, initializing)
     }
     case PrivateSignals::FAULT_SIG:
     {
-        _fault  = Fault::INIT_FAILED;
         status_ = tran(&error);
         break;
     }

@@ -1,5 +1,7 @@
 #include "bsp.hpp"
 #include "cli_ao.hpp"
+#include "motor_control_ao.hpp"
+#include "param_ao.hpp"
 
 int main(void)
 {
@@ -21,9 +23,11 @@ int main(void)
     MX_USART1_UART_Init();
 
     // Init event pools
-    static QF_MPOOL_EL(QP::QEvt) smlPoolSto[20];
+    static QF_MPOOL_EL(QP::QEvt) smlPoolSto[50];  // small (bare signals)
     QP::QF::poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
-    static uint8_t lgPoolSto[10][256];
+    static uint8_t mdPoolSto[50][16];  // medium (average data packets)
+    QP::QF::poolInit(mdPoolSto, sizeof(mdPoolSto), sizeof(mdPoolSto[0]));
+    static uint8_t lgPoolSto[20][256];  // large (logs or text)
     QP::QF::poolInit(lgPoolSto, sizeof(lgPoolSto), sizeof(lgPoolSto[0]));
 
     // Init publish-subscribe signals
@@ -34,7 +38,9 @@ int main(void)
     QP::QF::init();
 
     // Start AOs
-    cli::CLIAO::Inst().Start(1U);
+    mc::MotorControlAO::Inst().Start(1U);
+    param::ParamAO::Inst().Start(2U);
+    cli::CLIAO::Inst().Start(3U);
 
     // Start QF scheduler
     return QP::QF::run();

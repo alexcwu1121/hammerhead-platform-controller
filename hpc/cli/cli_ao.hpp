@@ -8,6 +8,13 @@
 
 namespace cli
 {
+/// @brief Fault codes
+enum Fault : uint8_t
+{
+    NO_FAULT,
+    INIT_FAILED
+};
+
 class CLIAO : public QP::QActive
 {
    public:
@@ -17,13 +24,6 @@ class CLIAO : public QP::QActive
         static CLIAO inst;
         return inst;
     }
-
-    /// @brief Fault codes
-    enum Fault : uint8_t
-    {
-        NO_FAULT,
-        INIT_FAILED
-    };
 
     /// @brief Start CLIAO
     /// @param priority
@@ -62,7 +62,7 @@ class CLIAO : public QP::QActive
     /// @brief UART Rx buffer size (one char at a time)
     static constexpr uint16_t _uartRxBufSize = 1U;
     /// @brief CLI memory buffer
-    CLI_UINT _cliBuf[BYTES_TO_CLI_UINTS(_cliBufSize)];
+    CLI_UINT _cliBuf[BYTES_TO_CLI_UINTS(_cliBufSize)] = {0};
     /// @brief UART buffer
     uint8_t _uartRxBuf[_uartRxBufSize] = {0};
     /// @brief UART peripheral

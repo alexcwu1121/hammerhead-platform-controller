@@ -18,6 +18,8 @@ target_include_directories(${CMAKE_PROJECT_NAME}
     PRIVATE
         ./
         cli/
+        motor-control/
+        parameter/
 )
 target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE
@@ -27,6 +29,11 @@ target_sources(${CMAKE_PROJECT_NAME}
         cli/cli_ao.cpp
         cli/cli_binding.cpp
         cli/embedded_cli.c
+        motor-control/motor_control_ao.cpp
+        parameter/hpc_parameters.cpp
+        parameter/parameter.cpp
+        parameter/param_ao.cpp
+        parameter/EEPROM_25LC256.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE
