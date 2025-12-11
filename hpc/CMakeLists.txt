@@ -46,6 +46,7 @@ target_compile_definitions(${CMAKE_PROJECT_NAME}
 target_link_options(${CMAKE_PROJECT_NAME}
     PRIVATE
         -T${CMAKE_CURRENT_LIST_DIR}/STM32F103XX_FLASH.ld
+        -u _printf_float # TODO: remove for release-no-debug builds
 )
 
 # Add the map file to the list of files to be removed with 'clean' target

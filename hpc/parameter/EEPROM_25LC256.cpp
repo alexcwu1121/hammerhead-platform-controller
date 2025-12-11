@@ -37,6 +37,7 @@ void EEPROM25LC256::DisableWriteProtect() const
 
 void EEPROM25LC256::Write(uint8_t* inBuf, uint16_t writeSize, uint16_t address)
 {
+    DisableWriteProtect();
     while (writeSize > 0)
     {
         // Compute chunk size
@@ -73,6 +74,7 @@ void EEPROM25LC256::Write(uint8_t* inBuf, uint16_t writeSize, uint16_t address)
         inBuf += chunk;
         writeSize -= chunk;
     }
+    EnableWriteProtect();
 }
 
 void EEPROM25LC256::Read(uint8_t* outBuf, uint16_t readSize, uint16_t address)

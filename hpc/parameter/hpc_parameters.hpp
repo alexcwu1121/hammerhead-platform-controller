@@ -9,6 +9,7 @@ enum class ParameterID : param::ParamIndex
 {
     M1_PWM_DEADBAND = 0U,
     M2_PWM_DEADBAND,
+    CLI_UPDATE_FREQ,
 };
 }
 

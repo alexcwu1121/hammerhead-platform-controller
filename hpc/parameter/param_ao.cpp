@@ -144,11 +144,8 @@ Q_STATE_DEF(param::ParamAO, active)
             cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
         }
 
-        // Write...
-        _eeprom.DisableWriteProtect();
+        // Write and read back
         _eeprom.Write(_txBuf, size, _paramBlockAddr);
-        _eeprom.EnableWriteProtect();
-        // ...and read back
         _eeprom.Read(_rxBuf, size, _paramBlockAddr);
 
         // Deserialize into parameter table

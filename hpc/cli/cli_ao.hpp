@@ -39,9 +39,9 @@ class CLIAO : public QP::QActive
     void ClearFault();
 
     /// @brief Print formatted string to CLI
-    /// @param format format string
+    /// @param fmt format string
     /// @param args
-    void Printf(const char* format, ...);
+    static void Printf(const char* fmt, ...);
 
     /// @brief Receive an incoming character
     void ReceiveChar(UART_HandleTypeDef* huart);
@@ -75,7 +75,7 @@ class CLIAO : public QP::QActive
     /// @brief Event queue storage
     QP::QEvtPtr _queue[_queueSize] = {0};
     /// @brief CLI process interval in ticks
-    static constexpr uint32_t _processInterval = bsp::TICKS_PER_SEC / 100;
+    static constexpr uint32_t _processInterval = bsp::TICKS_PER_SEC / 50;
     /// @brief CLI recovery retry interval in ticks
     static constexpr uint32_t _retryInterval = bsp::TICKS_PER_SEC;
     /// @brief Flag indicating if AO has executed initial transition

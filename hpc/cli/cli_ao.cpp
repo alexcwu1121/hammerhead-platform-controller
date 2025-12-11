@@ -41,30 +41,29 @@ void cli::CLIAO::ClearFault()
     }
 }
 
-void cli::CLIAO::Printf(const char* format, ...)
+void cli::CLIAO::Printf(const char* fmt, ...)
+
 {
-    if (_isStarted)
+    PrintEvt* evt = Q_NEW(PrintEvt, PrivateSignals::PRINT_SIG);
+
+    // Format the string using snprintf
+    va_list args;
+    va_start(args, fmt);
+    int length = vsnprintf(evt->buf, sizeof(evt->buf), fmt, args);
+    // int length = sprintf(evt->buf, fmt, args);
+    va_end(args);
+
+    // Check if string fits in buffer
+    // TODO: automatically blockify and inject multiple events if
+    //  buffer size exceeded
+    if (length > 0)
     {
-        PrintEvt* evt = Q_NEW(PrintEvt, PrivateSignals::PRINT_SIG);
-
-        // Format the string using snprintf
-        va_list args;
-        va_start(args, format);
-        int length = vsnprintf(evt->buf, sizeof(evt->buf), format, args);
-        va_end(args);
-
-        // Check if string fits in buffer
-        // TODO: automatically blockify and inject multiple events if
-        //  buffer size exceeded
-        if (length > 0)
-        {
-            POST(evt, this);
-        }
-        else
-        {
-            // Otherwise, gc the event so it doesn't leak
-            QP::QF::gc(evt);
-        }
+        CLIAO::Inst().POST(evt, this);
+    }
+    else
+    {
+        // Otherwise, gc the event so it doesn't leak
+        QP::QF::gc(evt);
     }
 }
 
@@ -121,14 +120,12 @@ Q_STATE_DEF(cli::CLIAO, initializing)
         // Create new CLI instance
         _cli = embeddedCliNew(config);
 
-        // Define lambda to write char to cli
+        // Register character write function
         auto write_char_to_cli = [](EmbeddedCli* embeddedCli, char c)
         {
             uint8_t char_to_send = c;
             HAL_UART_Transmit(_uartCliPeriph, &char_to_send, 1, 100);
         };
-
-        // Assign character write function
         _cli->writeChar = write_char_to_cli;
 
         // CLI init failed - most likely not enough memory
@@ -193,6 +190,7 @@ Q_STATE_DEF(cli::CLIAO, active)
     }
     case PrivateSignals::RX_CHAR_SIG:
     {
+        // Receive char and rearm interrupt
         HAL_UART_Receive_IT(_uartCliPeriph, _uartRxBuf, _uartRxBufSize);
         embeddedCliReceiveChar(_cli, _uartRxBuf[0]);
         status_ = Q_RET_HANDLED;
@@ -200,6 +198,7 @@ Q_STATE_DEF(cli::CLIAO, active)
     }
     case PrivateSignals::PROCESS_SIG:
     {
+        // Service CLI once
         embeddedCliProcess(_cli);
         status_ = Q_RET_HANDLED;
         break;
