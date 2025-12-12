@@ -5,213 +5,103 @@
 #include "cli_ao.hpp"
 #include "gpio.h"
 
-mc::MotorControlHSM::MotorControlHSM() : QP::QHsm(&initial), _fault(Fault::NO_FAULT) {}
-
-void mc::MotorControlHSM::SetPin(Pin pin, GPIO_TypeDef* port, uint16_t pinNum)
+/// Motor controller fault interrupt callback
+extern "C" void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-    switch (pin)
+    switch (GPIO_Pin)
     {
-    case Pin::M_EN:
+    case P_M1_FAULT_Pin:
     {
-        _mEnPort   = port;
-        _mEnPinNum = pinNum;
+        mc::MotorControlAO::MC1Inst().FaultIT();
         break;
     }
-    case Pin::M_DIR:
+    case P_M2_FAULT_Pin:
     {
-        _mDirPort   = port;
-        _mDirPinNum = pinNum;
-        break;
-    }
-    case Pin::M_PWM:
-    {
-        _mPWMPort   = port;
-        _mPWMPinNum = pinNum;
-        break;
-    }
-    case Pin::M_FAULT:
-    {
-        _mFaultPort   = port;
-        _mFaultPinNum = pinNum;
-        break;
-    }
-    case Pin::M_VIN_SENS:
-    {
-        _mVinSensPort   = port;
-        _mVinSensPinNum = pinNum;
-        break;
-    }
-    default:
-        break;
-    }
-}
-
-void mc::MotorControlHSM::SetTim(TIM_HandleTypeDef* htim, uint16_t htimCh)
-{
-    _htim   = htim;
-    _htimCh = htimCh;
-}
-
-void mc::MotorControlHSM::Initialize()
-{
-    static QP::QEvt evt(PrivateSignals::INITIALIZE_SIG);
-    dispatch(&evt, 0U);
-}
-
-void mc::MotorControlHSM::Reset()
-{
-    static QP::QEvt evt(PrivateSignals::RESET_SIG);
-    dispatch(&evt, 0U);
-}
-
-void mc::MotorControlHSM::ClearFault()
-{
-    // Clear fault
-    _fault = Fault::NO_FAULT;
-    static QP::QEvt evt(PrivateSignals::RESET_SIG);
-    dispatch(&evt, 0U);
-}
-
-void mc::MotorControlHSM::SetDuty(uint16_t duty)
-{
-    SetDutyEvt evt(PrivateSignals::SET_DUTY_SIG);
-    evt.duty = duty;
-    dispatch(&evt, 0U);
-}
-
-Q_STATE_DEF(mc::MotorControlHSM, initial)
-{
-    Q_UNUSED_PAR(e);
-    return tran(&initializing);
-}
-
-Q_STATE_DEF(mc::MotorControlHSM, root)
-{
-    QP::QState status_;
-    switch (e->sig)
-    {
-    case PrivateSignals::RESET_SIG:
-    {
-        status_ = tran(&initializing);
+        mc::MotorControlAO::MC2Inst().FaultIT();
         break;
     }
     default:
     {
-        status_ = super(&top);
         break;
     }
     }
-    return status_;
 }
 
-Q_STATE_DEF(mc::MotorControlHSM, initializing)
+namespace mc
 {
-    QP::QState status_;
-    switch (e->sig)
-    {
-    case INITIALIZE_SIG:
-    {
-        // Start pwm at a low duty cycle
-        /*
-        // Check for ground fault
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-        uint32_t value = HAL_ADC_GetValue(&hadc1);
-        HAL_ADC_Stop(&hadc1);
-
-        if(true)
-        {
-            static QP::QEvt evt(PrivateSignals::FAULT_SIG);
-            dispatch(&evt, 0U);
-        } else
-        {
-            static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
-            dispatch(&evt, 0U);
-        }
-        */
-
-        // Initialize direction to 0
-        HAL_GPIO_WritePin(_mDirPort, _mDirPinNum, GPIO_PIN_RESET);
-        // Initialize duty cycle to 0
-        __HAL_TIM_SET_COMPARE(_htim, _htimCh, 0U);
-        // Start PWM generation
-        HAL_TIM_PWM_Start(_htim, _htimCh);
-        // Enable motor driver
-        HAL_GPIO_WritePin(_mEnPort, _mEnPinNum, GPIO_PIN_RESET);
-
-        // TODO: Check mc fault pin
-        // _fault  = Fault::GROUND_FAULT;
-        /*
-        if()
-        {
-
-        } else
-        {
-
-        }
-        */
-
-        status_ = tran(&active);
-        break;
-    }
-    default:
-    {
-        status_ = super(&root);
-        break;
-    }
-    }
-    return status_;
-}
-
-Q_STATE_DEF(mc::MotorControlHSM, active)
+/// @brief Motor controller device properties
+struct MotorControllerDevice
 {
-    QP::QState status_;
-    switch (e->sig)
-    {
-    case Q_ENTRY_SIG:
-    {
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::SET_DUTY_SIG:
-    {
-        uint16_t duty = Q_EVT_CAST(SetDutyEvt)->duty;
-        // TODO: Check if configured duty cycle is within range
-        // if(duty > 1023)
-        //{
-        //    cli::CLIAO::Inst().Printf("Duty cycle out of range (0-1023)");
-        //}
+    /// @brief MC enable pin port
+    GPIO_TypeDef* _mEnPort;
+    /// @brief MC enable pin num
+    uint16_t _mEnPinNum;
+    /// @brief MC dir pin port
+    GPIO_TypeDef* _mDirPort;
+    /// @brief MC dir pin num
+    uint16_t _mDirPinNum;
+    /// @brief MC pwm pin power
+    GPIO_TypeDef* _mPWMPort;
+    /// @brief MC pwm pin num
+    uint16_t _mPWMPinNum;
+    /// @brief MC fault pin port
+    GPIO_TypeDef* _mFaultPort;
+    /// @brief MC fault pin num
+    uint16_t _mFaultPinNum;
+    /// @brief MC Vin sense pin port
+    GPIO_TypeDef* _mVinSensPort;
+    /// @brief MC Vin sense pin num
+    uint16_t _mVinSensPinNum;
+    /// @brief PWM timer handle
+    TIM_HandleTypeDef* _htim;
+    /// @brief PWM timer channel
+    uint16_t _htimCh;
+};
 
-        // TODO: Interpolate to actual duty cycle precision
+/// @brief MC1 device properties
+static MotorControllerDevice mc1Device = {._mEnPort        = P_M1_EN_GPIO_Port,
+                                          ._mEnPinNum      = P_M1_EN_Pin,
+                                          ._mDirPort       = P_M1_DIR_GPIO_Port,
+                                          ._mDirPinNum     = P_M1_DIR_Pin,
+                                          ._mPWMPort       = P_M1_PWM_GPIO_Port,
+                                          ._mPWMPinNum     = P_M1_PWM_Pin,
+                                          ._mFaultPort     = P_M1_FAULT_GPIO_Port,
+                                          ._mFaultPinNum   = P_M1_FAULT_Pin,
+                                          ._mVinSensPort   = P_M1_12V_SENS_GPIO_Port,
+                                          ._mVinSensPinNum = P_M1_12V_SENS_Pin,
+                                          ._htim           = &htim2,
+                                          ._htimCh         = TIM_CHANNEL_3};
 
-        __HAL_TIM_SET_COMPARE(_htim, _htimCh, duty);
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    default:
-    {
-        status_ = super(&root);
-        break;
-    }
-    }
-    return status_;
-}
+/// @brief MC2 device properties
+static MotorControllerDevice mc2Device = {._mEnPort        = P_M2_EN_GPIO_Port,
+                                          ._mEnPinNum      = P_M2_EN_Pin,
+                                          ._mDirPort       = P_M2_DIR_GPIO_Port,
+                                          ._mDirPinNum     = P_M2_DIR_Pin,
+                                          ._mPWMPort       = P_M2_PWM_GPIO_Port,
+                                          ._mPWMPinNum     = P_M2_PWM_Pin,
+                                          ._mFaultPort     = P_M2_FAULT_GPIO_Port,
+                                          ._mFaultPinNum   = P_M2_FAULT_Pin,
+                                          ._mVinSensPort   = P_M2_12V_SENS_GPIO_Port,
+                                          ._mVinSensPinNum = P_M2_12V_SENS_Pin,
+                                          ._htim           = &htim3,
+                                          ._htimCh         = TIM_CHANNEL_1};
 
-Q_STATE_DEF(mc::MotorControlHSM, error)
+mc::MotorControlAO::MotorControlAO(MotorControllerDevice* mcDevice)
+    : QP::QActive(&initial), _mcDevice(mcDevice)
 {
-    QP::QState status_;
-    switch (e->sig)
-    {
-    default:
-    {
-        status_ = super(&root);
-        break;
-    }
-    }
-    return status_;
 }
 
-mc::MotorControlAO::MotorControlAO() : QP::QActive(&initial) {}
+mc::MotorControlAO& mc::MotorControlAO::MC1Inst()
+{
+    static mc::MotorControlAO mc1_inst(&mc1Device);
+    return mc1_inst;
+}
+
+mc::MotorControlAO& mc::MotorControlAO::MC2Inst()
+{
+    static mc::MotorControlAO mc2_inst(&mc2Device);
+    return mc2_inst;
+}
 
 void mc::MotorControlAO::Start(const QP::QPrioSpec priority)
 {
@@ -222,50 +112,28 @@ void mc::MotorControlAO::Start(const QP::QPrioSpec priority)
     _isStarted = true;
 }
 
-void mc::MotorControlAO::SetDuty(Motor motor, uint16_t duty)
+void mc::MotorControlAO::SetDuty(uint16_t duty)
 {
     if (_isStarted)
     {
-        // Set duty
         SetDutyEvt* evt = Q_NEW(SetDutyEvt, PrivateSignals::SET_DUTY_SIG);
-        evt->motor      = motor;
         evt->duty       = duty;
         POST(evt, this);
+    }
+}
+
+void mc::MotorControlAO::FaultIT()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::FAULT_IT_SIG);
+        POST(&evt, this);
     }
 }
 
 Q_STATE_DEF(mc::MotorControlAO, initial)
 {
     Q_UNUSED_PAR(e);
-
-    // Set M1 pins and timers
-    _motorControlHSMs[Motor::M1].SetPin(MotorControlHSM::Pin::M_EN, P_M1_EN_GPIO_Port, P_M1_EN_Pin);
-    _motorControlHSMs[Motor::M1].SetPin(MotorControlHSM::Pin::M_DIR, P_M1_DIR_GPIO_Port,
-                                        P_M1_DIR_Pin);
-    _motorControlHSMs[Motor::M1].SetPin(MotorControlHSM::Pin::M_PWM, P_M1_PWM_GPIO_Port,
-                                        P_M1_PWM_Pin);
-    _motorControlHSMs[Motor::M1].SetPin(MotorControlHSM::Pin::M_FAULT, P_M1_FAULT_GPIO_Port,
-                                        P_M1_FAULT_Pin);
-    _motorControlHSMs[Motor::M1].SetPin(MotorControlHSM::Pin::M_VIN_SENS, P_M1_12V_SENS_GPIO_Port,
-                                        P_M1_12V_SENS_Pin);
-    _motorControlHSMs[Motor::M1].SetTim(&htim2, TIM_CHANNEL_3);
-
-    // Set M2 pins and timers
-    _motorControlHSMs[Motor::M2].SetPin(MotorControlHSM::Pin::M_EN, P_M2_EN_GPIO_Port, P_M2_EN_Pin);
-    _motorControlHSMs[Motor::M2].SetPin(MotorControlHSM::Pin::M_DIR, P_M2_DIR_GPIO_Port,
-                                        P_M2_DIR_Pin);
-    _motorControlHSMs[Motor::M2].SetPin(MotorControlHSM::Pin::M_PWM, P_M2_PWM_GPIO_Port,
-                                        P_M2_PWM_Pin);
-    _motorControlHSMs[Motor::M2].SetPin(MotorControlHSM::Pin::M_FAULT, P_M2_FAULT_GPIO_Port,
-                                        P_M2_FAULT_Pin);
-    _motorControlHSMs[Motor::M2].SetPin(MotorControlHSM::Pin::M_VIN_SENS, P_M2_12V_SENS_GPIO_Port,
-                                        P_M2_12V_SENS_Pin);
-    _motorControlHSMs[Motor::M2].SetTim(&htim3, TIM_CHANNEL_1);
-
-    // Initialize motor controller hsms
-    _motorControlHSMs[Motor::M1].init(0U);
-    _motorControlHSMs[Motor::M2].init(0U);
-
     return tran(&initializing);
 }
 
@@ -277,6 +145,11 @@ Q_STATE_DEF(mc::MotorControlAO, root)
     case PrivateSignals::RESET_SIG:
     {
         status_ = tran(&initializing);
+        break;
+    }
+    case PrivateSignals::FAULT_IT_SIG:
+    {
+        status_ = tran(&error);
         break;
     }
     default:
@@ -295,26 +168,20 @@ Q_STATE_DEF(mc::MotorControlAO, initializing)
     {
     case Q_ENTRY_SIG:
     {
-        // Attempt to clear faults
-        _motorControlHSMs[Motor::M1].ClearFault();
-        _motorControlHSMs[Motor::M2].ClearFault();
+        // Check for fault conditions
 
-        // Attempt to initialize motor controllers
-        _motorControlHSMs[Motor::M1].Initialize();
-        _motorControlHSMs[Motor::M2].Initialize();
+        // Initialize motor controller
+        HAL_GPIO_WritePin(_mcDevice->_mDirPort, _mcDevice->_mDirPinNum, GPIO_PIN_RESET);
+        // Initialize duty cycle to 0
+        __HAL_TIM_SET_COMPARE(_mcDevice->_htim, _mcDevice->_htimCh, 0U);
+        // Start PWM generation
+        HAL_TIM_PWM_Start(_mcDevice->_htim, _mcDevice->_htimCh);
+        // Enable motor driver
+        HAL_GPIO_WritePin(_mcDevice->_mEnPort, _mcDevice->_mEnPinNum, GPIO_PIN_RESET);
 
-        // Check motor controllers for faults during initialization
-        if (_motorControlHSMs[Motor::M1].GetFault() != Fault::NO_FAULT
-            || _motorControlHSMs[Motor::M1].GetFault() != Fault::NO_FAULT)
-        {
-            static QP::QEvt evt(PrivateSignals::FAULT_SIG);
-            POST(&evt, this);
-        }
-        else
-        {
-            static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
-            POST(&evt, this);
-        }
+        // Check for fault conditions again
+        static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
+        POST(&evt, this);
 
         status_ = Q_RET_HANDLED;
         break;
@@ -345,9 +212,10 @@ Q_STATE_DEF(mc::MotorControlAO, active)
     {
     case PrivateSignals::SET_DUTY_SIG:
     {
-        Motor    motor = Q_EVT_CAST(SetDutyEvt)->motor;
-        uint16_t duty  = Q_EVT_CAST(SetDutyEvt)->duty;
-        _motorControlHSMs[motor].SetDuty(duty);
+        uint16_t duty = Q_EVT_CAST(SetDutyEvt)->duty;
+        // TODO: Check if configured duty cycle is within range
+        // TODO: Interpolate to actual duty cycle precision
+        __HAL_TIM_SET_COMPARE(_mcDevice->_htim, _mcDevice->_htimCh, duty);
         status_ = Q_RET_HANDLED;
         break;
     }
@@ -365,6 +233,12 @@ Q_STATE_DEF(mc::MotorControlAO, error)
     QP::QState status_;
     switch (e->sig)
     {
+    case Q_ENTRY_SIG:
+    {
+        cli::CLIAO::Inst().Printf("Fault");
+        status_ = Q_RET_HANDLED;
+        break;
+    }
     default:
     {
         status_ = super(&root);
@@ -373,3 +247,4 @@ Q_STATE_DEF(mc::MotorControlAO, error)
     }
     return status_;
 }
+}  // namespace mc

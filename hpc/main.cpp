@@ -38,9 +38,10 @@ int main(void)
     QP::QF::init();
 
     // Start AOs
-    mc::MotorControlAO::Inst().Start(1U);
-    param::ParamAO::Inst().Start(2U);
-    cli::CLIAO::Inst().Start(3U);
+    mc::MotorControlAO::MC1Inst().Start(1U);
+    mc::MotorControlAO::MC2Inst().Start(2U);
+    param::ParamAO::Inst().Start(3U);
+    cli::CLIAO::Inst().Start(4U);
 
     // Start QF scheduler
     return QP::QF::run();

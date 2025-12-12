@@ -42,28 +42,30 @@ void cli::CLIAO::ClearFault()
 }
 
 void cli::CLIAO::Printf(const char* fmt, ...)
-
 {
-    PrintEvt* evt = Q_NEW(PrintEvt, PrivateSignals::PRINT_SIG);
-
-    // Format the string using snprintf
-    va_list args;
-    va_start(args, fmt);
-    int length = vsnprintf(evt->buf, sizeof(evt->buf), fmt, args);
-    // int length = sprintf(evt->buf, fmt, args);
-    va_end(args);
-
-    // Check if string fits in buffer
-    // TODO: automatically blockify and inject multiple events if
-    //  buffer size exceeded
-    if (length > 0)
+    if (_isStarted)
     {
-        CLIAO::Inst().POST(evt, this);
-    }
-    else
-    {
-        // Otherwise, gc the event so it doesn't leak
-        QP::QF::gc(evt);
+        PrintEvt* evt = Q_NEW(PrintEvt, PrivateSignals::PRINT_SIG);
+
+        // Format the string using snprintf
+        va_list args;
+        va_start(args, fmt);
+        // TODO: Consider manual to string instead of relying on std
+        int length = vsnprintf(evt->buf, sizeof(evt->buf), fmt, args);
+        va_end(args);
+
+        // Check if string fits in buffer
+        // TODO: automatically blockify and inject multiple events if
+        //  buffer size exceeded
+        if (length > 0)
+        {
+            CLIAO::Inst().POST(evt, this);
+        }
+        else
+        {
+            // Otherwise, gc the event so it doesn't leak
+            QP::QF::gc(evt);
+        }
     }
 }
 

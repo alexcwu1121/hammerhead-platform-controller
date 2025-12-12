@@ -41,7 +41,7 @@ class CLIAO : public QP::QActive
     /// @brief Print formatted string to CLI
     /// @param fmt format string
     /// @param args
-    static void Printf(const char* fmt, ...);
+    void Printf(const char* fmt, ...);
 
     /// @brief Receive an incoming character
     void ReceiveChar(UART_HandleTypeDef* huart);

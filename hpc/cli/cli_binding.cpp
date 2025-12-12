@@ -37,13 +37,18 @@ void cli::onMC(EmbeddedCli *cli, char *args, void *context)
         uint32_t    motor     = strtoulS<uint32_t>(motor_str);
         uint32_t    duty      = strtoulS<uint32_t>(duty_str);
 
-        if (motor >= mc::MotorControlAO::Motor::NUM_MOTOR)
+        if (motor == 0U)
+        {
+            mc::MotorControlAO::MC1Inst().SetDuty(duty);
+        }
+        else if (motor == 1U)
+        {
+            mc::MotorControlAO::MC2Inst().SetDuty(duty);
+        }
+        else
         {
             cli::CLIAO::Inst().Printf("Motor ID must be 0-1");
-            break;
         }
-
-        mc::MotorControlAO::Inst().SetDuty((mc::MotorControlAO::Motor)motor, duty);
         break;
     }
     default:
