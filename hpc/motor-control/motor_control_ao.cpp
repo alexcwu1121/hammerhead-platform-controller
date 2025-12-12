@@ -235,6 +235,11 @@ Q_STATE_DEF(mc::MotorControlAO, error)
     {
     case Q_ENTRY_SIG:
     {
+        // Disable motor driver
+        HAL_GPIO_WritePin(_mcDevice->_mEnPort, _mcDevice->_mEnPinNum, GPIO_PIN_SET);
+        // Set duty cycle to 0
+        __HAL_TIM_SET_COMPARE(_mcDevice->_htim, _mcDevice->_htimCh, 0U);
+
         cli::CLIAO::Inst().Printf("Fault");
         status_ = Q_RET_HANDLED;
         break;
