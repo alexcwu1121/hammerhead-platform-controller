@@ -3,11 +3,16 @@
 
 #include "EEPROM_25LC256.hpp"
 #include "bsp.hpp"
+#include "hpc_parameters.hpp"
 #include "parameter.hpp"
 #include "qpcpp.hpp"
 
 namespace param
 {
+// Parameter buffer size
+#define PARAM_BUF_SIZE static_cast<uint16_t>(ParameterID::NUM_PARAMS) * sizeof(ParameterPayload)
+
+/// @brief Parameter management Active Object
 class ParamAO : public QP::QActive
 {
    public:
@@ -20,13 +25,14 @@ class ParamAO : public QP::QActive
 
     /// @brief Start ParamAO
     /// @param priority
-    void Start(const QP::QPrioSpec priority);
+    /// @param id
+    void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
     /// @brief Set the value of a parameter
-    void SetParam(ParameterID param, Type value);
+    void SetParam(ParameterID id, Type value);
 
     /// @brief Request a parameter update event
-    void RequestUpdate(ParameterID param);
+    void RequestUpdate(ParameterID id);
 
     /// @brief Commit parameter values to EEPROM
     void Commit();
@@ -34,10 +40,15 @@ class ParamAO : public QP::QActive
     /// @brief Print full parameter list to CLI
     void List();
 
+    /// @brief Print a parameter to CLI
+    void PrintParam(ParameterID id);
+
     /// @brief Reset parameter values to default
     void ResetToDefaults();
 
    private:
+    /// @brief Subsystem ID
+    bsp::SubsystemID _id;
     /// @brief Event queue size
     static constexpr uint16_t _queueSize = 128U;
     /// @brief Event queue storage
@@ -45,11 +56,11 @@ class ParamAO : public QP::QActive
     /// @brief Flag indicating if AO has executed initial transition
     bool _isStarted = false;
     /// @brief SPI receive buffer size
-    static constexpr uint16_t _rxBufSize = 1024U;
+    static constexpr uint16_t _rxBufSize = PARAM_BUF_SIZE;
     /// @brief SPI receive buffer
     uint8_t _rxBuf[_rxBufSize] = {0};
     /// @brief SPI transmit buffer size
-    static constexpr uint16_t _txBufSize = 1024U;
+    static constexpr uint16_t _txBufSize = PARAM_BUF_SIZE;
     /// @brief SPI transmit buffer
     uint8_t _txBuf[_txBufSize] = {0};
     /// @brief EEPROM driver
@@ -58,15 +69,24 @@ class ParamAO : public QP::QActive
     static constexpr uint16_t _paramBlockAddr = 0x0;
     // TODO: add maximum address of parameter block
 
+    /// @brief Print a parameter
+    /// @param id
+    void PrintParam_h(ParameterID id);
+
+    /// @brief Publish a parameter update event
+    /// @param id
+    void PublishParameterUpdated(ParameterID id);
+
    private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {
-        SET_PARAM_VALUE_SIG = bsp::MAX_PUB_SIG,
+        SET_PARAM_VALUE_SIG = bsp::PublicSignals::MAX_PUB_SIG,
         REQUEST_UPDATE_SIG,
         COMMIT_SIG,
         LIST_SIG,
         RESET_TO_DEFAULTS_SIG,
+        PRINT_PARAM_SIG,
         MAX_PRIV_SIG
     };
 
@@ -79,7 +99,7 @@ class ParamAO : public QP::QActive
     };
 
     /// @brief Request parameter update event
-    class RequestUpdateEvt : public QP::QEvt
+    class ParamIndexEvt : public QP::QEvt
     {
        public:
         ParameterID id;

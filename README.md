@@ -10,7 +10,12 @@ For interactive debugging, install cortex-debug VSCode extension and the followi
 
 TODO
 - Add IMU
-- Add first and second order motor driver slew rates
-- Add hall effect current sensors
 - Add fault LED
 - Add external i2c pullups
+- Remove flow control and power-in pins from UART and SWDIO headers
+- Decrease MC buck regulator powerup thresholds to 12V
+- Change VIN and VMIN voltage dividers to support full voltage ranges
+
+- Add first and second order motor driver slew rates
+- Add mission AO with i2c comms
+- Add unit tests

@@ -6,6 +6,7 @@
 
 #include "cli_binding.hpp"
 #include "hpc_parameters.hpp"
+#include "param_ao.hpp"
 
 // Define UART interrupt callback function to handle a received character with CLI
 extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
@@ -13,29 +14,22 @@ extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
     cli::CLIAO::Inst().ReceiveChar(huart);
 }
 
-cli::CLIAO::CLIAO()
-    : QP::QActive(&initial),
-      _processTimer(this, PrivateSignals::PROCESS_SIG, 0U),
-      _retryTimer(this, PrivateSignals::RETRY_SIG, 0U),
-      _fault(Fault::NO_FAULT)
-{
-}
+cli::CLIAO::CLIAO() : QP::QActive(&initial), _processTimer(this, PrivateSignals::PROCESS_SIG, 0U) {}
 
-void cli::CLIAO::Start(const QP::QPrioSpec priority)
+void cli::CLIAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
     this->start(priority,      // QP prio. of the AO
                 _queue,        // event queue storage
                 _queueSize,    // queue size [events]
                 nullptr, 0U);  // no stack storage
+    _id        = id;
     _isStarted = true;
 }
 
-void cli::CLIAO::ClearFault()
+void cli::CLIAO::Reset()
 {
     if (_isStarted)
     {
-        // Clear fault
-        _fault = Fault::NO_FAULT;
         static QP::QEvt evt(PrivateSignals::RESET_SIG);
         POST(&evt, this);
     }
@@ -81,6 +75,8 @@ void cli::CLIAO::ReceiveChar(UART_HandleTypeDef* huart)
 Q_STATE_DEF(cli::CLIAO, initial)
 {
     Q_UNUSED_PAR(e);
+    // Subscribe to signals
+    subscribe(bsp::PublicSignals::PARAMETER_UPDATE_SIG);
     return tran(&initializing);
 }
 
@@ -92,6 +88,36 @@ Q_STATE_DEF(cli::CLIAO, root)
     case PrivateSignals::RESET_SIG:
     {
         status_ = tran(&initializing);
+        break;
+    }
+    case bsp::PublicSignals::PARAMETER_UPDATE_SIG:
+    {
+        param::ParameterID id  = Q_EVT_CAST(bsp::ParameterUpdateEvt)->id;
+        param::Type        val = Q_EVT_CAST(bsp::ParameterUpdateEvt)->value;
+
+        // Update parameter value
+        switch (id)
+        {
+        case param::ParameterID::CLI_UPDATE_FREQ:
+        {
+            // Set new process interval
+            if (val._float32 > 0)
+            {
+                _processInterval = bsp::TICKS_PER_SEC / val._float32;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+        }
+
+        // Self-post event indicating a parameter has been updated
+        static QP::QEvt evt(PrivateSignals::PARAMS_UPDATED);
+        POST(&evt, this);
+
+        status_ = Q_RET_HANDLED;
         break;
     }
     default:
@@ -133,15 +159,12 @@ Q_STATE_DEF(cli::CLIAO, initializing)
         // CLI init failed - most likely not enough memory
         if (_cli == NULL)
         {
-            _fault = Fault::INIT_FAILED;
             static QP::QEvt evt(PrivateSignals::FAULT_SIG);
             POST(&evt, this);
         }
-        else
-        {
-            static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
-            POST(&evt, this);
-        }
+
+        // Request parameters
+        param::ParamAO::Inst().RequestUpdate(param::ParameterID::CLI_UPDATE_FREQ);
 
         status_ = Q_RET_HANDLED;
         break;
@@ -151,13 +174,23 @@ Q_STATE_DEF(cli::CLIAO, initializing)
         status_ = tran(&error);
         break;
     }
-    case PrivateSignals::INITIALIZED_SIG:
+    case PrivateSignals::PARAMS_UPDATED:
     {
-        // Add all the initial command bindings
-        InitBindings(_cli);
-        // Clear the cli
-        onClear(_cli, NULL, NULL);
-        status_ = tran(&active);
+        // Check if all parameters have been initialized
+        if (_processInterval != UINT32_MAX)
+        {
+            // Add all the initial command bindings
+            InitBindings(_cli);
+            // Clear the cli
+            onClear(_cli, NULL, NULL);
+            // Start processing
+            status_ = tran(&active);
+        }
+        else
+        {
+            // Keep waiting
+            status_ = Q_RET_HANDLED;
+        }
         break;
     }
     default:
@@ -210,6 +243,14 @@ Q_STATE_DEF(cli::CLIAO, active)
         // Call embeddedCliPrint with the formatted string
         embeddedCliPrint(_cli, Q_EVT_CAST(PrintEvt)->buf);
         status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::PARAMS_UPDATED:
+    {
+        // Rearm cli process timer
+        _processTimer.disarm();
+        _processTimer.armX(_processInterval, _processInterval);
+        status_ = super(&root);
         break;
     }
     default:

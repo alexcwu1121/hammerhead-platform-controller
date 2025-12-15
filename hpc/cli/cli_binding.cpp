@@ -1,8 +1,7 @@
 #include "cli_binding.hpp"
 
-#include <stdio.h>
-
 #include "cli_ao.hpp"
+#include "embedded_cli.h"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
 
@@ -14,60 +13,161 @@ void cli::onClear(EmbeddedCli *cli, char *args, void *context)
 void cli::onMC(EmbeddedCli *cli, char *args, void *context)
 {
     // Get number of arguments
-    uint16_t argc = embeddedCliGetTokenCount(args);
+    uint16_t argc    = embeddedCliGetTokenCount(args);
+    bool     handled = false;
 
     switch (argc)
     {
     case 1U:
     {
-        // Reset
         break;
     }
     case 2U:
     {
-        // Get fault
+        const char *cmd_str   = embeddedCliGetToken(args, 1U);
+        const char *motor_str = embeddedCliGetToken(args, 2U);
+        if (strcmp(cmd_str, "reset") == 0)
+        {
+            if (strcmp(motor_str, "all") == 0)
+            {
+                mc::MotorControlAO::MC1Inst().Reset();
+                mc::MotorControlAO::MC2Inst().Reset();
+                handled = true;
+            }
+            else
+            {
+                uint32_t motor = strtoulS<uint32_t>(motor_str);
+
+                if (motor == 0U)
+                {
+                    mc::MotorControlAO::MC1Inst().Reset();
+                    handled = true;
+                }
+                else if (motor == 1U)
+                {
+                    mc::MotorControlAO::MC2Inst().Reset();
+                    handled = true;
+                }
+            }
+        }
         break;
     }
     case 3U:
     {
-        // Set duty
-        // const char* cmd_str = embeddedCliGetToken(args, 1U);
-        const char *motor_str = embeddedCliGetToken(args, 2U);
-        const char *duty_str  = embeddedCliGetToken(args, 3U);
-        uint32_t    motor     = strtoulS<uint32_t>(motor_str);
-        uint32_t    duty      = strtoulS<uint32_t>(duty_str);
+        const char *cmd_str = embeddedCliGetToken(args, 1U);
+        if (strcmp(cmd_str, "setduty") == 0)
+        {
+            const char *motor_str = embeddedCliGetToken(args, 2U);
+            const char *duty_str  = embeddedCliGetToken(args, 3U);
+            uint32_t    duty      = strtoulS<uint32_t>(duty_str);
 
-        if (motor == 0U)
-        {
-            mc::MotorControlAO::MC1Inst().SetDuty(duty);
+            if (strcmp(motor_str, "all") == 0)
+            {
+                mc::MotorControlAO::MC1Inst().SetDuty(duty);
+                mc::MotorControlAO::MC2Inst().SetDuty(duty);
+                handled = true;
+            }
+            else
+            {
+                uint32_t motor = strtoulS<uint32_t>(motor_str);
+
+                if (motor == 0U)
+                {
+                    mc::MotorControlAO::MC1Inst().SetDuty(duty);
+                    handled = true;
+                }
+                else if (motor == 1U)
+                {
+                    mc::MotorControlAO::MC2Inst().SetDuty(duty);
+                    handled = true;
+                }
+            }
         }
-        else if (motor == 1U)
+        else if (strcmp(cmd_str, "setdir") == 0)
         {
-            mc::MotorControlAO::MC2Inst().SetDuty(duty);
+            const char *motor_str = embeddedCliGetToken(args, 2U);
+            const char *dir_str   = embeddedCliGetToken(args, 3U);
+            mc::Dir     dir       = static_cast<mc::Dir>(strtoulS<uint32_t>(dir_str));
+
+            if (strcmp(motor_str, "all") == 0)
+            {
+                mc::MotorControlAO::MC1Inst().SetDir(dir);
+                mc::MotorControlAO::MC2Inst().SetDir(dir);
+                handled = true;
+            }
+            else
+            {
+                uint32_t motor = strtoulS<uint32_t>(motor_str);
+
+                if (motor == 0U)
+                {
+                    mc::MotorControlAO::MC1Inst().SetDir(dir);
+                    handled = true;
+                }
+                else if (motor == 1U)
+                {
+                    mc::MotorControlAO::MC2Inst().SetDir(dir);
+                    handled = true;
+                }
+            }
         }
-        else
+        else if (strcmp(cmd_str, "setrate") == 0)
         {
-            cli::CLIAO::Inst().Printf("Motor ID must be 0-1");
+            const char *motor_str = embeddedCliGetToken(args, 2U);
+            const char *rate_str  = embeddedCliGetToken(args, 3U);
+            float       rate      = strtofS(rate_str);
+
+            if (strcmp(motor_str, "all") == 0)
+            {
+                mc::MotorControlAO::MC1Inst().SetRate(rate);
+                mc::MotorControlAO::MC2Inst().SetRate(rate);
+                handled = true;
+            }
+            else
+            {
+                uint32_t motor = strtoulS<uint32_t>(motor_str);
+
+                if (motor == 0U)
+                {
+                    mc::MotorControlAO::MC1Inst().SetRate(rate);
+                    handled = true;
+                }
+                else if (motor == 1U)
+                {
+                    mc::MotorControlAO::MC2Inst().SetRate(rate);
+                    handled = true;
+                }
+            }
         }
         break;
     }
     default:
     {
+        break;
+    }
+    }
+
+    if (!handled)
+    {
         // Help dialogue
         cli::CLIAO::Inst().Printf(
             "Usage:\n\r"
-            "\tmc setduty [Motor ID (0-1)] [Duty (0-1023)]\n\r"
-            "\tmc getfault [Motor ID (0-1)]\n\r"
-            "\tmc reset\n\r");
-        break;
-    }
+            "\tmc setdir all [Dir (0|1)] --- 0==CW, 1==CCW\n\r"
+            "\tmc setdir [Motor ID (0 |1)] [Dir (0|1)] --- 0==CW, 1==CCW\n\r"
+            "\tmc setduty all [Duty (0<=val<=1023)]\n\r"
+            "\tmc setduty [Motor ID (0|1)] [Duty (0<=val<=1023)]\n\r"
+            "\tmc setrate all [Rate (-1.0<=val<=1.0)]\n\r"
+            "\tmc setrate [Motor ID (0|1)] [Rate (-1.0<=val<=1.0)]\n\r"
+            "\tmc reset all\n\r"
+            "\tmc reset [MotorID (0|1)]\n\r");
     }
 }
 
 void cli::onParam(EmbeddedCli *cli, char *args, void *context)
 {
     // Get number of arguments
-    uint16_t argc = embeddedCliGetTokenCount(args);
+    uint16_t argc    = embeddedCliGetTokenCount(args);
+    bool     handled = false;
 
     switch (argc)
     {
@@ -77,14 +177,17 @@ void cli::onParam(EmbeddedCli *cli, char *args, void *context)
         if (strcmp(cmd_str, "list") == 0)
         {
             param::ParamAO::Inst().List();
+            handled = true;
         }
         else if (strcmp(cmd_str, "commit") == 0)
         {
             param::ParamAO::Inst().Commit();
+            handled = true;
         }
         else if (strcmp(cmd_str, "reset-to-defaults") == 0)
         {
             param::ParamAO::Inst().ResetToDefaults();
+            handled = true;
         }
         break;
     }
@@ -93,6 +196,11 @@ void cli::onParam(EmbeddedCli *cli, char *args, void *context)
         const char *cmd_str = embeddedCliGetToken(args, 1U);
         if (strcmp(cmd_str, "get") == 0)
         {
+            const char        *id_str = embeddedCliGetToken(args, 2U);
+            param::ParameterID id     = static_cast<param::ParameterID>(strtoulS<uint8_t>(id_str));
+            param::ParamAO::Inst().PrintParam(id);
+
+            handled = true;
         }
         break;
     }
@@ -105,89 +213,91 @@ void cli::onParam(EmbeddedCli *cli, char *args, void *context)
             const char        *value_str = embeddedCliGetToken(args, 3U);
             param::ParameterID id = static_cast<param::ParameterID>(strtoulS<uint8_t>(id_str));
             param::TypeID      type;
-            param::Fault       fault = param::ParameterList::Inst().GetType(id, type);
+            // Parameter types should never be modified at runtime
+            param::Fault fault = param::ParameterList::Inst().GetType(id, type);
             if (fault != param::Fault::NO_FAULT)
             {
-                // TODO: handle
+                cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
                 break;
             }
 
+            // Set value
+            param::Type val;
             switch (type)
             {
             case param::TypeID::FLOAT32:
             {
-                float val;
-                val = strtofS(value_str);
-                // TODO: handle
-                param::Fault fault = param::ParameterList::Inst().Set(id, val);
+                val._float32 = strtofS(value_str);
+                param::ParamAO::Inst().SetParam(id, val);
                 break;
             }
             case param::TypeID::UINT8:
             {
-                uint8_t val;
-                val = strtoulS<uint8_t>(value_str);
-                // TODO: handle
-                param::Fault fault = param::ParameterList::Inst().Set(id, val);
+                val._uint8 = strtoulS<uint8_t>(value_str);
+                param::ParamAO::Inst().SetParam(id, val);
                 break;
             }
             case param::TypeID::UINT16:
             {
-                uint16_t val;
-                val = strtoulS<uint16_t>(value_str);
-                // TODO: handle
-                param::Fault fault = param::ParameterList::Inst().Set(id, val);
+                val._uint16 = strtoulS<uint16_t>(value_str);
+                param::ParamAO::Inst().SetParam(id, val);
                 break;
             }
             case param::TypeID::UINT32:
             {
-                uint32_t val;
-                val = strtoulS<uint32_t>(value_str);
-                // TODO: handle
-                param::Fault fault = param::ParameterList::Inst().Set(id, val);
+                val._uint32 = strtoulS<uint32_t>(value_str);
+                param::ParamAO::Inst().SetParam(id, val);
                 break;
             }
             case param::TypeID::INT8:
             {
-                int8_t val;
-                val = strtolS<int8_t>(value_str);
-                // TODO: handle
-                param::Fault fault = param::ParameterList::Inst().Set(id, val);
+                val._int8 = strtolS<int8_t>(value_str);
+                param::ParamAO::Inst().SetParam(id, val);
                 break;
             }
             case param::TypeID::INT16:
             {
-                int16_t val;
-                val = strtolS<int16_t>(value_str);
-                // TODO: handle
-                param::Fault fault = param::ParameterList::Inst().Set(id, val);
+                val._int16 = strtolS<int16_t>(value_str);
+                param::ParamAO::Inst().SetParam(id, val);
                 break;
             }
             case param::TypeID::INT32:
             {
-                int32_t val;
-                val = strtolS<int32_t>(value_str);
-                // TODO: handle
-                param::Fault fault = param::ParameterList::Inst().Set(id, val);
+                val._int32 = strtolS<int32_t>(value_str);
+                param::ParamAO::Inst().SetParam(id, val);
                 break;
             }
             default:
+            {
                 break;
             }
+            }
+
+            if (fault != param::Fault::NO_FAULT)
+            {
+                cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+            }
+
+            handled = true;
         }
         break;
     }
     default:
     {
+        break;
+    }
+    }
+
+    if (!handled)
+    {
         // Help dialogue
-        // TODO: separate into function and run on every invalid command
         cli::CLIAO::Inst().Printf(
             "Usage:\n\r"
             "\tparam list\n\r"
             "\tparam commit\n\r"
             "\tparam reset-to-defaults\n\r"
-            "\tparam set <id> <value>\n\r");
-        break;
-    }
+            "\tparam set [id] [value]\n\r"
+            "\tparam get [id]\n\r");
     }
 }
 

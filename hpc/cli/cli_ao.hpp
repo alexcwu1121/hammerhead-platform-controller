@@ -27,17 +27,13 @@ class CLIAO : public QP::QActive
 
     /// @brief Start CLIAO
     /// @param priority
-    void Start(const QP::QPrioSpec priority);
+    /// @param id
+    void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
-    /// @brief Get active fault
-    Fault GetFault() const
-    {
-        return _fault;
-    }
+    /// @brief Reinitialize and attempt to clear faults
+    void Reset();
 
-    /// @brief Attempt to clear fault and reinitialize
-    void ClearFault();
-
+    // TODO: wrap in removable macro for release-no-debug builds
     /// @brief Print formatted string to CLI
     /// @param fmt format string
     /// @param args
@@ -47,6 +43,8 @@ class CLIAO : public QP::QActive
     void ReceiveChar(UART_HandleTypeDef* huart);
 
    private:
+    /// @brief Subsystem ID
+    bsp::SubsystemID _id;
     /// @brief CLI total memory size
     static constexpr uint16_t _cliBufSize = 1048U;
     /// @brief CLI receive buffer size
@@ -58,7 +56,7 @@ class CLIAO : public QP::QActive
     /// @brief Maximum number of CLI bindings
     static constexpr uint16_t _cliMaxBindingCount = 32U;
     /// @brief Maximum size of string to print
-    static constexpr uint16_t _cliPrintBufSize = 240U;
+    static constexpr uint16_t _cliPrintBufSize = 500U;
     /// @brief UART Rx buffer size (one char at a time)
     static constexpr uint16_t _uartRxBufSize = 1U;
     /// @brief CLI memory buffer
@@ -69,35 +67,28 @@ class CLIAO : public QP::QActive
     static constexpr UART_HandleTypeDef* _uartCliPeriph = &huart1;
     /// @brief Ptr to embedded CLI instance
     EmbeddedCli* _cli;
-
     /// @brief Event queue size
     static constexpr uint16_t _queueSize = 128U;
     /// @brief Event queue storage
     QP::QEvtPtr _queue[_queueSize] = {0};
-    /// @brief CLI process interval in ticks
-    static constexpr uint32_t _processInterval = bsp::TICKS_PER_SEC / 50;
-    /// @brief CLI recovery retry interval in ticks
-    static constexpr uint32_t _retryInterval = bsp::TICKS_PER_SEC;
     /// @brief Flag indicating if AO has executed initial transition
     bool _isStarted = false;
     /// @brief CLI process timed event
     QP::QTimeEvt _processTimer;
-    /// @brief Retry timed event
-    QP::QTimeEvt _retryTimer;
-    /// @brief Last fault
-    Fault _fault;
+    /// @brief CLI process interval in ticks
+    uint32_t _processInterval = UINT32_MAX;
 
    private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {
-        INITIALIZED_SIG = bsp::MAX_PUB_SIG,
+        INITIALIZED_SIG = bsp::PublicSignals::MAX_PUB_SIG,
         FAULT_SIG,
         RESET_SIG,
         PRINT_SIG,
         RX_CHAR_SIG,
         PROCESS_SIG,
-        RETRY_SIG,
+        PARAMS_UPDATED,
         MAX_PRIV_SIG
     };
 

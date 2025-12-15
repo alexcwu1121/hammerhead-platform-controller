@@ -95,7 +95,7 @@ class ParameterList
     }
 
     /// @brief Maximum number of parameters this list can hold
-    static constexpr ParamIndex maxParameters = 256U;
+    static constexpr ParamIndex maxParameters = 128U;
 
     /// @brief Register a parameter
     /// @param param
@@ -272,9 +272,9 @@ struct ParameterPayload
 struct Parameter : ParameterPayload
 {
     /// @brief Maximum parameter name size
-    static constexpr uint16_t maxParamNameSize = 256U;
+    static constexpr uint16_t maxParamNameSize = 64U;
     /// @brief Maximum parameter description size
-    static constexpr uint16_t maxParamDescSize = 256U;
+    static constexpr uint16_t maxParamDescSize = 128U;
 
     /// @brief Default parameter value
     Type defaultValue;

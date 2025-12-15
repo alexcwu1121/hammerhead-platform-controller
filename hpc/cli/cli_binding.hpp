@@ -1,9 +1,7 @@
 #ifndef INC_CLI_BINDING_H_
 #define INC_CLI_BINDING_H_
 
-#include <stdlib.h>
-
-#include "embedded_cli.h"
+class EmbeddedCli;
 
 namespace cli
 {

@@ -5,9 +5,6 @@ add_library(hal OBJECT)
 target_include_directories(hal
     PUBLIC
         Core/Inc
-        #Middlewares/Third_Party/FreeRTOS/Source/include
-        #Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
-        #Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3
         Drivers/STM32F1xx_HAL_Driver/Inc
         Drivers/STM32F1xx_HAL_Driver/Inc/Legacy
         Drivers/CMSIS/Device/ST/STM32F1xx/Include
@@ -16,6 +13,7 @@ target_include_directories(hal
 target_sources(hal
     PRIVATE
         Core/Src/adc.c
+        Core/Src/dma.c
         Core/Src/gpio.c
         Core/Src/i2c.c
         Core/Src/spi.c
@@ -26,16 +24,6 @@ target_sources(hal
         Core/Src/system_stm32f1xx.c
         Core/Src/tim.c
         Core/Src/usart.c
-        #Middlewares/Third_Party/FreeRTOS/Source/croutine.c
-        #Middlewares/Third_Party/FreeRTOS/Source/event_groups.c
-        #Middlewares/Third_Party/FreeRTOS/Source/list.c
-        #Middlewares/Third_Party/FreeRTOS/Source/queue.c
-        #Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c
-        #Middlewares/Third_Party/FreeRTOS/Source/tasks.c
-        #Middlewares/Third_Party/FreeRTOS/Source/timers.c
-        #Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c
-        #Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
-        #Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c
         Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c
         Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_adc.c
         Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_adc_ex.c

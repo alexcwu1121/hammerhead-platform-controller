@@ -1,6 +1,8 @@
 #ifndef MC_AO_HPP_
 #define MC_AO_HPP_
 
+#include <limits>
+
 #include "bsp.hpp"
 #include "gpio.h"
 #include "qpcpp.hpp"
@@ -12,9 +14,17 @@ namespace mc
 /// @brief Fault codes
 enum Fault : uint8_t
 {
-    NO_FAULT,
-    GROUND_FAULT,
-    OVERCURRENT_THERMAL_FAULT
+    UNDERVOLTAGE_FAULT,
+    OVERVOLTAGE_FAULT,
+    OVERCURRENT_THERMAL_FAULT,
+    NUM_FAULTS
+};
+
+/// @brief Motor direction
+enum Dir : uint8_t
+{
+    CW,
+    CCW
 };
 
 struct MotorControllerDevice;
@@ -36,39 +46,83 @@ class MotorControlAO : public QP::QActive
 
     /// @brief Start MCAO
     /// @param priority
-    void Start(const QP::QPrioSpec priority);
+    /// @param id
+    void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
-    /// @brief Set PWM duty cycle for a motor (0-1023)
+    /// @brief Reinitialize and attempt to clear faults
+    void Reset();
+
+    /// @brief Set direction
+    /// @param dir
+    void SetDir(Dir dir);
+
+    /// @brief Set PWM duty cycle (0 <= duty <= 1023)
+    /// @param duty
     void SetDuty(uint16_t duty);
+
+    /// @brief Set an angular rate (-1.0 <= rate <= 1.0)
+    /// @param rate
+    void SetRate(float rate);
 
     /// @brief Handle motor controller fault interrupt
     void FaultIT();
 
    private:
+    /// @brief Subsystem ID
+    bsp::SubsystemID _id;
     /// @brief Event queue size
     static constexpr uint16_t _queueSize = 128U;
     /// @brief Event queue storage
     QP::QEvtPtr _queue[_queueSize] = {0};
     /// @brief Flag indicating if AO has executed initial transition
     bool _isStarted = false;
-    /// @brief Ground fault detection probe duty cycle, (0-1023)
-    static constexpr uint16_t _groundFaultDuty = 1U;
-    /// @brief Ground fault detection lower threshold, Volts
-    static constexpr float _groundFaultVoltage = 5.0f;
-    /// @brief Last fault
-    mc::Fault _fault;
-    /// @brief Motor controller device properties
+    /// @brief Motor controller device specific properties
     MotorControllerDevice* _mcDevice;
+    /// @brief First order slew rate
+    float _firstOrderSlew = std::numeric_limits<float>::max();
+    /// @brief Second order slew rate
+    float _secondOrderSlew = std::numeric_limits<float>::max();
+    /// @brief Motor input undervoltage threshold
+    float _underVoltageThreshold = -std::numeric_limits<float>::max();
+    /// @brief Motor input overvoltage threshold
+    float _overVoltageThreshold = std::numeric_limits<float>::max();
+    /// @brief Last measured motor input voltage
+    float _vmIn = -std::numeric_limits<float>::max();
+    /// @brief Fault states
+    bool _faultStates[mc::Fault::NUM_FAULTS] = {false};
+    /// @brief Fault recovery timer
+    QP::QTimeEvt _faultRecoveryTimer;
+    /// @brief Fault recovery timer period in ticks
+    uint32_t _faultRecoveryTimerInterval = bsp::TICKS_PER_SEC / 100;
+
+    /// @brief Check fault conditions and update fault states
+    void UpdateFaults();
+
+    /// @brief Check if there exist active faults
+    bool IsActiveFaults();
+
+    /// @brief Check if initialized
+    bool IsInitialized();
+
+    // TODO: rate control
+    // TODO: first and second order slew rates
+    // TODO: print state, including driver voltage
+    // TODO: start stream motor states
+    // TODO: print fault states
 
    private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {
-        INITIALIZED_SIG = bsp::MAX_PUB_SIG,
-        FAULT_SIG,
+        FAULT_SIG = bsp::PublicSignals::MAX_PUB_SIG,
         FAULT_IT_SIG,
         RESET_SIG,
+        SET_DIR_SIG,
         SET_DUTY_SIG,
+        SET_RATE_SIG,
+        PARAMS_UPDATED_SIG,
+        VM_UPDATED_SIG,
+        FAULT_RECOVERY_SIG,
         MAX_PRIV_SIG
     };
 
@@ -78,6 +132,22 @@ class MotorControlAO : public QP::QActive
        public:
         SetDutyEvt(QP::QSignal sig) : QP::QEvt(sig) {}
         uint16_t duty;
+    };
+
+    /// @brief Set direction evt
+    class SetDirEvt : public QP::QEvt
+    {
+       public:
+        SetDirEvt(QP::QSignal sig) : QP::QEvt(sig) {}
+        Dir dir;
+    };
+
+    /// @brief Set rate evt
+    class SetRateEvt : public QP::QEvt
+    {
+       public:
+        SetRateEvt(QP::QSignal sig) : QP::QEvt(sig) {}
+        float rate;
     };
 
     /// @brief Initial state
