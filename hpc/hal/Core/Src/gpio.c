@@ -66,7 +66,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin : P_M1_FAULT_Pin */
   GPIO_InitStruct.Pin = P_M1_FAULT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(P_M1_FAULT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : P_M2_EN_Pin P_EEPROM_CS_Pin P_SPARE_GPIO_2_Pin P_SPARE_GPIO_3_Pin
@@ -81,7 +81,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin : P_M2_FAULT_Pin */
   GPIO_InitStruct.Pin = P_M2_FAULT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(P_M2_FAULT_GPIO_Port, &GPIO_InitStruct);
 
 }

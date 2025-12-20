@@ -21,7 +21,7 @@ constexpr uint16_t NUM_ADC_SAMPLES = 8U;
 /// @brief Period at which ADC publishes QP events in # conversions
 constexpr uint16_t ADC_PUBLISH_PERIOD = 200U;
 /// @brief ADC IIR filter learning rate
-constexpr float ADC_IIR_ALPHA = 0.05f;
+constexpr float ADC_IIR_ALPHA = 0.1f;
 
 /// @brief ADC Channels
 enum ADCChannels : uint8_t

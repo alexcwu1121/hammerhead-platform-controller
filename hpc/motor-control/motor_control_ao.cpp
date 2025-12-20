@@ -94,7 +94,8 @@ static MotorControllerDevice mc2Device = {._mEnPort        = P_M2_EN_GPIO_Port,
 mc::MotorControlAO::MotorControlAO(MotorControllerDevice* mcDevice)
     : QP::QActive(&initial),
       _mcDevice(mcDevice),
-      _faultRecoveryTimer(this, PrivateSignals::FAULT_RECOVERY_SIG, 0U)
+      _faultRecoveryTimer(this, PrivateSignals::FAULT_RECOVERY_SIG, 0U),
+      _rateControlTimer(this, PrivateSignals::RATE_CONTROL_UPDATE_SIG, 0U)
 {
 }
 
@@ -240,8 +241,8 @@ bool mc::MotorControlAO::IsInitialized()
     // Received at least one ADC measurement
     // No faults
     // Parameters initialized
-    return _firstOrderSlew != std::numeric_limits<float>::max()
-           && _secondOrderSlew != std::numeric_limits<float>::max()
+    return _rateStiffness != std::numeric_limits<float>::max()
+           && _rateDamping != std::numeric_limits<float>::max()
            && _underVoltageThreshold != -std::numeric_limits<float>::max()
            && _overVoltageThreshold != std::numeric_limits<float>::max() && !IsActiveFaults()
            && _vmIn != -std::numeric_limits<float>::max();
@@ -264,24 +265,6 @@ Q_STATE_DEF(mc::MotorControlAO, root)
     case PrivateSignals::RESET_SIG:
     {
         status_ = tran(&initializing);
-        break;
-    }
-    case PrivateSignals::FAULT_SIG:
-    {
-        // Update fault conditions
-        UpdateFaults();
-
-        // Transition to error
-        status_ = tran(&error);
-        break;
-    }
-    case PrivateSignals::FAULT_IT_SIG:
-    {
-        // Update fault conditions
-        UpdateFaults();
-
-        // Transition to error
-        status_ = tran(&error);
         break;
     }
     case bsp::PublicSignals::ADC_SIG:
@@ -315,27 +298,36 @@ Q_STATE_DEF(mc::MotorControlAO, root)
         // Update parameter value
         switch (id)
         {
-        case param::ParameterID::MC_1O_ORDER_SLEW_RATE:
+        case param::ParameterID::MC_PWM_DEADBAND:
         {
-            // Set first order slew rate
-            if (val._float32 > 0)
+            // Set lower pwm deadband
+            if (val._uint16 < _fsr)
             {
-                _firstOrderSlew = val._float32;
+                _pwmLowerDeadband = val._uint16;
             }
             break;
         }
-        case param::ParameterID::MC_2O_ORDER_SLEW_RATE:
+        case param::ParameterID::MC_RATE_STIFFNESS:
         {
-            /// Set second order slew rate
-            if (val._float32 > 0)
+            // Set rate control stiffness
+            if (val._float32 >= 0)
             {
-                _secondOrderSlew = val._float32;
+                _rateStiffness = val._float32;
+            }
+            break;
+        }
+        case param::ParameterID::MC_RATE_DAMPING:
+        {
+            // Set rate control damping
+            if (val._float32 >= 0)
+            {
+                _rateDamping = val._float32;
             }
             break;
         }
         case param::ParameterID::MC_UNDERVOLTAGE_FAULT_THRESHOLD:
         {
-            /// Set undervoltage fault threshold
+            // Set undervoltage fault threshold
             if (val._float32 > 0)
             {
                 _underVoltageThreshold = val._float32;
@@ -344,7 +336,7 @@ Q_STATE_DEF(mc::MotorControlAO, root)
         }
         case param::ParameterID::MC_OVERVOLTAGE_FAULT_THRESHOLD:
         {
-            /// Set overvoltage fault threshold
+            // Set overvoltage fault threshold
             if (val._float32 > 0)
             {
                 _overVoltageThreshold = val._float32;
@@ -401,8 +393,9 @@ Q_STATE_DEF(mc::MotorControlAO, initializing)
         HAL_GPIO_WritePin(_mcDevice->_mEnPort, _mcDevice->_mEnPinNum, GPIO_PIN_RESET);
 
         // Request parameters
-        param::ParamAO::Inst().RequestUpdate(param::ParameterID::MC_1O_ORDER_SLEW_RATE);
-        param::ParamAO::Inst().RequestUpdate(param::ParameterID::MC_2O_ORDER_SLEW_RATE);
+        param::ParamAO::Inst().RequestUpdate(param::ParameterID::MC_PWM_DEADBAND);
+        param::ParamAO::Inst().RequestUpdate(param::ParameterID::MC_RATE_STIFFNESS);
+        param::ParamAO::Inst().RequestUpdate(param::ParameterID::MC_RATE_DAMPING);
         param::ParamAO::Inst().RequestUpdate(param::ParameterID::MC_UNDERVOLTAGE_FAULT_THRESHOLD);
         param::ParamAO::Inst().RequestUpdate(param::ParameterID::MC_OVERVOLTAGE_FAULT_THRESHOLD);
 
@@ -438,6 +431,38 @@ Q_STATE_DEF(mc::MotorControlAO, active)
     QP::QState status_;
     switch (e->sig)
     {
+    case Q_ENTRY_SIG:
+    {
+        // Arm rate control timer
+        _rateControlTimer.armX(_rateControlTimerInterval, _rateControlTimerInterval);
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case Q_EXIT_SIG:
+    {
+        // Disarm rate control timer
+        _rateControlTimer.disarm();
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::FAULT_SIG:
+    {
+        // Update fault conditions
+        UpdateFaults();
+
+        // Transition to error
+        status_ = tran(&error);
+        break;
+    }
+    case PrivateSignals::FAULT_IT_SIG:
+    {
+        // Update fault conditions
+        UpdateFaults();
+
+        // Transition to error
+        status_ = tran(&error);
+        break;
+    }
     case PrivateSignals::SET_DIR_SIG:
     {
         Dir dir = Q_EVT_CAST(SetDirEvt)->dir;
@@ -455,8 +480,31 @@ Q_STATE_DEF(mc::MotorControlAO, active)
     }
     case PrivateSignals::SET_RATE_SIG:
     {
-        // float rate = Q_EVT_CAST(SetRateEvt)->rate;
-
+        // Update reference rate
+        float new_rate = Q_EVT_CAST(SetRateEvt)->rate;
+        if (std::abs(new_rate) <= 1.0f)
+        {
+            _refRate = new_rate;
+        }
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::RATE_CONTROL_UPDATE_SIG:
+    {
+        // Compute rate acceleration
+        float rate_ddt = -_rateStiffness * (_currentRate - _refRate) - _rateDamping * _currentDRate;
+        // Integrate
+        _currentDRate += rate_ddt;
+        _currentRate += _currentDRate;
+        // Convert current rate to PWM duty cycle and direction
+        uint16_t duty =
+            static_cast<uint16_t>(std::abs(_currentRate) * float(_fsr - _pwmLowerDeadband))
+            + _pwmLowerDeadband;
+        // Set duty cycle
+        __HAL_TIM_SET_COMPARE(_mcDevice->_htim, _mcDevice->_htimCh, duty);
+        // Set direction
+        HAL_GPIO_WritePin(_mcDevice->_mDirPort, _mcDevice->_mDirPinNum,
+                          static_cast<GPIO_PinState>(_currentRate > _eps));
         status_ = Q_RET_HANDLED;
         break;
     }
@@ -476,6 +524,9 @@ Q_STATE_DEF(mc::MotorControlAO, error)
     {
     case Q_ENTRY_SIG:
     {
+        // Reset states
+        _currentRate  = 0.0f;
+        _currentDRate = 0.0f;
         // Disable motor driver
         HAL_GPIO_WritePin(_mcDevice->_mEnPort, _mcDevice->_mEnPinNum, GPIO_PIN_SET);
         // Set duty cycle to 0

@@ -78,10 +78,12 @@ class MotorControlAO : public QP::QActive
     bool _isStarted = false;
     /// @brief Motor controller device specific properties
     MotorControllerDevice* _mcDevice;
-    /// @brief First order slew rate
-    float _firstOrderSlew = std::numeric_limits<float>::max();
-    /// @brief Second order slew rate
-    float _secondOrderSlew = std::numeric_limits<float>::max();
+    /// @brief PWM lower deadband
+    uint16_t _pwmLowerDeadband = 0U;
+    /// @brief Rate control stiffness
+    float _rateStiffness = std::numeric_limits<float>::max();
+    /// @brief Rate control damping
+    float _rateDamping = std::numeric_limits<float>::max();
     /// @brief Motor input undervoltage threshold
     float _underVoltageThreshold = -std::numeric_limits<float>::max();
     /// @brief Motor input overvoltage threshold
@@ -93,7 +95,21 @@ class MotorControlAO : public QP::QActive
     /// @brief Fault recovery timer
     QP::QTimeEvt _faultRecoveryTimer;
     /// @brief Fault recovery timer period in ticks
-    uint32_t _faultRecoveryTimerInterval = bsp::TICKS_PER_SEC / 100;
+    uint32_t _faultRecoveryTimerInterval = bsp::TICKS_PER_SEC / 100U;
+    /// @brief Rate control timer
+    QP::QTimeEvt _rateControlTimer;
+    /// @brief Rate control timer period in ticks
+    uint32_t _rateControlTimerInterval = bsp::TICKS_PER_SEC / 1000U;
+    /// @brief Reference rate
+    float _refRate = {0.0f};
+    /// @brief Current rate
+    float _currentRate = {0.0f};
+    /// @brief Current rate differential
+    float _currentDRate = {0.0f};
+    /// @brief Current rate directional epsilon
+    static constexpr float _eps = {0.0001f};
+    /// @brief PWM duty cycle full scale range
+    static constexpr uint16_t _fsr = {1023U};
 
     /// @brief Check fault conditions and update fault states
     void UpdateFaults();
@@ -123,6 +139,7 @@ class MotorControlAO : public QP::QActive
         PARAMS_UPDATED_SIG,
         VM_UPDATED_SIG,
         FAULT_RECOVERY_SIG,
+        RATE_CONTROL_UPDATE_SIG,
         MAX_PRIV_SIG
     };
 

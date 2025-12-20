@@ -2,28 +2,24 @@
 
 namespace param
 {
-DEFINE_PARAMETER(param::ParameterID::M1_PWM_DEADBAND, param::TypeID::UINT16,
-                 param::Type{._uint16 = 200U}, "M1_PWM_DEADBAND",
-                 "Motor 1 PWM lower-end deadband (0<=val<=1023)")
+DEFINE_PARAMETER(param::ParameterID::MC_PWM_DEADBAND, param::TypeID::UINT16,
+                 param::Type{._uint16 = 75U}, "MC_PWM_DEADBAND",
+                 "Motor controller PWM lower-end deadband (0<=val<=1023)")
 
-DEFINE_PARAMETER(param::ParameterID::M2_PWM_DEADBAND, param::TypeID::UINT16,
-                 param::Type{._uint16 = 200U}, "M2_PWM_DEADBAND",
-                 "Motor 2 PWM lower-end deadband (0<=val<=1023)");
+DEFINE_PARAMETER(param::ParameterID::MC_RATE_STIFFNESS, param::TypeID::FLOAT32,
+                 param::Type{._float32 = 0.001f}, "MC_RATE_STIFFNESS",
+                 "Motor controller rate control stiffness (0.0<=val<=inf)");
 
-DEFINE_PARAMETER(param::ParameterID::MC_1O_ORDER_SLEW_RATE, param::TypeID::FLOAT32,
-                 param::Type{._float32 = 0.1f}, "MC_1O_ORDER_SLEW_RATE",
-                 "Motor controller first order slew rate (0.0<=val<=inf)");
-
-DEFINE_PARAMETER(param::ParameterID::MC_2O_ORDER_SLEW_RATE, param::TypeID::FLOAT32,
-                 param::Type{._float32 = 0.1f}, "MC_2O_ORDER_SLEW_RATE",
-                 "Motor controller second order slew rate (0.0<=val<=inf)");
+DEFINE_PARAMETER(param::ParameterID::MC_RATE_DAMPING, param::TypeID::FLOAT32,
+                 param::Type{._float32 = 0.05f}, "MC_RATE_DAMPING",
+                 "Motor controller rate control damping (0.0<=val<=inf)");
 
 DEFINE_PARAMETER(param::ParameterID::MC_UNDERVOLTAGE_FAULT_THRESHOLD, param::TypeID::FLOAT32,
-                 param::Type{._float32 = 11.0f}, "MC_UNDERVOLTAGE_FAULT_THRESHOLD",
+                 param::Type{._float32 = 10.0f}, "MC_UNDERVOLTAGE_FAULT_THRESHOLD",
                  "Motor controller undervoltage threshold (V)");
 
 DEFINE_PARAMETER(param::ParameterID::MC_OVERVOLTAGE_FAULT_THRESHOLD, param::TypeID::FLOAT32,
-                 param::Type{._float32 = 13.0f}, "MC_OVERVOLTAGE_FAULT_THRESHOLD",
+                 param::Type{._float32 = 14.0f}, "MC_OVERVOLTAGE_FAULT_THRESHOLD",
                  "Motor controller overvoltage threshold (V)");
 
 DEFINE_PARAMETER(param::ParameterID::BATTERY_DISCHARGE_CURVE_C0, param::TypeID::FLOAT32,
