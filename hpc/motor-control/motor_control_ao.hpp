@@ -27,6 +27,13 @@ enum Dir : uint8_t
     CCW
 };
 
+/// @brief Motor control mode
+enum Mode : uint8_t
+{
+    DUTY,
+    RATE
+};
+
 struct MotorControllerDevice;
 /// @brief Motor Control AO
 class MotorControlAO : public QP::QActive
@@ -63,6 +70,10 @@ class MotorControlAO : public QP::QActive
     /// @brief Set an angular rate (-1.0 <= rate <= 1.0)
     /// @param rate
     void SetRate(float rate);
+
+    /// @brief Set motor control mode
+    /// @param mode
+    void SetMode(Mode mode);
 
     /// @brief Handle motor controller fault interrupt
     void FaultIT();
@@ -110,6 +121,8 @@ class MotorControlAO : public QP::QActive
     static constexpr float _eps = {0.0001f};
     /// @brief PWM duty cycle full scale range
     static constexpr uint16_t _fsr = {1023U};
+    /// @brief Motor control mode
+    Mode _mode = Mode::RATE;
 
     /// @brief Check fault conditions and update fault states
     void UpdateFaults();
@@ -136,6 +149,7 @@ class MotorControlAO : public QP::QActive
         SET_DIR_SIG,
         SET_DUTY_SIG,
         SET_RATE_SIG,
+        SET_MODE_SIG,
         PARAMS_UPDATED_SIG,
         VM_UPDATED_SIG,
         FAULT_RECOVERY_SIG,
@@ -167,14 +181,24 @@ class MotorControlAO : public QP::QActive
         float rate;
     };
 
+    /// @brief Set mode evt
+    class SetModeEvt : public QP::QEvt
+    {
+       public:
+        SetModeEvt(QP::QSignal sig) : QP::QEvt(sig) {}
+        Mode mode;
+    };
+
     /// @brief Initial state
     Q_STATE_DECL(initial);
     /// @brief Root state
     Q_STATE_DECL(root);
     /// @brief Initialize
     Q_STATE_DECL(initializing);
-    /// @brief Process CLI events
-    Q_STATE_DECL(active);
+    /// @brief Active direct duty cycle control
+    Q_STATE_DECL(active_duty);
+    /// @brief Active rate control
+    Q_STATE_DECL(active_rate);
     /// @brief Fault
     Q_STATE_DECL(error);
 };  // class MotorControlAO

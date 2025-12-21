@@ -15,7 +15,7 @@ TODO
 - Remove flow control and power-in pins from UART and SWDIO headers
 - Decrease MC buck regulator powerup thresholds to 12V
 - Change VIN and VMIN voltage dividers to support full voltage ranges
+- Add bottom-side testpoints
 
-- Add first and second order motor driver slew rates
 - Add mission AO with i2c comms
 - Add unit tests

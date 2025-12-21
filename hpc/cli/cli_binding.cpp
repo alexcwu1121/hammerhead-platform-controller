@@ -55,7 +55,35 @@ void cli::onMC(EmbeddedCli *cli, char *args, void *context)
     case 3U:
     {
         const char *cmd_str = embeddedCliGetToken(args, 1U);
-        if (strcmp(cmd_str, "setduty") == 0)
+        if (strcmp(cmd_str, "setmode") == 0)
+        {
+            const char *motor_str = embeddedCliGetToken(args, 2U);
+            const char *mode_str  = embeddedCliGetToken(args, 3U);
+            mc::Mode    mode      = static_cast<mc::Mode>(strtoulS<uint32_t>(mode_str));
+
+            if (strcmp(motor_str, "all") == 0)
+            {
+                mc::MotorControlAO::MC1Inst().SetMode(mode);
+                mc::MotorControlAO::MC2Inst().SetMode(mode);
+                handled = true;
+            }
+            else
+            {
+                uint32_t motor = strtoulS<uint32_t>(motor_str);
+
+                if (motor == 0U)
+                {
+                    mc::MotorControlAO::MC1Inst().SetMode(mode);
+                    handled = true;
+                }
+                else if (motor == 1U)
+                {
+                    mc::MotorControlAO::MC2Inst().SetMode(mode);
+                    handled = true;
+                }
+            }
+        }
+        else if (strcmp(cmd_str, "setduty") == 0)
         {
             const char *motor_str = embeddedCliGetToken(args, 2U);
             const char *duty_str  = embeddedCliGetToken(args, 3U);
@@ -152,6 +180,8 @@ void cli::onMC(EmbeddedCli *cli, char *args, void *context)
         // Help dialogue
         cli::CLIAO::Inst().Printf(
             "Usage:\n\r"
+            "\tmc setmode all [Mode (0|1)] --- 0==DUTY, 1==RATE\n\r"
+            "\tmc setmode [Motor ID (0 |1)] [Mode (0|1)] --- 0==DUTY, 1==RATE\n\r"
             "\tmc setdir all [Dir (0|1)] --- 0==CW, 1==CCW\n\r"
             "\tmc setdir [Motor ID (0 |1)] [Dir (0|1)] --- 0==CW, 1==CCW\n\r"
             "\tmc setduty all [Duty (0<=val<=1023)]\n\r"

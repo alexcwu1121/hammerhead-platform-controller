@@ -160,6 +160,16 @@ void mc::MotorControlAO::SetRate(float rate)
     }
 }
 
+void mc::MotorControlAO::SetMode(Mode mode)
+{
+    if (_isStarted)
+    {
+        SetModeEvt* evt = Q_NEW(SetModeEvt, PrivateSignals::SET_MODE_SIG);
+        evt->mode       = mode;
+        POST(evt, this);
+    }
+}
+
 void mc::MotorControlAO::FaultIT()
 {
     if (_isStarted)
@@ -265,6 +275,30 @@ Q_STATE_DEF(mc::MotorControlAO, root)
     case PrivateSignals::RESET_SIG:
     {
         status_ = tran(&initializing);
+        break;
+    }
+    case PrivateSignals::SET_MODE_SIG:
+    {
+        _mode   = Q_EVT_CAST(SetModeEvt)->mode;
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::FAULT_SIG:
+    {
+        // Update fault conditions
+        UpdateFaults();
+
+        // Transition to error
+        status_ = tran(&error);
+        break;
+    }
+    case PrivateSignals::FAULT_IT_SIG:
+    {
+        // Update fault conditions
+        UpdateFaults();
+
+        // Transition to error
+        status_ = tran(&error);
         break;
     }
     case bsp::PublicSignals::ADC_SIG:
@@ -408,7 +442,18 @@ Q_STATE_DEF(mc::MotorControlAO, initializing)
         if (IsInitialized())
         {
             // Start processing
-            status_ = tran(&active);
+            if (_mode == Mode::DUTY)
+            {
+                status_ = tran(&active_duty);
+            }
+            else if (_mode == Mode::RATE)
+            {
+                status_ = tran(&active_rate);
+            }
+            else
+            {
+                status_ = tran(&error);
+            }
         }
         else
         {
@@ -426,7 +471,49 @@ Q_STATE_DEF(mc::MotorControlAO, initializing)
     return status_;
 }
 
-Q_STATE_DEF(mc::MotorControlAO, active)
+Q_STATE_DEF(mc::MotorControlAO, active_duty)
+{
+    QP::QState status_;
+    switch (e->sig)
+    {
+    case PrivateSignals::SET_DIR_SIG:
+    {
+        Dir dir = Q_EVT_CAST(SetDirEvt)->dir;
+        HAL_GPIO_WritePin(_mcDevice->_mDirPort, _mcDevice->_mDirPinNum,
+                          static_cast<GPIO_PinState>(dir));
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::SET_DUTY_SIG:
+    {
+        uint16_t duty = Q_EVT_CAST(SetDutyEvt)->duty;
+        __HAL_TIM_SET_COMPARE(_mcDevice->_htim, _mcDevice->_htimCh, duty);
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::SET_MODE_SIG:
+    {
+        _mode = Q_EVT_CAST(SetModeEvt)->mode;
+        if (_mode == Mode::RATE)
+        {
+            status_ = tran(&active_rate);
+        }
+        else
+        {
+            status_ = Q_RET_HANDLED;
+        }
+        break;
+    }
+    default:
+    {
+        status_ = super(&root);
+        break;
+    }
+    }
+    return status_;
+}
+
+Q_STATE_DEF(mc::MotorControlAO, active_rate)
 {
     QP::QState status_;
     switch (e->sig)
@@ -442,39 +529,6 @@ Q_STATE_DEF(mc::MotorControlAO, active)
     {
         // Disarm rate control timer
         _rateControlTimer.disarm();
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::FAULT_SIG:
-    {
-        // Update fault conditions
-        UpdateFaults();
-
-        // Transition to error
-        status_ = tran(&error);
-        break;
-    }
-    case PrivateSignals::FAULT_IT_SIG:
-    {
-        // Update fault conditions
-        UpdateFaults();
-
-        // Transition to error
-        status_ = tran(&error);
-        break;
-    }
-    case PrivateSignals::SET_DIR_SIG:
-    {
-        Dir dir = Q_EVT_CAST(SetDirEvt)->dir;
-        HAL_GPIO_WritePin(_mcDevice->_mDirPort, _mcDevice->_mDirPinNum,
-                          static_cast<GPIO_PinState>(dir));
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::SET_DUTY_SIG:
-    {
-        uint16_t duty = Q_EVT_CAST(SetDutyEvt)->duty;
-        __HAL_TIM_SET_COMPARE(_mcDevice->_htim, _mcDevice->_htimCh, duty);
         status_ = Q_RET_HANDLED;
         break;
     }
@@ -506,6 +560,19 @@ Q_STATE_DEF(mc::MotorControlAO, active)
         HAL_GPIO_WritePin(_mcDevice->_mDirPort, _mcDevice->_mDirPinNum,
                           static_cast<GPIO_PinState>(_currentRate > _eps));
         status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::SET_MODE_SIG:
+    {
+        _mode = Q_EVT_CAST(SetModeEvt)->mode;
+        if (_mode == Mode::DUTY)
+        {
+            status_ = tran(&active_duty);
+        }
+        else
+        {
+            status_ = Q_RET_HANDLED;
+        }
         break;
     }
     default:
