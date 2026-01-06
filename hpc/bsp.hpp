@@ -33,13 +33,13 @@ enum ADCChannels : uint8_t
 };
 
 /// @brief VIN voltage divider R1
-constexpr float VIN_DIV_R1 = 120000.0f;
+constexpr float VIN_DIV_R1 = 100000.0f;
 /// @brief VIN voltage divider R2
-constexpr float VIN_DIV_R2 = 27000.0f;
+constexpr float VIN_DIV_R2 = 10000.0f;
 /// @brief Motor driver output voltage divider R1
 constexpr float VMIN_DIV_R1 = 68000.0f;
 /// @brief Motor driver output voltage divider R2
-constexpr float VMIN_DIV_R2 = 27000.0f;
+constexpr float VMIN_DIV_R2 = 10000.0f;
 /// @brief ADC resolution
 constexpr float ADC_RES = 4096.0f;
 /// @brief ADC reference voltage
