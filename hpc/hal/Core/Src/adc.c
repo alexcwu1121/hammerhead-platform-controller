@@ -62,7 +62,7 @@ void MX_ADC1_Init(void)
   // TODO: update after updating voltage dividers
   AnalogWDGConfig.HighThreshold = 4095; // 18V
   // TODO: update after updating voltage dividers
-  AnalogWDGConfig.LowThreshold = 2850; // 12.5V
+  AnalogWDGConfig.LowThreshold = 1; // 12.5V
   AnalogWDGConfig.Channel = ADC_CHANNEL_0;
   AnalogWDGConfig.ITMode = ENABLE;
   if (HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConfig) != HAL_OK)

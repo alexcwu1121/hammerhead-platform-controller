@@ -76,7 +76,7 @@ class CLIAO : public QP::QActive
     /// @brief CLI process timed event
     QP::QTimeEvt _processTimer;
     /// @brief CLI process interval in ticks
-    uint32_t _processInterval = UINT32_MAX;
+    uint32_t _processInterval = bsp::TICKS_PER_SEC / 20U;
 
    private:
     /// @brief Private CLIAO signals

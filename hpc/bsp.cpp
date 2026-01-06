@@ -23,6 +23,44 @@ extern "C"
         }
     }
 
+    /// @brief Hardfault handler
+    __attribute__((naked)) void HardFault_Handler(void)
+    {
+        __asm volatile(
+            "tst lr, #4        \n"  // Which stack? MSP or PSP
+            "ite eq            \n"
+            "mrseq r0, msp     \n"
+            "mrsne r0, psp     \n"
+            "b hardfault_c     \n");
+    }
+
+    /// @brief Break out registers
+    /// @param stack
+    void hardfault_c(uint32_t* stack)
+    {
+        volatile uint32_t r0  = stack[0];
+        volatile uint32_t r1  = stack[1];
+        volatile uint32_t r2  = stack[2];
+        volatile uint32_t r3  = stack[3];
+        volatile uint32_t r12 = stack[4];
+        volatile uint32_t lr  = stack[5];
+        volatile uint32_t pc  = stack[6];
+        volatile uint32_t psr = stack[7];
+
+        (void)r0;
+        (void)r1;
+        (void)r2;
+        (void)r3;
+        (void)r12;
+        (void)lr;
+        (void)pc;
+        (void)psr;
+
+        __BKPT(1);  // Stop here and inspect
+        while (1)
+            ;
+    }
+
     /// @brief ADC conversion buffer
     static volatile uint16_t adcBuf[bsp::ADCChannels::NUM_ADC_CHANNELS * bsp::NUM_ADC_SAMPLES];
     // IIR adc filter accumulator

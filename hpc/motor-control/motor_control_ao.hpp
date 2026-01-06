@@ -133,12 +133,6 @@ class MotorControlAO : public QP::QActive
     /// @brief Check if initialized
     bool IsInitialized();
 
-    // TODO: rate control
-    // TODO: first and second order slew rates
-    // TODO: print state, including driver voltage
-    // TODO: start stream motor states
-    // TODO: print fault states
-
    private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
