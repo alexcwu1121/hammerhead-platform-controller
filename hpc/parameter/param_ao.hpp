@@ -37,6 +37,9 @@ class ParamAO : public QP::QActive
     /// @brief Commit parameter values to EEPROM
     void Commit();
 
+    /// @brief Update parameter values from EEPROM
+    void Update();
+
     /// @brief Print full parameter list to CLI
     void List();
 
@@ -68,6 +71,8 @@ class ParamAO : public QP::QActive
     /// @brief Base address of parameter block
     static constexpr uint16_t _paramBlockAddr = 0x0;
     // TODO: add maximum address of parameter block
+    /// @brief number of read retries
+    static constexpr uint16_t _readRetryCount = 3U;
 
     /// @brief Print a parameter
     /// @param id
@@ -76,6 +81,9 @@ class ParamAO : public QP::QActive
     /// @brief Publish a parameter update event
     /// @param id
     void PublishParameterUpdated(ParameterID id);
+
+    /// @brief Read parameters from EEPROM
+    void ReadParameters();
 
    private:
     /// @brief Private CLIAO signals
@@ -87,6 +95,7 @@ class ParamAO : public QP::QActive
         LIST_SIG,
         RESET_TO_DEFAULTS_SIG,
         PRINT_PARAM_SIG,
+        UPDATE_SIG,
         MAX_PRIV_SIG
     };
 

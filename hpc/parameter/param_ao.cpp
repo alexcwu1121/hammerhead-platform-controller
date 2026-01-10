@@ -49,6 +49,15 @@ void param::ParamAO::Commit()
     }
 }
 
+void param::ParamAO::Update()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::UPDATE_SIG);
+        POST(&evt, this);
+    }
+}
+
 void param::ParamAO::List()
 {
     if (_isStarted)
@@ -191,6 +200,36 @@ void param::ParamAO::PublishParameterUpdated(ParameterID id)
     }
 }
 
+void param::ParamAO::ReadParameters()
+{
+    // Get expected serialized size of parameter table
+    uint16_t read_size = ParameterList::Inst().GetSize();
+    // Read parameters from EEPROM
+    _eeprom.Read(_rxBuf, read_size, _paramBlockAddr);
+    // Deserialize into parameter table
+    uint16_t deserialize_size;
+
+    // Try to read a few times
+    param::Fault fault;
+    for (uint16_t i = 0; i < _readRetryCount; i++)
+    {
+        fault = ParameterList::Inst().Deserialize(_rxBuf, _rxBufSize, deserialize_size);
+        if (fault == param::Fault::NO_FAULT)
+        {
+            break;
+        }
+    }
+
+    if (fault != param::Fault::NO_FAULT)
+    {
+        cli::CLIAO::Inst().Printf("ERROR: Parameter deserialize fault (%u)", fault);
+    }
+    else if (read_size != deserialize_size)
+    {
+        cli::CLIAO::Inst().Printf("ERROR: Parameter unexpected read size");
+    }
+}
+
 Q_STATE_DEF(param::ParamAO, initial)
 {
     Q_UNUSED_PAR(e);
@@ -205,24 +244,15 @@ Q_STATE_DEF(param::ParamAO, active)
     {
     case Q_ENTRY_SIG:
     {
-        // Get expected serialized size of parameter table
-        uint16_t read_size = ParameterList::Inst().GetSize();
-        // Read parameters from EEPROM
-        _eeprom.Read(_rxBuf, read_size, _paramBlockAddr);
-        // Deserialize into parameter table
-        uint16_t     deserialize_size;
-        param::Fault fault =
-            ParameterList::Inst().Deserialize(_rxBuf, _rxBufSize, deserialize_size);
-
-        if (fault != param::Fault::NO_FAULT)
-        {
-            cli::CLIAO::Inst().Printf("ERROR: Parameter deserialize fault (%u)", fault);
-        }
-        else if (read_size != deserialize_size)
-        {
-            cli::CLIAO::Inst().Printf("ERROR: Parameter unexpected read size");
-        }
-
+        // Initialize slave select to high
+        _eeprom.Deselect();
+        ReadParameters();
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::UPDATE_SIG:
+    {
+        ReadParameters();
         status_ = Q_RET_HANDLED;
         break;
     }

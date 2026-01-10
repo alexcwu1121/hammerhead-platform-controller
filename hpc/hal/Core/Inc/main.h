@@ -99,23 +99,21 @@ void Error_Handler(void);
 #define P_DEBUG_SWDIO_GPIO_Port GPIOA
 #define P_DEBUG_SWCLK_Pin GPIO_PIN_14
 #define P_DEBUG_SWCLK_GPIO_Port GPIOA
-#define P_SPARE_GPIO_1_Pin GPIO_PIN_15
-#define P_SPARE_GPIO_1_GPIO_Port GPIOA
-#define P_SPARE_GPIO_2_Pin GPIO_PIN_3
-#define P_SPARE_GPIO_2_GPIO_Port GPIOB
-#define P_SPARE_GPIO_3_Pin GPIO_PIN_4
-#define P_SPARE_GPIO_3_GPIO_Port GPIOB
-#define P_SPARE_GPIO_4_Pin GPIO_PIN_5
-#define P_SPARE_GPIO_4_GPIO_Port GPIOB
+#define P_IMU_CS_Pin GPIO_PIN_15
+#define P_IMU_CS_GPIO_Port GPIOA
+#define P_IMU_SCK_Pin GPIO_PIN_3
+#define P_IMU_SCK_GPIO_Port GPIOB
+#define P_IMU_MISO_Pin GPIO_PIN_4
+#define P_IMU_MISO_GPIO_Port GPIOB
+#define P_IMU_MOSI_Pin GPIO_PIN_5
+#define P_IMU_MOSI_GPIO_Port GPIOB
 #define P_MM_SCL_Pin GPIO_PIN_6
 #define P_MM_SCL_GPIO_Port GPIOB
 #define P_MM_SDA_Pin GPIO_PIN_7
 #define P_MM_SDA_GPIO_Port GPIOB
-#define P_SPARE_GPIO_5_Pin GPIO_PIN_8
-#define P_SPARE_GPIO_5_GPIO_Port GPIOB
 #define P_M1_EN_Pin GPIO_PIN_9
 #define P_M1_EN_GPIO_Port GPIOB
-
+ 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

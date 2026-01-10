@@ -23,6 +23,12 @@ class EEPROM25LC256
     /// @brief Disable write protect
     void DisableWriteProtect() const;
 
+    /// @brief Set chip select high
+    void Select() const;
+
+    /// @brief Set chip select low
+    void Deselect() const;
+
     /// @brief Write data to EEPROM synchronously
     /// @param inBuf
     /// @param writeSize

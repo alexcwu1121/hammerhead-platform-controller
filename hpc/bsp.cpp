@@ -141,6 +141,17 @@ extern "C"
     {
         Q_onError(module, id);
     }
+
+    /// @brief HAL user initialization
+    /// @param
+    void HAL_MspInit(void)
+    {
+        __HAL_RCC_AFIO_CLK_ENABLE();
+        __HAL_RCC_PWR_CLK_ENABLE();
+
+        __HAL_AFIO_REMAP_SPI1_ENABLE();
+        __HAL_AFIO_REMAP_SWJ_NOJTAG();
+    }
 }
 
 namespace QP

@@ -214,6 +214,11 @@ void cli::onParam(EmbeddedCli *cli, char *args, void *context)
             param::ParamAO::Inst().Commit();
             handled = true;
         }
+        else if (strcmp(cmd_str, "update") == 0)
+        {
+            param::ParamAO::Inst().Update();
+            handled = true;
+        }
         else if (strcmp(cmd_str, "reset-to-defaults") == 0)
         {
             param::ParamAO::Inst().ResetToDefaults();
@@ -325,6 +330,7 @@ void cli::onParam(EmbeddedCli *cli, char *args, void *context)
             "Usage:\n\r"
             "\tparam list\n\r"
             "\tparam commit\n\r"
+            "\tparam update\n\r"
             "\tparam reset-to-defaults\n\r"
             "\tparam set [id] [value]\n\r"
             "\tparam get [id]\n\r");

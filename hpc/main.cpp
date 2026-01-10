@@ -1,5 +1,6 @@
 #include "bsp.hpp"
 #include "cli_ao.hpp"
+#include "mission_ao.hpp"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
 
@@ -15,8 +16,9 @@ int main(void)
     MX_GPIO_Init();
     MX_DMA_Init();
     MX_ADC1_Init();
-    MX_I2C1_Init();
+    // MX_I2C1_Init();
     MX_I2C2_Init();
+    MX_SPI1_Init();
     MX_SPI2_Init();
     MX_TIM2_Init();
     MX_TIM3_Init();
@@ -40,10 +42,13 @@ int main(void)
     // Start AOs
     // ParamAO is highest priority because it doesn't do much + must start before everything else
     param::ParamAO::Inst().Start(1U, bsp::SubsystemID::PARAMETER_SUBSYSTEM);
-    mc::MotorControlAO::MC1Inst().Start(2U, bsp::SubsystemID::MC1_SUBSYSTEM);
-    mc::MotorControlAO::MC2Inst().Start(3U, bsp::SubsystemID::MC2_SUBSYSTEM);
-    cli::CLIAO::Inst().Start(4U, bsp::SubsystemID::CLI_SUBSYSTEM);
+    mission::MissionAO::Inst().Start(2U, bsp::SubsystemID::MISSION_SUBSYSTEM);
+    mc::MotorControlAO::MC1Inst().Start(3U, bsp::SubsystemID::MC1_SUBSYSTEM);
+    mc::MotorControlAO::MC2Inst().Start(4U, bsp::SubsystemID::MC2_SUBSYSTEM);
+    cli::CLIAO::Inst().Start(5U, bsp::SubsystemID::CLI_SUBSYSTEM);
 
     // Start QF scheduler
     return QP::QF::run();
+
+    return 0;
 }

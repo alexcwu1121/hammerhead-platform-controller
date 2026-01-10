@@ -1,20 +1,20 @@
 #include "EEPROM_25LC256.hpp"
 
-// EEPROM SPI opcodes
-#define CMD_WREN 0x06
-#define CMD_WRDI 0x04
-#define CMD_RDSR 0x05
-#define CMD_WRSR 0x01
-#define CMD_READ 0x03
-#define CMD_WRITE 0x02
-
-// Transaction sizes
-#define OPCODE_SIZE 1U
-#define ADDR_SIZE 2U
-#define PAGE_SIZE 64U
-
 namespace eeprom
 {
+// EEPROM SPI opcodes
+constexpr uint8_t CMD_WREN  = 0x06;
+constexpr uint8_t CMD_WRDI  = 0x04;
+constexpr uint8_t CMD_RDSR  = 0x05;
+constexpr uint8_t CMD_WRSR  = 0x01;
+constexpr uint8_t CMD_READ  = 0x03;
+constexpr uint8_t CMD_WRITE = 0x02;
+
+// Transaction sizes
+constexpr uint32_t OPCODE_SIZE = 1U;
+constexpr uint32_t ADDR_SIZE   = 2U;
+constexpr uint32_t PAGE_SIZE   = 64U;
+
 EEPROM25LC256::EEPROM25LC256(GPIO_TypeDef* csPort, uint16_t csPinNum, GPIO_TypeDef* wpPort,
                              uint16_t wpPinNum, SPI_HandleTypeDef* spiDevice)
     : _csPort(csPort),
@@ -35,6 +35,16 @@ void EEPROM25LC256::DisableWriteProtect() const
     HAL_GPIO_WritePin(_wpPort, _wpPinNum, GPIO_PIN_SET);
 }
 
+void EEPROM25LC256::Select() const
+{
+    HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_RESET);
+}
+
+void EEPROM25LC256::Deselect() const
+{
+    HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_SET);
+}
+
 void EEPROM25LC256::Write(uint8_t* inBuf, uint16_t writeSize, uint16_t address)
 {
     DisableWriteProtect();
@@ -51,9 +61,9 @@ void EEPROM25LC256::Write(uint8_t* inBuf, uint16_t writeSize, uint16_t address)
 
         // Write enable
         uint8_t wren = CMD_WREN;
-        HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_RESET);
+        Select();
         HAL_SPI_Transmit(_spiDevice, &wren, 1, HAL_MAX_DELAY);
-        HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_SET);
+        Deselect();
 
         // Pack tx buffer
         txbuf[index++] = CMD_WRITE;
@@ -63,9 +73,9 @@ void EEPROM25LC256::Write(uint8_t* inBuf, uint16_t writeSize, uint16_t address)
         index += chunk;
 
         // Transmit chunk and wait for transaction to end
-        HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_RESET);
+        Select();
         HAL_SPI_Transmit(_spiDevice, txbuf, index, HAL_MAX_DELAY);
-        HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_SET);
+        Deselect();
         // Wait for write to end
         WaitForWriteEnd();
 
@@ -84,10 +94,10 @@ void EEPROM25LC256::Read(uint8_t* outBuf, uint16_t readSize, uint16_t address)
     cmd[1] = (address >> 8) & 0xFF;
     cmd[2] = address & 0xFF;
 
-    HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(_spiDevice, cmd, 3, HAL_MAX_DELAY);
+    Select();
+    HAL_SPI_Transmit(_spiDevice, cmd, 3U, HAL_MAX_DELAY);
     HAL_SPI_Receive(_spiDevice, outBuf, readSize, HAL_MAX_DELAY);
-    HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_SET);
+    Deselect();
 }
 
 void EEPROM25LC256::WaitForWriteEnd(void)
@@ -98,10 +108,10 @@ void EEPROM25LC256::WaitForWriteEnd(void)
     // TODO: timeout
     do
     {
-        HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_RESET);
+        Select();
         HAL_SPI_Transmit(_spiDevice, &cmd, 1, HAL_MAX_DELAY);
         HAL_SPI_Receive(_spiDevice, &status, 1, HAL_MAX_DELAY);
-        HAL_GPIO_WritePin(_csPort, _csPinNum, GPIO_PIN_SET);
+        Deselect();
     } while (status & 0x01);
 }
 }  // namespace eeprom
