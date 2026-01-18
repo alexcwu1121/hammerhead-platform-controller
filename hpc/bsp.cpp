@@ -89,7 +89,8 @@ extern "C"
                        + bsp::ADC_TO_VMIN_OFFSET;
 
         // IIR filter
-        auto iir = [](float& prior, float obs) { prior += bsp::ADC_IIR_ALPHA * (obs - prior); };
+        auto iir = [](float& prior, const float& obs)
+        { prior += bsp::ADC_IIR_ALPHA * (obs - prior); };
         iir(adcIIR[bsp::ADCChannels::VIN], vin);
         iir(adcIIR[bsp::ADCChannels::VMOUT1], vmout1);
         iir(adcIIR[bsp::ADCChannels::VMOUT2], vmout2);

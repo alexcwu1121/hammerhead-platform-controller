@@ -2,6 +2,7 @@
 
 #include "cli_ao.hpp"
 #include "embedded_cli.h"
+#include "mission_ao.hpp"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
 
@@ -337,6 +338,39 @@ void cli::onParam(EmbeddedCli *cli, char *args, void *context)
     }
 }
 
+void cli::onIMU(EmbeddedCli *cli, char *args, void *context)
+{
+    // Get number of arguments
+    uint16_t argc    = embeddedCliGetTokenCount(args);
+    bool     handled = false;
+
+    switch (argc)
+    {
+    case 1U:
+    {
+        const char *cmd_str = embeddedCliGetToken(args, 1U);
+        if (strcmp(cmd_str, "run_compensation") == 0)
+        {
+            mission::MissionAO::Inst().RunIMUCompensation();
+            handled = true;
+        }
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+
+    if (!handled)
+    {
+        // Help dialogue
+        cli::CLIAO::Inst().Printf(
+            "Usage:\n\r"
+            "\timu run_compensation\n\r");
+    }
+}
+
 void cli::InitBindings(EmbeddedCli *cli)
 {
     // Command binding for the clear command
@@ -362,4 +396,12 @@ void cli::InitBindings(EmbeddedCli *cli)
                                        .context      = NULL,
                                        .binding      = onParam};
     embeddedCliAddBinding(cli, param_binding);
+
+    // Command binding for the IMU system command
+    CliCommandBinding imu_binding = {.name         = "imu",
+                                     .help         = "Manage IMU",
+                                     .tokenizeArgs = true,
+                                     .context      = NULL,
+                                     .binding      = onIMU};
+    embeddedCliAddBinding(cli, imu_binding);
 }

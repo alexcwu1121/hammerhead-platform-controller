@@ -33,6 +33,9 @@ class MissionAO : public QP::QActive
     /// @param id
     void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
+    /// @brief Run IMU compensation
+    void RunIMUCompensation();
+
    private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -47,14 +50,17 @@ class MissionAO : public QP::QActive
     /// @brief IMU service timer
     QP::QTimeEvt _imuTimer;
     /// @brief Rate control timer period in ticks
-    uint32_t _imuTimerInterval = bsp::TICKS_PER_SEC / 1000U;
+    uint32_t _imuTimerInterval = bsp::TICKS_PER_SEC / 200U;
 
    private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {
-        RESET_SIG = bsp::PublicSignals::MAX_PUB_SIG,
+        INITIALIZED_SIG = bsp::PublicSignals::MAX_PUB_SIG,
+        FAULT_SIG,
+        RESET_SIG,
         IMU_SERVICE_SIG,
+        RUN_IMU_COMPENSATION_SIG,
         MAX_PRIV_SIG
     };
 
