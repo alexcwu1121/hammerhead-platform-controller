@@ -8,7 +8,8 @@ namespace mission
 MissionAO::MissionAO()
     : QP::QActive(&initial),
       _imu(P_IMU_CS_GPIO_Port, P_IMU_CS_Pin, &hspi1),
-      _imuTimer(this, PrivateSignals::IMU_SERVICE_SIG, 0U)
+      _imuTimer(this, PrivateSignals::IMU_SERVICE_SIG, 0U),
+      _imuStreamTimer(this, PrivateSignals::IMU_STREAM_SIG, 0U)
 {
 }
 
@@ -27,6 +28,24 @@ void MissionAO::RunIMUCompensation()
     if (_isStarted)
     {
         static QP::QEvt evt(PrivateSignals::RUN_IMU_COMPENSATION_SIG);
+        POST(&evt, this);
+    }
+}
+
+void MissionAO::StartIMUStream()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::START_IMU_STREAM);
+        POST(&evt, this);
+    }
+}
+
+void MissionAO::StopIMUStream()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::STOP_IMU_STREAM);
         POST(&evt, this);
     }
 }
@@ -119,23 +138,26 @@ Q_STATE_DEF(MissionAO, active)
     {
     case Q_ENTRY_SIG:
     {
-        // Arm rate control timer
+        // Arm imu polling timer
         _imuTimer.armX(_imuTimerInterval, _imuTimerInterval);
         status_ = Q_RET_HANDLED;
         break;
     }
     case Q_EXIT_SIG:
     {
-        // Disarm rate control timer
+        // Disarm imu polling timer
         _imuTimer.disarm();
         status_ = Q_RET_HANDLED;
         break;
     }
     case PrivateSignals::IMU_SERVICE_SIG:
     {
-        imu::IMUData data;
-        imu::Fault   fault = _imu.ReadData(data);
-        status_            = Q_RET_HANDLED;
+        imu::Fault fault = _imu.ReadData(_imuData);
+        if (fault)
+        {
+            /// TODO: Log fault in eeprom
+        }
+        status_ = Q_RET_HANDLED;
         break;
     }
     case PrivateSignals::RUN_IMU_COMPENSATION_SIG:
@@ -149,6 +171,37 @@ Q_STATE_DEF(MissionAO, active)
         {
             cli::CLIAO::Inst().Printf("INFO: IMU compensation finished");
         }
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::START_IMU_STREAM:
+    {
+        // Arm imu stream timer
+        _imuStreamTimer.armX(_imuStreamTimerInterval, _imuStreamTimerInterval);
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::STOP_IMU_STREAM:
+    {
+        // Disarm imu stream timer
+        _imuStreamTimer.disarm();
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::IMU_STREAM_SIG:
+    {
+        // Print IMU data
+        cli::CLIAO::Inst().Printf(
+            ">>>>>>>>>>>>>>\n\r"
+            "Acc X: %+7.2f g\n\r"
+            "Acc Y: %+7.2f g\n\r"
+            "Acc Z: %+7.2f g\n\r"
+            "Gyr X: %+7.2f dps\n\r"
+            "Gyr Y: %+7.2f dps\n\r"
+            "Gyr Z: %+7.2f dps\n\r"
+            ">>>>>>>>>>>>>>\n\r",
+            _imuData.acc[0], _imuData.acc[1], _imuData.acc[2], _imuData.gyr[0], _imuData.gyr[1],
+            _imuData.gyr[2]);
         status_ = Q_RET_HANDLED;
         break;
     }

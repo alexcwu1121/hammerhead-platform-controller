@@ -354,6 +354,16 @@ void cli::onIMU(EmbeddedCli *cli, char *args, void *context)
             mission::MissionAO::Inst().RunIMUCompensation();
             handled = true;
         }
+        else if (strcmp(cmd_str, "start_stream") == 0)
+        {
+            mission::MissionAO::Inst().StartIMUStream();
+            handled = true;
+        }
+        else if (strcmp(cmd_str, "stop_stream") == 0)
+        {
+            mission::MissionAO::Inst().StopIMUStream();
+            handled = true;
+        }
         break;
     }
     default:
@@ -367,7 +377,9 @@ void cli::onIMU(EmbeddedCli *cli, char *args, void *context)
         // Help dialogue
         cli::CLIAO::Inst().Printf(
             "Usage:\n\r"
-            "\timu run_compensation\n\r");
+            "\timu run_compensation\n\r"
+            "\timu start_stream\n\r"
+            "\timu stop_stream\n\r");
     }
 }
 

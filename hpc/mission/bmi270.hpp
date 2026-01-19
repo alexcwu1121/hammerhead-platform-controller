@@ -20,12 +20,8 @@ enum Fault : uint8_t
 /// @brief 6DOF IMU data
 struct IMUData
 {
-    float accel_x;
-    float accel_y;
-    float accel_z;
-    float omega_x;
-    float omega_y;
-    float omega_z;
+    float acc[3];
+    float gyr[3];
 };
 
 class BMI270
@@ -68,7 +64,7 @@ class BMI270
         GYR_Z_LSB       = 0x16,
         GYR_Z_MSB       = 0x17,
         GEN_SET_1       = 0x34,
-        NVM_CONF        = 0x70,  // Accelerometer compensation enable
+        NV_CONF         = 0x70,  // Accelerometer compensation enable
         OFFSET_0        = 0x71,  // Accelerometer x-axis offset compensation
         OFFSET_1        = 0x72,  // Accelerometer y-axis offset compensation
         OFFSET_2        = 0x73,  // Accelerometer z-axis offset compensation
@@ -77,6 +73,7 @@ class BMI270
         OFFSET_5        = 0x76,  // Gyrocsope z-axis offset compensation
         OFFSET_6        = 0x77,  // Gyroscope compensation enable
         CMD             = 0x7E,
+        GYR_CAS         = 0x3C,
     };
 
     /// @brief Accelerometer ranges
@@ -173,11 +170,6 @@ class BMI270
     /// TODO: 0x6D ACC_SELF_TEST
     /// TODO: 0x6E GYR_SELF_TEST_AXES
 
-    /// TODO: Add compensation offsets to parameter table
-    /// TODO: Add means to trigger compensation via CLI
-
-    /// TODO: Gyro and acc post-processing (pg.31)
-
    private:
     /// @brief Chip-Select pin port
     GPIO_TypeDef* _csPort;
@@ -194,15 +186,19 @@ class BMI270
     /// @brief Initialization retry/poll period in ms
     static constexpr uint32_t _initRetryPeriod = 1U;
     /// @brief Offset compensation polling period in ms
-    static constexpr uint32_t _compensationPollPeriod = 40U;
+    static constexpr uint32_t _compensationPollPeriod = 5U;
     /// @brief Offset compensation polling count
-    static constexpr uint32_t _compensationPollCount = 1U;
+    static constexpr uint32_t _compensationPollCount = 30U;
     /// @brief NVM operation polling period in ms
     static constexpr uint32_t _nvmWaitPollPeriod = 1U;
     /// @brief NVM operation polling count
     static constexpr uint32_t _nvmWaitPollCount = 50U;
     /// @brief Compensation IIR learning rate
-    static constexpr float _compIIRAlpha = 0.05;
+    static constexpr float _compIIRAlpha = 0.10;
+    /// @brief Accelerometer offset resolution (g)
+    static constexpr float _accOffsetRes = 0.0039f;
+    /// @brief Gyroscope offset resolution (dps)
+    static constexpr float _gyrOffsetRes = 0.061f;
     /// @brief Gyroscope odr
     GyrODR _gyrODR = GyrODR::ODR_1K6;
     /// @brief Accelerometer odr
@@ -211,6 +207,8 @@ class BMI270
     GyrRange _gyrRange = GyrRange::DPS_500;
     /// @brief Accelerometer range
     AccRange _accRange = AccRange::G_4;
+    /// @brief Gyro cross axis coupling factor
+    int8_t _gyrCas = 0;
 
     /// @brief Raw 6DOF IMU data
     struct IMUDataRaw

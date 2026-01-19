@@ -1,5 +1,7 @@
 #include "bmi270.hpp"
 
+#include "math.h"
+
 namespace imu
 {
 /// @brief BMI270 device ID
@@ -267,18 +269,47 @@ Fault BMI270::Initialize()
     // Set default gyroscope range
     fault = SetGyrRange(_gyrRange);
 
+    // Enable accelerometer offset compensation
+    uint8_t nv_conf = {0};
+    fault           = ReadRegisters(&nv_conf, Register::NV_CONF, sizeof(nv_conf));
+    nv_conf         = nv_conf | (0x01 << 3);
+    fault           = WriteRegisters(&nv_conf, Register::NV_CONF, sizeof(nv_conf));
+    if (fault != Fault::NO_FAULT)
+    {
+        return fault;
+    }
+
+    // Enable gyroscope offset compensation
+    uint8_t offset_6 = {0};
+    fault            = ReadRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
+    offset_6         = offset_6 | (0x01 << 6);
+    fault            = WriteRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
+    if (fault != Fault::NO_FAULT)
+    {
+        return fault;
+    }
+
+    // Read gyro zx coupling compensation factor
+    fault = ReadRegisters((uint8_t*)&_gyrCas, Register::GYR_CAS, sizeof(_gyrCas));
+    // GYR_CAS is a 7-bit wide signed integer. Perform sign extension
+    _gyrCas = (_gyrCas << 1) >> 1;
+
     return fault;
 }
 
 Fault BMI270::ReadData(IMUData& data)
 {
+    // Read raw data
     IMUDataRaw raw_data = {0};
     Fault      fault    = ReadDataRaw(raw_data);
     if (fault != Fault::NO_FAULT)
     {
         return NO_FAULT;
     }
+
     // Scale to range
+    data = ScaleRaw(raw_data);
+
     return fault;
 }
 
@@ -317,15 +348,38 @@ Fault BMI270::RunCompensation()
         return fault;
     }
 
+    // Disable accelerometer offset compensation temporarily
+    uint8_t nv_conf = {0};
+    fault           = ReadRegisters(&nv_conf, Register::NV_CONF, sizeof(nv_conf));
+    nv_conf &= ~(0x01 << 3);
+    fault = WriteRegisters(&nv_conf, Register::NV_CONF, sizeof(nv_conf));
+    if (fault != Fault::NO_FAULT)
+    {
+        return fault;
+    }
+
+    // Disable gyroscope offset compensation temporarily
+    uint8_t offset_6 = {0};
+    fault            = ReadRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
+    offset_6 &= ~(0x01 << 6);
+    fault = WriteRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
+    if (fault != Fault::NO_FAULT)
+    {
+        return fault;
+    }
+
     // Read N samples from gyroscope and accelerometer
     // IMU must not be in motion
-    bool       init = false;
-    IMUDataRaw avg  = {0};
+    bool    init = false;
+    IMUData avg  = {0};
+    // Read once after changing compensation enables
+    fault = ReadData(avg);
+    avg   = {0};
     for (uint32_t i = 0; i < _compensationPollCount; i++)
     {
         // Read sample
-        IMUDataRaw data = {0};
-        fault           = ReadDataRaw(data);
+        IMUData data = {0};
+        fault        = ReadData(data);
         if (fault != Fault::NO_FAULT)
         {
             return fault;
@@ -339,46 +393,80 @@ Fault BMI270::RunCompensation()
         else
         {
             // Simple IIR filter
-            auto iir = [](int16_t& prior, const int16_t& obs, const float& alpha)
-            { prior += (int16_t)(alpha * ((float)obs - (float)prior)); };
+            auto iir = [](float& prior, float& obs, const float& alpha)
+            { prior += alpha * (obs - prior); };
             iir(avg.acc[0], data.acc[0], _compIIRAlpha);
             iir(avg.acc[1], data.acc[1], _compIIRAlpha);
             iir(avg.acc[2], data.acc[2], _compIIRAlpha);
-            iir(avg.gyr[0], data.acc[0], _compIIRAlpha);
-            iir(avg.gyr[1], data.acc[1], _compIIRAlpha);
-            iir(avg.gyr[2], data.acc[2], _compIIRAlpha);
+            iir(avg.gyr[0], data.gyr[0], _compIIRAlpha);
+            iir(avg.gyr[1], data.gyr[1], _compIIRAlpha);
+            iir(avg.gyr[2], data.gyr[2], _compIIRAlpha);
         }
 
         HAL_Delay(_compensationPollPeriod);
     }
+    // Negate average and scale by resolution for bias offset
+    avg.acc[0] = lrintf(-avg.acc[0] / _accOffsetRes);
+    avg.acc[1] = lrintf(-avg.acc[1] / _accOffsetRes);
+    avg.acc[2] = lrintf(-avg.acc[2] / _accOffsetRes);
+    avg.gyr[0] = lrintf(-avg.gyr[0] / _gyrOffsetRes);
+    avg.gyr[1] = lrintf(-avg.gyr[1] / _gyrOffsetRes);
+    avg.gyr[2] = lrintf(-avg.gyr[2] / _gyrOffsetRes);
 
+    /// TODO: Don't do accelerometer compensation until a procedure is defined
+    /*
     // Compute compensation values and write to offset registers
     int8_t acc_offset[3] = {0};
-    acc_offset[0]        = (int8_t)((avg.acc[0] * 127) >> 15);
-    acc_offset[1]        = (int8_t)((avg.acc[1] * 127) >> 15);
-    acc_offset[2]        = (int8_t)((avg.acc[2] * 127) >> 15);
+    acc_offset[0]        = (int8_t)(((uint16_t)avg.acc[0] * 127) >> 15);
+    acc_offset[1]        = (int8_t)(((uint16_t)avg.acc[1] * 127) >> 15);
+    acc_offset[2]        = (int8_t)(((uint16_t)avg.acc[2] * 127) >> 15);
     // Write accelerometer compensation values
     /// TODO: assumes little endian
     fault = WriteRegisters((uint8_t*)(acc_offset), Register::OFFSET_0, sizeof(acc_offset[0]));
     fault = WriteRegisters((uint8_t*)(acc_offset + 1), Register::OFFSET_1, sizeof(acc_offset[1]));
     fault = WriteRegisters((uint8_t*)(acc_offset + 2), Register::OFFSET_2, sizeof(acc_offset[2]));
+    */
+
     // Write LSB gyro compensation values
     uint8_t gyr_offset_lsb[3] = {0};
-    gyr_offset_lsb[0]         = (uint8_t)(avg.gyr[0] & 0xFF);
-    gyr_offset_lsb[1]         = (uint8_t)(avg.gyr[1] & 0xFF);
-    gyr_offset_lsb[2]         = (uint8_t)(avg.gyr[2] & 0xFF);
+    gyr_offset_lsb[0]         = (uint8_t)((int16_t)avg.gyr[0] & 0xFF);
+    gyr_offset_lsb[1]         = (uint8_t)((int16_t)avg.gyr[1] & 0xFF);
+    gyr_offset_lsb[2]         = (uint8_t)((int16_t)avg.gyr[2] & 0xFF);
+    uint8_t gyr_offset_msb[3] = {0};
+    gyr_offset_msb[0]         = (uint8_t)(((int16_t)avg.gyr[0] >> 8) & 0xFF);
+    gyr_offset_msb[1]         = (uint8_t)(((int16_t)avg.gyr[1] >> 8) & 0xFF);
+    gyr_offset_msb[2]         = (uint8_t)(((int16_t)avg.gyr[2] >> 8) & 0xFF);
     fault                     = WriteRegisters(gyr_offset_lsb, Register::OFFSET_3, 1U);
     fault                     = WriteRegisters(gyr_offset_lsb + 1, Register::OFFSET_4, 1U);
     fault                     = WriteRegisters(gyr_offset_lsb + 2, Register::OFFSET_5, 1U);
-
     // Read offset 6 registers for other configurations before writing offsets
-    uint8_t offset_6 = 0;
-    fault            = ReadRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
-    offset_6         = (offset_6 & ~0x03) | (uint8_t)((avg.gyr[0] >> 8) & 0x03);
-    offset_6         = (offset_6 & ~0x0C) | (uint8_t)((avg.gyr[1] >> 6) & 0x0C);
-    offset_6         = (offset_6 & ~0x30) | (uint8_t)((avg.gyr[2] >> 4) & 0x30);
+    offset_6 = 0;
+    fault    = ReadRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
+    offset_6 = (offset_6 & ~0x03) | (gyr_offset_msb[0] & 0x03);
+    offset_6 = (offset_6 & ~0x0C) | (gyr_offset_msb[1] << 2 & 0x0C);
+    offset_6 = (offset_6 & ~0x30) | (gyr_offset_msb[2] << 4 & 0x30);
     // Write MSB gyro compensation values
     fault = WriteRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
+
+    // Reenable accelerometer offset compensation
+    nv_conf = {0};
+    fault   = ReadRegisters(&nv_conf, Register::NV_CONF, sizeof(nv_conf));
+    nv_conf = nv_conf | (0x01 << 3);
+    fault   = WriteRegisters(&nv_conf, Register::NV_CONF, sizeof(nv_conf));
+    if (fault != Fault::NO_FAULT)
+    {
+        return fault;
+    }
+
+    // Reenable gyroscope offset compensation
+    offset_6 = {0};
+    fault    = ReadRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
+    offset_6 = offset_6 | (0x01 << 6);
+    fault    = WriteRegisters(&offset_6, Register::OFFSET_6, sizeof(offset_6));
+    if (fault != Fault::NO_FAULT)
+    {
+        return fault;
+    }
 
     // Prepare NVM programming
     uint8_t gen_set_1[2] = {0};
@@ -395,7 +483,7 @@ Fault BMI270::RunCompensation()
 
     // Unlock NVM programming
     static const uint8_t nvm_unlock = 0x01;
-    fault = WriteRegisters(&nvm_unlock, Register::NVM_CONF, sizeof(nvm_unlock));
+    fault = WriteRegisters(&nvm_unlock, Register::NV_CONF, sizeof(nvm_unlock));
 
     // Program NVM
     static const uint8_t nvm_prog = 0xa0;
@@ -419,7 +507,7 @@ Fault BMI270::RunCompensation()
 
     // Lock NVM programming
     static const uint8_t nvm_lock = 0x00;
-    fault                         = WriteRegisters(&nvm_lock, Register::NVM_CONF, sizeof(nvm_lock));
+    fault                         = WriteRegisters(&nvm_lock, Register::NV_CONF, sizeof(nvm_lock));
 
     return fault;
 }
@@ -479,12 +567,26 @@ Fault BMI270::ReadDataRaw(IMUDataRaw& data)
         // Check for gyro data ready
         if (status & (0x01 << 6))
         {
-            fault = ReadRegisters((uint8_t*)data.gyr, Register::GYR_X_LSB, sizeof(data.gyr));
+            uint8_t gyr_temp[6] = {0};
+            fault               = ReadRegisters(gyr_temp, Register::GYR_X_LSB, sizeof(gyr_temp));
+            data.gyr[0]         = (gyr_temp[1] << 8) | gyr_temp[0];
+            data.gyr[1]         = (gyr_temp[3] << 8) | gyr_temp[2];
+            data.gyr[2]         = (gyr_temp[5] << 8) | gyr_temp[4];
+
+            // Ratex = DATA_15<<8 + DATA_14 - GYR_CAS.factor_zx * (DATA_19<<8+DATA_18) / 2^9
+            // Ratey = DATA_17<<8 + DATA_16
+            // Ratez = DATA_19<<8 + DATA_18
+            data.gyr[0] -= (int16_t)_gyrCas * data.gyr[2] / 512;
         }
+
         // Check for accelerometer data ready
         if (status & (0x01 << 7))
         {
-            fault = ReadRegisters((uint8_t*)data.acc, Register::ACC_X_LSB, sizeof(data.acc));
+            uint8_t acc_temp[6] = {0};
+            fault               = ReadRegisters(acc_temp, Register::ACC_X_LSB, sizeof(acc_temp));
+            data.acc[0]         = (acc_temp[1] << 8) | acc_temp[0];
+            data.acc[1]         = (acc_temp[3] << 8) | acc_temp[2];
+            data.acc[2]         = (acc_temp[5] << 8) | acc_temp[4];
         }
     }
     return fault;
@@ -495,57 +597,78 @@ IMUData BMI270::ScaleRaw(const IMUDataRaw& raw)
     IMUData data = {0};
 
     // Scale accelerometer readings
+    float acc_range = 1.0f;
     switch (_accRange)
     {
     case AccRange::G_2:
     {
+        acc_range = 2.0f;
         break;
     }
     case AccRange::G_4:
     {
+        acc_range = 4.0f;
         break;
     }
     case AccRange::G_8:
     {
+        acc_range = 8.0f;
         break;
     }
     case AccRange::G_16:
     {
+        acc_range = 16.0f;
         break;
     }
     default:
     {
+        acc_range = 1.0f;
         break;
     }
     }
+    data.acc[0] = (acc_range / (float)INT16_MAX) * (float)raw.acc[0];
+    data.acc[1] = (acc_range / (float)INT16_MAX) * (float)raw.acc[1];
+    data.acc[2] = (acc_range / (float)INT16_MAX) * (float)raw.acc[2];
 
     // Scale gyro readings
+    float gyr_range = 1.0f;
     switch (_gyrRange)
     {
     case GyrRange::DPS_125:
     {
+        gyr_range = 125.0f;
         break;
     }
     case GyrRange::DPS_250:
     {
+        gyr_range = 250.0f;
         break;
     }
     case GyrRange::DPS_500:
     {
+        gyr_range = 500.0f;
         break;
     }
     case GyrRange::DPS_1000:
     {
+        gyr_range = 1000.0f;
         break;
     }
     case GyrRange::DPS_2000:
     {
+        gyr_range = 2000.0f;
         break;
     }
     default:
     {
+        gyr_range = 1.0f;
         break;
     }
     }
+    data.gyr[0] = (gyr_range / (float)INT16_MAX) * (float)raw.gyr[0];
+    data.gyr[1] = (gyr_range / (float)INT16_MAX) * (float)raw.gyr[1];
+    data.gyr[2] = (gyr_range / (float)INT16_MAX) * (float)raw.gyr[2];
+
+    return data;
 }
 }  // namespace imu

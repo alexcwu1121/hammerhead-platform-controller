@@ -36,6 +36,12 @@ class MissionAO : public QP::QActive
     /// @brief Run IMU compensation
     void RunIMUCompensation();
 
+    /// @brief Start IMU stream
+    void StartIMUStream();
+
+    /// @brief Stop IMU stream
+    void StopIMUStream();
+
    private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -51,6 +57,12 @@ class MissionAO : public QP::QActive
     QP::QTimeEvt _imuTimer;
     /// @brief Rate control timer period in ticks
     uint32_t _imuTimerInterval = bsp::TICKS_PER_SEC / 200U;
+    /// @brief IMU stream timer
+    QP::QTimeEvt _imuStreamTimer;
+    /// @brief IMU stream period
+    uint32_t _imuStreamTimerInterval = bsp::TICKS_PER_SEC / 10U;
+    /// @brief Last IMU sample
+    imu::IMUData _imuData = {0};
 
    private:
     /// @brief Private CLIAO signals
@@ -61,6 +73,9 @@ class MissionAO : public QP::QActive
         RESET_SIG,
         IMU_SERVICE_SIG,
         RUN_IMU_COMPENSATION_SIG,
+        START_IMU_STREAM,
+        STOP_IMU_STREAM,
+        IMU_STREAM_SIG,
         MAX_PRIV_SIG
     };
 
