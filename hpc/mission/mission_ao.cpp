@@ -4,6 +4,7 @@
 
 #include "bsp.hpp"
 #include "cli_ao.hpp"
+#include "gpio.h"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
 
@@ -74,6 +75,51 @@ void MissionAO::PrintFault()
     }
 }
 
+void MissionAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
+{
+    if (fault > bsp::MAX_SUBSYSTEM_FAULTS)
+    {
+        // Fault code can't exceed max faults
+        cli::CLIAO::Inst().Printf("ERROR: Fault code out of range");
+        return;
+    }
+
+    if (_faultStates[id][fault] != active)
+    {
+        // Update internal fault state
+        _faultStates[id][fault] = active;
+        if (active)
+        {
+            // Enable fault LED if fault becomes active
+            HAL_GPIO_WritePin(P_FAULT_LED_GPIO_Port, P_FAULT_LED_Pin, GPIO_PIN_SET);
+        }
+        else
+        {
+            // Check for presence of any fault
+            bool is_fault = false;
+            for (uint8_t subsystem = 0; subsystem < bsp::SubsystemID::NUM_SUBSYSTEMS; subsystem++)
+            {
+                for (uint8_t fault = 0; fault < bsp::MAX_SUBSYSTEM_FAULTS; fault++)
+                {
+                    if (_faultStates[subsystem][fault] != 0)
+                    {
+                        is_fault = true;
+                        break;
+                    }
+                }
+            }
+            if (is_fault)
+            {
+                HAL_GPIO_WritePin(P_FAULT_LED_GPIO_Port, P_FAULT_LED_Pin, GPIO_PIN_SET);
+            }
+            else
+            {
+                HAL_GPIO_WritePin(P_FAULT_LED_GPIO_Port, P_FAULT_LED_Pin, GPIO_PIN_RESET);
+            }
+        }
+    }
+}
+
 Q_STATE_DEF(MissionAO, initial)
 {
     Q_UNUSED_PAR(e);
@@ -105,24 +151,8 @@ Q_STATE_DEF(MissionAO, root)
         // Fault active/inactive
         bool active = Q_EVT_CAST(bsp::FaultEvt)->active;
 
-        if (fault > bsp::MAX_SUBSYSTEM_FAULTS)
-        {
-            // Fault code can't exceed max faults
-            cli::CLIAO::Inst().Printf("ERROR: Fault code out of range");
-        }
-        else
-        {
-            // If fault has cleared, check if cleared fault matches
-            //  prior active fault. Log warning otherwise
-            if (!active && _faultStates[id][fault])
-            {
-                cli::CLIAO::Inst().Printf("WARNING: Cleared fault does not match existing fault");
-            }
-
-            // Update fault status
-            // System convention is 0 for nofault, but not enforced
-            _faultStates[id][fault] = active;
-        }
+        // Update fault status
+        SetFault(id, fault, active);
 
         status_ = Q_RET_HANDLED;
         break;
@@ -234,7 +264,9 @@ Q_STATE_DEF(MissionAO, initializing)
         // Initialize
         if (fault != imu::Fault::NO_FAULT)
         {
-            _faultStates[_id][Fault::IMU_INIT_FAILED] = true;
+            // Update fault status
+            SetFault(_id, Fault::IMU_INIT_FAILED, true);
+
             static QP::QEvt evt(PrivateSignals::FAULT_SIG);
             POST(&evt, this);
         }
@@ -373,10 +405,7 @@ Q_STATE_DEF(MissionAO, error)
         // Clear all INTERNAL faults on exit
         for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
         {
-            if (_faultStates[_id][fault])
-            {
-                _faultStates[_id][fault] = false;
-            }
+            SetFault(_id, fault, false);
         }
 
         status_ = Q_RET_HANDLED;

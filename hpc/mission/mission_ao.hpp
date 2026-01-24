@@ -136,6 +136,9 @@ class MissionAO : public QP::QActive
         MAX_PRIV_SIG
     };
 
+    /// @brief Set and publish fault
+    void SetFault(bsp::SubsystemID subsystem, uint8_t fault, bool active);
+
     /// @brief Initial state
     Q_STATE_DECL(initial);
     /// @brief Root state

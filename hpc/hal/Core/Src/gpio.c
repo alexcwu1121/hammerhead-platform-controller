@@ -45,9 +45,13 @@ void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(P_FAULT_LED_GPIO_Port, P_FAULT_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   // Don't pull IMU cs pin low early. Dummy read slave ID later.
@@ -55,6 +59,13 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, P_M2_EN_Pin|P_EEPROM_CS_Pin|P_M1_EN_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : P_FAULT_LED_Pin */
+  GPIO_InitStruct.Pin = P_FAULT_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(P_FAULT_LED_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : P_M1_DIR_Pin P_M2_DIR_Pin P_EEPROM_WP_Pin */
   GPIO_InitStruct.Pin = P_M1_DIR_Pin|P_M2_DIR_Pin|P_EEPROM_WP_Pin|P_IMU_CS_Pin;
@@ -82,6 +93,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(P_M2_FAULT_GPIO_Port, &GPIO_InitStruct);
 
+  
 }
 
 /* USER CODE BEGIN 2 */
