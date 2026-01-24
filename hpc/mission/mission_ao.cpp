@@ -1,8 +1,6 @@
 #include "mission_ao.hpp"
 
 #include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "bsp.hpp"
 #include "cli_ao.hpp"

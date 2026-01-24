@@ -1,7 +1,7 @@
 #include "bmi270.hpp"
 
 #include "cli_ao.hpp"
-#include "math.h"
+//#include "math.h"
 
 namespace imu
 {
@@ -407,12 +407,12 @@ Fault BMI270::RunCompensation()
         HAL_Delay(_compensationPollPeriod);
     }
     // Negate average and scale by resolution for bias offset
-    avg.acc[0] = lrintf(-avg.acc[0] / _accOffsetRes);
-    avg.acc[1] = lrintf(-avg.acc[1] / _accOffsetRes);
-    avg.acc[2] = lrintf(-avg.acc[2] / _accOffsetRes);
-    avg.gyr[0] = lrintf(-avg.gyr[0] / _gyrOffsetRes);
-    avg.gyr[1] = lrintf(-avg.gyr[1] / _gyrOffsetRes);
-    avg.gyr[2] = lrintf(-avg.gyr[2] / _gyrOffsetRes);
+    avg.acc[0] = -avg.acc[0] / _accOffsetRes;
+    avg.acc[1] = -avg.acc[1] / _accOffsetRes;
+    avg.acc[2] = -avg.acc[2] / _accOffsetRes;
+    avg.gyr[0] = -avg.gyr[0] / _gyrOffsetRes;
+    avg.gyr[1] = -avg.gyr[1] / _gyrOffsetRes;
+    avg.gyr[2] = -avg.gyr[2] / _gyrOffsetRes;
 
     /// TODO: Don't do accelerometer compensation until a procedure is defined
     /*

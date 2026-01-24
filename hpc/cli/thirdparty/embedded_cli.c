@@ -1,8 +1,9 @@
 #include "embedded_cli.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "printf.h"
 
 #define CLI_TOKEN_NPOS 0xffff
 

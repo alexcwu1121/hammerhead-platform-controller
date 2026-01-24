@@ -29,7 +29,7 @@ int main(void)
     QP::QF::poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
     static uint8_t mdPoolSto[50][32];  // medium (average data packets)
     QP::QF::poolInit(mdPoolSto, sizeof(mdPoolSto), sizeof(mdPoolSto[0]));
-    static uint8_t lgPoolSto[10][512];  // large (logs or text)
+    static uint8_t lgPoolSto[7][512];  // large (logs or text)
     QP::QF::poolInit(lgPoolSto, sizeof(lgPoolSto), sizeof(lgPoolSto[0]));
 
     // Init publish-subscribe signals

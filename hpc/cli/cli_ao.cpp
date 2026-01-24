@@ -1,12 +1,11 @@
 #include "cli_ao.hpp"
 
 #include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "cli_binding.hpp"
 #include "hpc_parameters.hpp"
 #include "param_ao.hpp"
+#include "thirdparty/printf.h"
 
 // Define UART interrupt callback function to handle a received character with CLI
 extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)

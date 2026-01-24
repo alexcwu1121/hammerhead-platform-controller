@@ -2,8 +2,8 @@
 #define CLI_AO_HPP_
 
 #include "bsp.hpp"
-#include "embedded_cli.h"
 #include "qpcpp.hpp"
+#include "thirdparty/embedded_cli.h"
 #include "usart.h"
 
 namespace cli

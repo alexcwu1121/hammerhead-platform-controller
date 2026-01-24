@@ -29,7 +29,8 @@ target_sources(${CMAKE_PROJECT_NAME}
         main.cpp
         cli/cli_ao.cpp
         cli/cli_binding.cpp
-        cli/embedded_cli.c
+        cli/thirdparty/embedded_cli.c
+        cli/thirdparty/printf.c
         motor-control/motor_control_ao.cpp
         parameter/hpc_parameters.cpp
         parameter/parameter.cpp
@@ -49,7 +50,6 @@ target_compile_definitions(${CMAKE_PROJECT_NAME}
 target_link_options(${CMAKE_PROJECT_NAME}
     PRIVATE
         -T${CMAKE_CURRENT_LIST_DIR}/STM32F103XX_FLASH.ld
-        -u _printf_float # TODO: remove for release-no-debug builds
 )
 
 # Add the map file to the list of files to be removed with 'clean' target

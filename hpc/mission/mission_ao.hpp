@@ -1,11 +1,12 @@
 #ifndef MISSION_AO_HPP_
 #define MISSION_AO_HPP_
 
-// TODO: stuff to do here:
-//  - collect faults and report to MM
+/// TODO: stuff to do here:
 //  - send IMU data up to MM
 //  - listen and convert MC commands from MM
 //  - listen and convert parameter commands from MM
+
+/// TODO: Nice to haves:
 //  - report battery life from input voltage sense
 //      - test ADC voltage readings and implement battery polynomial
 //  - record motor control and imu timing stability metrics

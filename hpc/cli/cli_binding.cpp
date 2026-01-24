@@ -1,10 +1,10 @@
 #include "cli_binding.hpp"
 
 #include "cli_ao.hpp"
-#include "embedded_cli.h"
 #include "mission_ao.hpp"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
+#include "thirdparty/embedded_cli.h"
 
 void cli::onClear(EmbeddedCli *cli, char *args, void *context)
 {
