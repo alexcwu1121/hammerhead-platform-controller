@@ -113,12 +113,12 @@ mc::MotorControlAO& mc::MotorControlAO::MC2Inst()
 
 void mc::MotorControlAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
+    _id        = id;
+    _isStarted = true;
     this->start(priority,      // QP prio. of the AO
                 _queue,        // event queue storage
                 _queueSize,    // queue size [events]
                 nullptr, 0U);  // no stack storage
-    _id        = id;
-    _isStarted = true;
 }
 
 void mc::MotorControlAO::Reset()
@@ -264,6 +264,7 @@ Q_STATE_DEF(mc::MotorControlAO, initial)
     // Subscribe to signals
     subscribe(bsp::PublicSignals::PARAMETER_UPDATE_SIG);
     subscribe(bsp::PublicSignals::ADC_SIG);
+    subscribe(bsp::PublicSignals::REQUEST_FAULT_SIG);
     return tran(&initializing);
 }
 
@@ -387,6 +388,20 @@ Q_STATE_DEF(mc::MotorControlAO, root)
         static QP::QEvt evt(PrivateSignals::PARAMS_UPDATED_SIG);
         POST(&evt, this);
 
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case bsp::PublicSignals::REQUEST_FAULT_SIG:
+    {
+        // Publish all fault states
+        for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
+        {
+            bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+            evt->id            = _id;
+            evt->fault         = fault;
+            evt->active        = _faultStates[fault];
+            PUBLISH(evt, this);
+        }
         status_ = Q_RET_HANDLED;
         break;
     }

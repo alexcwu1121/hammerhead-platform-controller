@@ -11,9 +11,27 @@ namespace cli
 /// @brief Fault codes
 enum Fault : uint8_t
 {
-    NO_FAULT,
-    INIT_FAILED
+    INIT_FAILED = 0U,
+    NUM_FAULTS
 };
+
+/// @brief Fault code to string table
+/// @param fault
+/// @return
+constexpr const char* FaultToStr(Fault fault)
+{
+    switch (fault)
+    {
+    case Fault::INIT_FAILED:
+    {
+        return "INIT_FAILED";
+    }
+    default:
+    {
+        return "";
+    }
+    }
+}
 
 class CLIAO : public QP::QActive
 {
@@ -42,6 +60,9 @@ class CLIAO : public QP::QActive
     /// @brief Receive an incoming character
     void ReceiveChar(UART_HandleTypeDef* huart);
 
+    /// @brief Maximum size of string to print
+    static constexpr uint16_t cliPrintBufSize = 500U;
+
    private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -55,8 +76,6 @@ class CLIAO : public QP::QActive
     static constexpr uint16_t _cliHistorySize = 64U;
     /// @brief Maximum number of CLI bindings
     static constexpr uint16_t _cliMaxBindingCount = 32U;
-    /// @brief Maximum size of string to print
-    static constexpr uint16_t _cliPrintBufSize = 500U;
     /// @brief UART Rx buffer size (one char at a time)
     static constexpr uint16_t _uartRxBufSize = 1U;
     /// @brief CLI memory buffer
@@ -77,6 +96,8 @@ class CLIAO : public QP::QActive
     QP::QTimeEvt _processTimer;
     /// @brief CLI process interval in ticks
     uint32_t _processInterval = bsp::TICKS_PER_SEC / 20U;
+    /// @brief Fault states
+    bool _faultStates[cli::Fault::NUM_FAULTS] = {false};
 
    private:
     /// @brief Private CLIAO signals
@@ -96,7 +117,7 @@ class CLIAO : public QP::QActive
     class PrintEvt : public QP::QEvt
     {
        public:
-        char buf[_cliPrintBufSize];
+        char buf[cliPrintBufSize];
     };
 
     /// @brief Initial state

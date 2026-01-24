@@ -11,12 +11,12 @@ param::ParamAO::ParamAO()
 
 void param::ParamAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
+    _id        = id;
+    _isStarted = true;
     this->start(priority,      // QP prio. of the AO
                 _queue,        // event queue storage
                 _queueSize,    // queue size [events]
                 nullptr, 0U);  // no stack storage
-    _id        = id;
-    _isStarted = true;
 }
 
 void param::ParamAO::SetParam(ParameterID id, Type value)
@@ -86,6 +86,21 @@ void param::ParamAO::ResetToDefaults()
     }
 }
 
+void param::ParamAO::SetFault(param::Fault fault, bool active)
+{
+    if (_faultStates[fault] != active)
+    {
+        // Update internal fault state
+        _faultStates[fault] = active;
+        // Publish fault update
+        bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+        evt->id            = _id;
+        evt->fault         = fault;
+        evt->active        = active;
+        PUBLISH(evt, this);
+    }
+}
+
 void param::ParamAO::PrintParam_h(ParameterID id)
 {
     Fault       fault;
@@ -99,30 +114,35 @@ void param::ParamAO::PrintParam_h(ParameterID id)
     if (fault != param::Fault::NO_FAULT)
     {
         cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+        SetFault(fault, true);
         return;
     }
     fault = ParameterList::Inst().Get(id, value);
     if (fault != param::Fault::NO_FAULT)
     {
         cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+        SetFault(fault, true);
         return;
     }
     fault = ParameterList::Inst().GetDefault(id, defaultValue);
     if (fault != param::Fault::NO_FAULT)
     {
         cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+        SetFault(fault, true);
         return;
     }
     fault = ParameterList::Inst().GetName(id, name);
     if (fault != param::Fault::NO_FAULT)
     {
         cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+        SetFault(fault, true);
         return;
     }
     fault = ParameterList::Inst().GetDesc(id, desc);
     if (fault != param::Fault::NO_FAULT)
     {
         cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+        SetFault(fault, true);
         return;
     }
 
@@ -223,10 +243,12 @@ void param::ParamAO::ReadParameters()
     if (fault != param::Fault::NO_FAULT)
     {
         cli::CLIAO::Inst().Printf("ERROR: Parameter deserialize fault (%u)", fault);
+        SetFault(fault, true);
     }
     else if (read_size != deserialize_size)
     {
         cli::CLIAO::Inst().Printf("ERROR: Parameter unexpected read size");
+        SetFault(fault, true);
     }
 }
 
@@ -234,6 +256,7 @@ Q_STATE_DEF(param::ParamAO, initial)
 {
     Q_UNUSED_PAR(e);
     _eeprom.EnableWriteProtect();
+    subscribe(bsp::PublicSignals::REQUEST_FAULT_SIG);
     return tran(&active);
 }
 
@@ -265,6 +288,7 @@ Q_STATE_DEF(param::ParamAO, active)
         if (fault != param::Fault::NO_FAULT)
         {
             cli::CLIAO::Inst().Printf("ERROR: Parameter set fault (%u)", fault);
+            SetFault(fault, true);
         }
 
         // Publish a parameter update event
@@ -288,6 +312,7 @@ Q_STATE_DEF(param::ParamAO, active)
         if (fault != param::Fault::NO_FAULT)
         {
             cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+            SetFault(fault, true);
         }
 
         // Write and read back
@@ -300,6 +325,7 @@ Q_STATE_DEF(param::ParamAO, active)
         if (fault != param::Fault::NO_FAULT)
         {
             cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+            SetFault(fault, true);
         }
 
         status_ = Q_RET_HANDLED;
@@ -325,12 +351,14 @@ Q_STATE_DEF(param::ParamAO, active)
             if (fault != param::Fault::NO_FAULT)
             {
                 cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+                SetFault(fault, true);
                 continue;
             }
             fault = ParameterList::Inst().Set(id, defaultValue);
             if (fault != param::Fault::NO_FAULT)
             {
                 cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+                SetFault(fault, true);
                 continue;
             }
 
@@ -343,6 +371,20 @@ Q_STATE_DEF(param::ParamAO, active)
     case PrivateSignals::PRINT_PARAM_SIG:
     {
         PrintParam_h(Q_EVT_CAST(ParamIndexEvt)->id);
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case bsp::PublicSignals::REQUEST_FAULT_SIG:
+    {
+        // Publish all fault states
+        for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
+        {
+            bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+            evt->id            = _id;
+            evt->fault         = fault;
+            evt->active        = _faultStates[fault];
+            PUBLISH(evt, this);
+        }
         status_ = Q_RET_HANDLED;
         break;
     }

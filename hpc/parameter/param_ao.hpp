@@ -73,6 +73,8 @@ class ParamAO : public QP::QActive
     // TODO: add maximum address of parameter block
     /// @brief number of read retries
     static constexpr uint16_t _readRetryCount = 3U;
+    /// @brief Fault states
+    bool _faultStates[param::Fault::NUM_FAULTS] = {false};
 
     /// @brief Print a parameter
     /// @param id
@@ -84,6 +86,9 @@ class ParamAO : public QP::QActive
 
     /// @brief Read parameters from EEPROM
     void ReadParameters();
+
+    /// @brief Set and publish fault
+    void SetFault(param::Fault fault, bool active);
 
    private:
     /// @brief Private CLIAO signals

@@ -29,7 +29,7 @@ int main(void)
     QP::QF::poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
     static uint8_t mdPoolSto[50][32];  // medium (average data packets)
     QP::QF::poolInit(mdPoolSto, sizeof(mdPoolSto), sizeof(mdPoolSto[0]));
-    static uint8_t lgPoolSto[5][512];  // large (logs or text)
+    static uint8_t lgPoolSto[10][512];  // large (logs or text)
     QP::QF::poolInit(lgPoolSto, sizeof(lgPoolSto), sizeof(lgPoolSto[0]));
 
     // Init publish-subscribe signals
@@ -42,10 +42,10 @@ int main(void)
     // Start AOs
     // ParamAO is highest priority because it doesn't do much + must start before everything else
     param::ParamAO::Inst().Start(1U, bsp::SubsystemID::PARAMETER_SUBSYSTEM);
-    mission::MissionAO::Inst().Start(2U, bsp::SubsystemID::MISSION_SUBSYSTEM);
-    mc::MotorControlAO::MC1Inst().Start(3U, bsp::SubsystemID::MC1_SUBSYSTEM);
-    mc::MotorControlAO::MC2Inst().Start(4U, bsp::SubsystemID::MC2_SUBSYSTEM);
-    cli::CLIAO::Inst().Start(5U, bsp::SubsystemID::CLI_SUBSYSTEM);
+    cli::CLIAO::Inst().Start(2U, bsp::SubsystemID::CLI_SUBSYSTEM);
+    mission::MissionAO::Inst().Start(3U, bsp::SubsystemID::MISSION_SUBSYSTEM);
+    mc::MotorControlAO::MC1Inst().Start(4U, bsp::SubsystemID::MC1_SUBSYSTEM);
+    mc::MotorControlAO::MC2Inst().Start(5U, bsp::SubsystemID::MC2_SUBSYSTEM);
 
     // Start QF scheduler
     return QP::QF::run();

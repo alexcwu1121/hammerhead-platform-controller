@@ -16,8 +16,8 @@ extern "C"
         QS_ASSERTION(module, id, 10000U);  // report assertion to QS
 
         // Reset
-        // Breakpoint here
-        // NVIC_SystemReset(); // TODO: not a good idea? Reset in release only
+        /// TODO: Enable in release only
+        // NVIC_SystemReset();
         for (;;)
         {
         }
@@ -56,9 +56,10 @@ extern "C"
         (void)pc;
         (void)psr;
 
-        __BKPT(1);  // Stop here and inspect
-        while (1)
-            ;
+        __BKPT(1);
+        for (;;)
+        {
+        }
     }
 
     /// @brief ADC conversion buffer

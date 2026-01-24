@@ -8,17 +8,45 @@
 #include "qpcpp.hpp"
 #include "tim.h"
 
+/// TODO: Add timing jitter pin toggle mode as option
+
 namespace mc
 {
 // Add FaultAO and a global fault event system indexed by AO of origin and fault type
 /// @brief Fault codes
 enum Fault : uint8_t
 {
-    UNDERVOLTAGE_FAULT,
+    UNDERVOLTAGE_FAULT = 0U,
     OVERVOLTAGE_FAULT,
     OVERCURRENT_THERMAL_FAULT,
     NUM_FAULTS
 };
+
+/// @brief Fault code to string table
+/// @param fault
+/// @return
+constexpr const char* FaultToStr(Fault fault)
+{
+    switch (fault)
+    {
+    case Fault::UNDERVOLTAGE_FAULT:
+    {
+        return "UNDERVOLTAGE_FAULT";
+    }
+    case Fault::OVERVOLTAGE_FAULT:
+    {
+        return "OVERVOLTAGE_FAULT";
+    }
+    case Fault::OVERCURRENT_THERMAL_FAULT:
+    {
+        return "OVERCURRENT_THERMAL_FAULT";
+    }
+    default:
+    {
+        return "";
+    }
+    }
+}
 
 /// @brief Motor direction
 enum Dir : uint8_t

@@ -2,17 +2,54 @@
 #define MISSION_AO_HPP_
 
 // TODO: stuff to do here:
-//  - collect faults
+//  - collect faults and report to MM
 //  - send IMU data up to MM
 //  - listen and convert MC commands from MM
 //  - listen and convert parameter commands from MM
 //  - report battery life from input voltage sense
+//      - test ADC voltage readings and implement battery polynomial
+//  - record motor control and imu timing stability metrics
 
 #include "bmi270.hpp"
 #include "bsp.hpp"
 
 namespace mission
 {
+/// @brief Fault codes
+enum Fault : uint8_t
+{
+    IMU_INIT_FAILED = 0U,
+    BATT_LOW,
+    BATT_CRITICAL,
+    NUM_FAULTS
+};
+
+/// @brief Fault code to string table
+/// @param fault
+/// @return
+constexpr const char* FaultToStr(Fault fault)
+{
+    switch (fault)
+    {
+    case Fault::IMU_INIT_FAILED:
+    {
+        return "IMU_INIT_FAILED";
+    }
+    case Fault::BATT_LOW:
+    {
+        return "BATT_LOW";
+    }
+    case Fault::BATT_CRITICAL:
+    {
+        return "BATT_CRITICAL";
+    }
+    default:
+    {
+        return "";
+    }
+    }
+}
+
 /// @brief Mission AO
 class MissionAO : public QP::QActive
 {
@@ -42,6 +79,12 @@ class MissionAO : public QP::QActive
     /// @brief Stop IMU stream
     void StopIMUStream();
 
+    /// @brief Reset mission AO
+    void Reset();
+
+    /// @brief Print system fault state
+    void PrintFault();
+
    private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -63,6 +106,16 @@ class MissionAO : public QP::QActive
     uint32_t _imuStreamTimerInterval = bsp::TICKS_PER_SEC / 10U;
     /// @brief Last IMU sample
     imu::IMUData _imuData = {0};
+    /// @brief Internal fault recovery timer
+    QP::QTimeEvt _faultRecoveryTimer;
+    /// @brief Internal fault recovery timer period in ticks
+    uint32_t _faultRecoveryTimerInterval = bsp::TICKS_PER_SEC / 100U;
+    /// @brief Fault request timer
+    QP::QTimeEvt _faultRequestTimer;
+    /// @brief Fault request timer period in ticks
+    uint32_t _faultRequestTimerInterval = bsp::TICKS_PER_SEC / 20U;
+    /// @brief Latest faults from all subsystems, including mission subsystem
+    bool _faultStates[bsp::SubsystemID::NUM_SUBSYSTEMS][bsp::MAX_SUBSYSTEM_FAULTS] = {0};
 
    private:
     /// @brief Private CLIAO signals
@@ -76,6 +129,8 @@ class MissionAO : public QP::QActive
         START_IMU_STREAM,
         STOP_IMU_STREAM,
         IMU_STREAM_SIG,
+        SUBS_FAULT_REQUEST_SIG,
+        PRINT_FAULT_SIG,
         MAX_PRIV_SIG
     };
 

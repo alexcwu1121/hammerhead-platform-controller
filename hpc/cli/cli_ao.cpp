@@ -18,12 +18,12 @@ cli::CLIAO::CLIAO() : QP::QActive(&initial), _processTimer(this, PrivateSignals:
 
 void cli::CLIAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
+    _id        = id;
+    _isStarted = true;
     this->start(priority,      // QP prio. of the AO
                 _queue,        // event queue storage
                 _queueSize,    // queue size [events]
                 nullptr, 0U);  // no stack storage
-    _id        = id;
-    _isStarted = true;
 }
 
 void cli::CLIAO::Reset()
@@ -77,6 +77,7 @@ Q_STATE_DEF(cli::CLIAO, initial)
     Q_UNUSED_PAR(e);
     // Subscribe to signals
     subscribe(bsp::PublicSignals::PARAMETER_UPDATE_SIG);
+    subscribe(bsp::PublicSignals::REQUEST_FAULT_SIG);
     return tran(&initializing);
 }
 
@@ -117,6 +118,20 @@ Q_STATE_DEF(cli::CLIAO, root)
         static QP::QEvt evt(PrivateSignals::PARAMS_UPDATED);
         POST(&evt, this);
 
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case bsp::PublicSignals::REQUEST_FAULT_SIG:
+    {
+        // Publish all fault states
+        for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
+        {
+            bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+            evt->id            = _id;
+            evt->fault         = fault;
+            evt->active        = _faultStates[fault];
+            PUBLISH(evt, this);
+        }
         status_ = Q_RET_HANDLED;
         break;
     }
@@ -171,6 +186,13 @@ Q_STATE_DEF(cli::CLIAO, initializing)
     }
     case PrivateSignals::FAULT_SIG:
     {
+        // Publish fault
+        _faultStates[Fault::INIT_FAILED] = true;
+        bsp::FaultEvt* evt               = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+        evt->id                          = _id;
+        evt->fault                       = Fault::INIT_FAILED;
+        evt->active                      = _faultStates[Fault::INIT_FAILED];
+        PUBLISH(evt, this);
         status_ = tran(&error);
         break;
     }
@@ -267,6 +289,24 @@ Q_STATE_DEF(cli::CLIAO, error)
     QP::QState status_;
     switch (e->sig)
     {
+    case Q_EXIT_SIG:
+    {
+        // Clear all faults on exit
+        for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
+        {
+            if (_faultStates[fault])
+            {
+                _faultStates[fault] = false;
+                bsp::FaultEvt* evt  = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+                evt->id             = _id;
+                evt->fault          = fault;
+                evt->active         = _faultStates[fault];
+                PUBLISH(evt, this);
+            }
+        }
+        status_ = Q_RET_HANDLED;
+        break;
+    }
     default:
     {
         status_ = super(&root);

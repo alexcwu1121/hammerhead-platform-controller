@@ -20,7 +20,58 @@ enum Fault : uint8_t
     TOO_MANY_PARAMETERS,
     NO_SUCH_PARAM,
     UNSUPPORTED_TYPE,
+    NUM_FAULTS
 };
+
+/// @brief Fault code to string table
+/// @param fault
+/// @return
+constexpr const char* FaultToStr(Fault fault)
+{
+    switch (fault)
+    {
+    case Fault::NO_FAULT:
+    {
+        return "NO_FAULT";
+    }
+    case Fault::ID_MISMATCH:
+    {
+        return "ID_MISMATCH";
+    }
+    case Fault::TYPE_MISMATCH:
+    {
+        return "TYPE_MISMATCH";
+    }
+    case Fault::OUTBUF_TOO_SMALL:
+    {
+        return "OUTBUF_TOO_SMALL";
+    }
+    case Fault::INBUF_TOO_SMALL:
+    {
+        return "INBUF_TOO_SMALL";
+    }
+    case Fault::NONCONTIGUOUS_REGISTRATION:
+    {
+        return "NONCONTIGUOUS_REGISTRATION";
+    }
+    case Fault::TOO_MANY_PARAMETERS:
+    {
+        return "TOO_MANY_PARAMETERS";
+    }
+    case Fault::NO_SUCH_PARAM:
+    {
+        return "NO_SUCH_PARAM";
+    }
+    case Fault::UNSUPPORTED_TYPE:
+    {
+        return "UNSUPPORTED_TYPE";
+    }
+    default:
+    {
+        return "";
+    }
+    }
+}
 
 /// @brief Parameter payload type IDs
 enum TypeID : uint8_t

@@ -61,7 +61,8 @@ enum SubsystemID : uint8_t
     MC1_SUBSYSTEM,
     MC2_SUBSYSTEM,
     CLI_SUBSYSTEM,
-    MISSION_SUBSYSTEM
+    MISSION_SUBSYSTEM,
+    NUM_SUBSYSTEMS  // Keep this last
 };
 
 /// @brief Public QP signals
@@ -70,7 +71,8 @@ enum PublicSignals : QP::QSignal
     PARAMETER_UPDATE_SIG = QP::Q_USER_SIG,
     ADC_SIG,
     FAULT_SIG,
-    MAX_PUB_SIG
+    REQUEST_FAULT_SIG,
+    MAX_PUB_SIG  // Keep this last
 };
 
 /// @brief Parameter update event
@@ -82,6 +84,9 @@ class ParameterUpdateEvt : public QP::QEvt
     /// @brief Parameter value
     param::Type value;
 };
+
+/// @brief Maximum number of faults each subsystem may implement
+constexpr uint8_t MAX_SUBSYSTEM_FAULTS = 16U;
 
 /// @brief Fault event
 class FaultEvt : public QP::QEvt

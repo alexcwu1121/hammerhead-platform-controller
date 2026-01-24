@@ -364,6 +364,11 @@ void cli::onIMU(EmbeddedCli *cli, char *args, void *context)
             mission::MissionAO::Inst().StopIMUStream();
             handled = true;
         }
+        else if (strcmp(cmd_str, "reset") == 0)
+        {
+            mission::MissionAO::Inst().Reset();
+            handled = true;
+        }
         break;
     }
     default:
@@ -379,7 +384,41 @@ void cli::onIMU(EmbeddedCli *cli, char *args, void *context)
             "Usage:\n\r"
             "\timu run_compensation\n\r"
             "\timu start_stream\n\r"
-            "\timu stop_stream\n\r");
+            "\timu stop_stream\n\r"
+            "\timu reset\n\r");
+    }
+}
+
+void cli::onMission(EmbeddedCli *cli, char *args, void *context)
+{
+    // Get number of arguments
+    uint16_t argc    = embeddedCliGetTokenCount(args);
+    bool     handled = false;
+
+    switch (argc)
+    {
+    case 1U:
+    {
+        const char *cmd_str = embeddedCliGetToken(args, 1U);
+        if (strcmp(cmd_str, "print_fault") == 0)
+        {
+            mission::MissionAO::Inst().PrintFault();
+            handled = true;
+        }
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+
+    if (!handled)
+    {
+        // Help dialogue
+        cli::CLIAO::Inst().Printf(
+            "Usage:\n\r"
+            "\tmission print_fault\n\r");
     }
 }
 
@@ -416,4 +455,12 @@ void cli::InitBindings(EmbeddedCli *cli)
                                      .context      = NULL,
                                      .binding      = onIMU};
     embeddedCliAddBinding(cli, imu_binding);
+
+    // Command binding for the mission system command
+    CliCommandBinding mission_binding = {.name         = "mission",
+                                         .help         = "Manage system",
+                                         .tokenizeArgs = true,
+                                         .context      = NULL,
+                                         .binding      = onMission};
+    embeddedCliAddBinding(cli, mission_binding);
 }
