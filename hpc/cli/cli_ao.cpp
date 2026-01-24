@@ -43,7 +43,6 @@ void cli::CLIAO::Printf(const char* fmt, ...)
         // Format the string using snprintf
         va_list args;
         va_start(args, fmt);
-        // TODO: Consider manual to string instead of relying on std
         int length = vsnprintf(evt->buf, sizeof(evt->buf), fmt, args);
         va_end(args);
 

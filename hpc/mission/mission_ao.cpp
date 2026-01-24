@@ -140,7 +140,6 @@ Q_STATE_DEF(MissionAO, root)
         for (uint8_t fault = 0; fault < mission::Fault::NUM_FAULTS; fault++)
         {
             bool state = _faultStates[bsp::SubsystemID::MISSION_SUBSYSTEM][fault];
-            // TODO: Consider manual to string instead of relying on std
             ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
                             mission::FaultToStr((mission::Fault)fault), state);
         }
@@ -154,7 +153,6 @@ Q_STATE_DEF(MissionAO, root)
         for (uint8_t fault = 0; fault < mc::Fault::NUM_FAULTS; fault++)
         {
             bool state = _faultStates[bsp::SubsystemID::MC1_SUBSYSTEM][fault];
-            // TODO: Consider manual to string instead of relying on std
             ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
                             mc::FaultToStr((mc::Fault)fault), state);
         }
@@ -168,7 +166,6 @@ Q_STATE_DEF(MissionAO, root)
         for (uint8_t fault = 0; fault < mc::Fault::NUM_FAULTS; fault++)
         {
             bool state = _faultStates[bsp::SubsystemID::MC2_SUBSYSTEM][fault];
-            // TODO: Consider manual to string instead of relying on std
             ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
                             mc::FaultToStr((mc::Fault)fault), state);
         }
@@ -182,7 +179,6 @@ Q_STATE_DEF(MissionAO, root)
         for (uint8_t fault = 0; fault < param::Fault::NUM_FAULTS; fault++)
         {
             bool state = _faultStates[bsp::SubsystemID::PARAMETER_SUBSYSTEM][fault];
-            // TODO: Consider manual to string instead of relying on std
             ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
                             param::FaultToStr((param::Fault)fault), state);
         }
@@ -196,7 +192,6 @@ Q_STATE_DEF(MissionAO, root)
         for (uint8_t fault = 0; fault < cli::Fault::NUM_FAULTS; fault++)
         {
             bool state = _faultStates[bsp::SubsystemID::CLI_SUBSYSTEM][fault];
-            // TODO: Consider manual to string instead of relying on std
             ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
                             cli::FaultToStr((cli::Fault)fault), state);
         }
