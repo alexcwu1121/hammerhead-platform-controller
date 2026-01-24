@@ -2,9 +2,10 @@
 #define MISSION_AO_HPP_
 
 /// TODO: stuff to do here:
-//  - send IMU data up to MM
-//  - listen and convert MC commands from MM
-//  - listen and convert parameter commands from MM
+//  - send IMU data up to MM on every read
+//  - Define MM i2c protocol
+//      - listen and convert MC commands from MM
+//      - listen and convert parameter commands from MM
 
 /// TODO: Nice to haves:
 //  - report battery life from input voltage sense

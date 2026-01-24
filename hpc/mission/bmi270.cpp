@@ -1,7 +1,6 @@
 #include "bmi270.hpp"
 
 #include "cli_ao.hpp"
-//#include "math.h"
 
 namespace imu
 {
