@@ -1,5 +1,7 @@
 #include "EEPROM_25LC256.hpp"
 
+/// TODO: refactor to use interrupt driven non-blocking SPI HAL API
+
 namespace eeprom
 {
 // EEPROM SPI opcodes

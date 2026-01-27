@@ -62,6 +62,7 @@ enum SubsystemID : uint8_t
     MC2_SUBSYSTEM,
     CLI_SUBSYSTEM,
     MISSION_SUBSYSTEM,
+    IMU_SUBSYSTEM,
     NUM_SUBSYSTEMS  // Keep this last
 };
 

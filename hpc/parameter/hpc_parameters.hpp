@@ -17,6 +17,7 @@ enum class ParameterID : param::ParamIndex
     BATTERY_DISCHARGE_CURVE_C2,
     BATTERY_DISCHARGE_CURVE_C3,
     CLI_UPDATE_FREQ,
+    MM_I2C_ADDR,
     NUM_PARAMS,  // keep this at the end
 };
 }

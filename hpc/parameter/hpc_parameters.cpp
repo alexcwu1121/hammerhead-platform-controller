@@ -40,4 +40,7 @@ DEFINE_PARAMETER(param::ParameterID::BATTERY_DISCHARGE_CURVE_C3, param::TypeID::
 
 DEFINE_PARAMETER(param::ParameterID::CLI_UPDATE_FREQ, param::TypeID::FLOAT32,
                  param::Type{._float32 = 20.0f}, "CLI_UPDATE_FREQ", "CLI update frequency (Hz)");
+
+DEFINE_PARAMETER(param::ParameterID::MM_I2C_ADDR, param::TypeID::UINT8, param::Type{._uint8 = 0x10},
+                 "MM_I2C_ADDR", "Mission module I2C address");
 }  // namespace param

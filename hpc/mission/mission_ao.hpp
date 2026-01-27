@@ -12,7 +12,6 @@
 //      - test ADC voltage readings and implement battery polynomial
 //  - record motor control and imu timing stability metrics
 
-#include "bmi270.hpp"
 #include "bsp.hpp"
 
 namespace mission
@@ -20,7 +19,7 @@ namespace mission
 /// @brief Fault codes
 enum Fault : uint8_t
 {
-    IMU_INIT_FAILED = 0U,
+    MISSION_INIT_FAILED = 0U,
     BATT_LOW,
     BATT_CRITICAL,
     NUM_FAULTS
@@ -33,9 +32,9 @@ constexpr const char* FaultToStr(Fault fault)
 {
     switch (fault)
     {
-    case Fault::IMU_INIT_FAILED:
+    case Fault::MISSION_INIT_FAILED:
     {
-        return "IMU_INIT_FAILED";
+        return "MISSION_INIT_FAILED";
     }
     case Fault::BATT_LOW:
     {
@@ -72,15 +71,6 @@ class MissionAO : public QP::QActive
     /// @param id
     void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
-    /// @brief Run IMU compensation
-    void RunIMUCompensation();
-
-    /// @brief Start IMU stream
-    void StartIMUStream();
-
-    /// @brief Stop IMU stream
-    void StopIMUStream();
-
     /// @brief Reset mission AO
     void Reset();
 
@@ -96,18 +86,6 @@ class MissionAO : public QP::QActive
     QP::QEvtPtr _queue[_queueSize] = {0};
     /// @brief Flag indicating if AO has executed initial transition
     bool _isStarted = false;
-    /// @brief IMU device
-    imu::BMI270 _imu;
-    /// @brief IMU service timer
-    QP::QTimeEvt _imuTimer;
-    /// @brief Rate control timer period in ticks
-    uint32_t _imuTimerInterval = bsp::TICKS_PER_SEC / 200U;
-    /// @brief IMU stream timer
-    QP::QTimeEvt _imuStreamTimer;
-    /// @brief IMU stream period
-    uint32_t _imuStreamTimerInterval = bsp::TICKS_PER_SEC / 10U;
-    /// @brief Last IMU sample
-    imu::IMUData _imuData = {0};
     /// @brief Internal fault recovery timer
     QP::QTimeEvt _faultRecoveryTimer;
     /// @brief Internal fault recovery timer period in ticks
@@ -118,6 +96,8 @@ class MissionAO : public QP::QActive
     uint32_t _faultRequestTimerInterval = bsp::TICKS_PER_SEC / 20U;
     /// @brief Latest faults from all subsystems, including mission subsystem
     bool _faultStates[bsp::SubsystemID::NUM_SUBSYSTEMS][bsp::MAX_SUBSYSTEM_FAULTS] = {0};
+    /// @brief Mission Module I2C address
+    uint8_t _mmAddr = 0x00;
 
    private:
     /// @brief Private CLIAO signals
@@ -126,11 +106,6 @@ class MissionAO : public QP::QActive
         INITIALIZED_SIG = bsp::PublicSignals::MAX_PUB_SIG,
         FAULT_SIG,
         RESET_SIG,
-        IMU_SERVICE_SIG,
-        RUN_IMU_COMPENSATION_SIG,
-        START_IMU_STREAM,
-        STOP_IMU_STREAM,
-        IMU_STREAM_SIG,
         SUBS_FAULT_REQUEST_SIG,
         PRINT_FAULT_SIG,
         MAX_PRIV_SIG

@@ -1,6 +1,7 @@
 #include "cli_binding.hpp"
 
 #include "cli_ao.hpp"
+#include "imu_ao.hpp"
 #include "mission_ao.hpp"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
@@ -351,22 +352,22 @@ void cli::onIMU(EmbeddedCli *cli, char *args, void *context)
         const char *cmd_str = embeddedCliGetToken(args, 1U);
         if (strcmp(cmd_str, "run_compensation") == 0)
         {
-            mission::MissionAO::Inst().RunIMUCompensation();
+            imu::IMUAO::Inst().RunIMUCompensation();
             handled = true;
         }
         else if (strcmp(cmd_str, "start_stream") == 0)
         {
-            mission::MissionAO::Inst().StartIMUStream();
+            imu::IMUAO::Inst().StartIMUStream();
             handled = true;
         }
         else if (strcmp(cmd_str, "stop_stream") == 0)
         {
-            mission::MissionAO::Inst().StopIMUStream();
+            imu::IMUAO::Inst().StopIMUStream();
             handled = true;
         }
         else if (strcmp(cmd_str, "reset") == 0)
         {
-            mission::MissionAO::Inst().Reset();
+            imu::IMUAO::Inst().Reset();
             handled = true;
         }
         break;

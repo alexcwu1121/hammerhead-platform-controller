@@ -1,5 +1,6 @@
 #include "bsp.hpp"
 #include "cli_ao.hpp"
+#include "imu_ao.hpp"
 #include "mission_ao.hpp"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
@@ -16,13 +17,19 @@ int main(void)
     MX_GPIO_Init();
     MX_DMA_Init();
     MX_ADC1_Init();
-    // MX_I2C1_Init();
+    MX_I2C1_Init();
     MX_I2C2_Init();
-    MX_SPI1_Init();
+    // MX_SPI1_Init();
     MX_SPI2_Init();
     MX_TIM2_Init();
     MX_TIM3_Init();
     MX_USART1_UART_Init();
+
+    /// TODO: Why do I need to do this for I2C to work
+    HAL_I2C_DeInit(&hi2c1);
+    HAL_I2C_DeInit(&hi2c2);
+    HAL_I2C_Init(&hi2c1);
+    HAL_I2C_Init(&hi2c2);
 
     // Init event pools
     static QF_MPOOL_EL(QP::QEvt) smlPoolSto[50];  // small (bare signals)
@@ -46,6 +53,7 @@ int main(void)
     mission::MissionAO::Inst().Start(3U, bsp::SubsystemID::MISSION_SUBSYSTEM);
     mc::MotorControlAO::MC1Inst().Start(4U, bsp::SubsystemID::MC1_SUBSYSTEM);
     mc::MotorControlAO::MC2Inst().Start(5U, bsp::SubsystemID::MC2_SUBSYSTEM);
+    imu::IMUAO::Inst().Start(6U, bsp::SubsystemID::IMU_SUBSYSTEM);
 
     // Start QF scheduler
     return QP::QF::run();

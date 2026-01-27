@@ -167,6 +167,12 @@ void QF::onStartup()
     // Assign all priority bits for preemption-prio. And none to sub-prio.
     NVIC_SetPriorityGrouping(0U);
 
+    // I2C interrupts
+    HAL_NVIC_SetPriority(I2C1_EV_IRQn, 4U, 4U);
+    HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+    HAL_NVIC_SetPriority(I2C2_EV_IRQn, 4U, 4U);
+    HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
+
     // UART RX interrupt
     HAL_NVIC_SetPriority(USART1_IRQn, 4U, 4U);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
@@ -189,6 +195,22 @@ void QF::onStartup()
 /// @brief QF idle callback
 void QK::onIdle() {}
 }  // namespace QP
+
+/// @brief I2C1 interrupt handler
+extern "C" void I2C1_EV_IRQHandler(void)
+{
+    QK_ISR_ENTRY();
+    HAL_I2C_EV_IRQHandler(&hi2c1);
+    QK_ISR_EXIT();
+}
+
+/// @brief I2C2 interrupt handler
+extern "C" void I2C2_EV_IRQHandler(void)
+{
+    QK_ISR_ENTRY();
+    HAL_I2C_EV_IRQHandler(&hi2c2);
+    QK_ISR_EXIT();
+}
 
 /// @brief USART1 interrupt handler
 extern "C" void USART1_IRQHandler(void)

@@ -339,6 +339,8 @@ Fault BMI270::SetGyrRange(GyrRange range)
 
 Fault BMI270::RunCompensation()
 {
+    /// TODO: Refactor into an asynchronous state machine
+
     // Disable ADS
     static const uint8_t pwr_conf =
         PWR_CONF_REG(AdvPowerSave::APS_OFF, FIFOSelfWakeUp::FSW_OFF, FupEn::FUP_OFF);

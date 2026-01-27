@@ -15,7 +15,50 @@ enum Fault : uint8_t
     INVALID_ID,
     INVALID_SIZE,
     INIT_FAILED,
+    NUM_FAULTS
 };
+
+/// @brief Fault code to string table
+/// @param fault
+/// @return
+constexpr const char* FaultToStr(Fault fault)
+{
+    switch (fault)
+    {
+    case Fault::NO_FAULT:
+    {
+        return "NO_FAULT";
+    }
+    case Fault::HAL_ERROR:
+    {
+        return "HAL_ERROR";
+    }
+    case Fault::HAL_BUSY:
+    {
+        return "HAL_BUSY";
+    }
+    case Fault::HAL_TIMEOUT:
+    {
+        return "HAL_TIMEOUT";
+    }
+    case Fault::INVALID_ID:
+    {
+        return "INVALID_ID";
+    }
+    case Fault::INVALID_SIZE:
+    {
+        return "INVALID_SIZE";
+    }
+    case Fault::INIT_FAILED:
+    {
+        return "INIT_FAILED";
+    }
+    default:
+    {
+        return "";
+    }
+    }
+}
 
 /// @brief 6DOF IMU data
 struct IMUData
@@ -188,7 +231,7 @@ class BMI270
     /// @brief Offset compensation polling period in ms
     static constexpr uint32_t _compensationPollPeriod = 5U;
     /// @brief Offset compensation polling count
-    static constexpr uint32_t _compensationPollCount = 30U;
+    static constexpr uint32_t _compensationPollCount = 10U;
     /// @brief NVM operation polling period in ms
     static constexpr uint32_t _nvmWaitPollPeriod = 1U;
     /// @brief NVM operation polling count

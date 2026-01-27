@@ -5,16 +5,132 @@
 #include "bsp.hpp"
 #include "cli_ao.hpp"
 #include "gpio.h"
+#include "i2c_mailbox.hpp"
+#include "imu_ao.hpp"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
+
+// Protocol specification
+// If a valid Mission Module I2C address is defined as a parameter:
+//      HPC periodically tx IMU measurements to MM (forget about this for now)
+//          Master tx
+// Always:
+//      MM tx motor control mode to HPC
+//      MM tx motor 1 rate setpoint to HPC
+//      MM tx motor 1 duty setpoint to HPC
+//      MM tx motor 1 dir setpoint to HPC
+//      MM tx motor 2 rate setpoint to HPC
+//      MM tx motor 2 duty setpoint to HPC
+//      MM tx motor 2 dir setpoint to HPC
+//      MM tx reset motor 1 to HPC
+//      MM tx reset motor 2 to HPC
+//      MM tx reset IMU to HPC
+//      MM tx IMU run compensation to HPC
+//      MM tx param set to HPC
+//      MM tx param commit to HPC
+//          Slave rx
+//
+//      MM tx value to read from HPC (applies to next MM master rx)
+//      - Param value
+//      - IMU data
+//          Slave rx
+//
+//      MM rx data ready from HPC
+//          Slave tx (lock protect)
+//      MM rx data from HPC
+//          Slave tx
+
+static mission::I2CMailbox i2cMailbox(&hi2c2);
+
+/// @brief I2C slave tx callback
+/// @param hi2c
+extern "C" void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef* hi2c)
+{
+    if (hi2c->Instance == I2C1)
+    {
+    }
+    else if (hi2c->Instance == I2C2)
+    {
+    }
+}
+
+/// @brief I2C master rx callback
+/// @param hi2c
+extern "C" void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef* hi2c)
+{
+    if (hi2c->Instance == I2C1)
+    {
+    }
+    else if (hi2c->Instance == I2C2)
+    {
+    }
+}
+
+/// @brief I2C slave tx callback
+/// @param hi2c
+extern "C" void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef* hi2c)
+{
+    if (hi2c->Instance == I2C1)
+    {
+    }
+    else if (hi2c->Instance == I2C2)
+    {
+    }
+}
+
+/// @brief I2C slave rx callback
+/// @param hi2c
+extern "C" void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef* hi2c)
+{
+    if (hi2c->Instance == I2C1)
+    {
+    }
+    else if (hi2c->Instance == I2C2)
+    {
+        // Identify the command code
+        // Pack and publish event
+    }
+}
+
+/// @brief Address match callback
+/// @param hi2c
+/// @param TransferDirection
+/// @param AddrMatchCode
+extern "C" void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c, uint8_t TransferDirection,
+                                     uint16_t AddrMatchCode)
+{
+    if (hi2c->Instance == I2C1)
+    {
+        if (TransferDirection == I2C_DIRECTION_TRANSMIT)
+        {
+            i2cMailbox.StartSlaveRx();
+            // HAL_I2C_Slave_Receive_IT(&hi2c1, buf, 4);
+        }
+        else
+        {
+            i2cMailbox.StartSlaveTx();
+            // HAL_I2C_Slave_Receive_IT(&hi2c1, buf, 4);
+        }
+    }
+    else if (hi2c->Instance == I2C2)
+    {
+        // Identify the command code
+        // Pack and publish event
+    }
+}
+
+/// @brief Listen mode complete callback
+/// @param hi2c
+extern "C" void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef* hi2c) {}
+
+/// @brief I2C error handler callback
+/// @param hi2c
+extern "C" void HAL_I2C_ErrorCallback(I2C_HandleTypeDef* hi2c) {}
 
 namespace mission
 {
 MissionAO::MissionAO()
     : QP::QActive(&initial),
-      _imu(P_IMU_CS_GPIO_Port, P_IMU_CS_Pin, &hspi1),
-      _imuTimer(this, PrivateSignals::IMU_SERVICE_SIG, 0U),
-      _imuStreamTimer(this, PrivateSignals::IMU_STREAM_SIG, 0U),
       _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
       _faultRequestTimer(this, PrivateSignals::SUBS_FAULT_REQUEST_SIG, 0U)
 {
@@ -28,33 +144,6 @@ void MissionAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
                 _queue,        // event queue storage
                 _queueSize,    // queue size [events]
                 nullptr, 0U);  // no stack storage
-}
-
-void MissionAO::RunIMUCompensation()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::RUN_IMU_COMPENSATION_SIG);
-        POST(&evt, this);
-    }
-}
-
-void MissionAO::StartIMUStream()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::START_IMU_STREAM);
-        POST(&evt, this);
-    }
-}
-
-void MissionAO::StopIMUStream()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::STOP_IMU_STREAM);
-        POST(&evt, this);
-    }
 }
 
 void MissionAO::Reset()
@@ -124,6 +213,8 @@ Q_STATE_DEF(MissionAO, initial)
 {
     Q_UNUSED_PAR(e);
     subscribe(bsp::PublicSignals::FAULT_SIG);
+    subscribe(bsp::PublicSignals::PARAMETER_UPDATE_SIG);
+    i2cMailbox.init(nullptr, 0U);
     return tran(&initializing);
 }
 
@@ -144,16 +235,9 @@ Q_STATE_DEF(MissionAO, root)
     }
     case bsp::PublicSignals::FAULT_SIG:
     {
-        // Originating subsystem
-        bsp::SubsystemID id = Q_EVT_CAST(bsp::FaultEvt)->id;
-        // Fault code
-        uint8_t fault = Q_EVT_CAST(bsp::FaultEvt)->fault;
-        // Fault active/inactive
-        bool active = Q_EVT_CAST(bsp::FaultEvt)->active;
-
         // Update fault status
-        SetFault(id, fault, active);
-
+        SetFault(Q_EVT_CAST(bsp::FaultEvt)->id, Q_EVT_CAST(bsp::FaultEvt)->fault,
+                 Q_EVT_CAST(bsp::FaultEvt)->active);
         status_ = Q_RET_HANDLED;
         break;
     }
@@ -201,6 +285,19 @@ Q_STATE_DEF(MissionAO, root)
         }
         cli::CLIAO::Inst().Printf(buf);
 
+        // Print all imu fault statuses
+        static const char* imu = "IMU Subsystem\n\r";
+        memset(buf, 0U, sizeof(buf));
+        ptr = (char*)memcpy(buf, imu, strlen(imu));
+        ptr += strlen(imu);
+        for (uint8_t fault = 0; fault < imu::Fault::NUM_FAULTS; fault++)
+        {
+            bool state = _faultStates[bsp::SubsystemID::IMU_SUBSYSTEM][fault];
+            ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
+                            imu::FaultToStr((imu::Fault)fault), state);
+        }
+        cli::CLIAO::Inst().Printf(buf);
+
         // Print all parameter fault statuses
         static const char* param = "Parameter Subsystem\n\r";
         memset(buf, 0U, sizeof(buf));
@@ -230,6 +327,28 @@ Q_STATE_DEF(MissionAO, root)
         status_ = Q_RET_HANDLED;
         break;
     }
+    case bsp::PublicSignals::PARAMETER_UPDATE_SIG:
+    {
+        param::ParameterID id  = Q_EVT_CAST(bsp::ParameterUpdateEvt)->id;
+        param::Type        val = Q_EVT_CAST(bsp::ParameterUpdateEvt)->value;
+
+        // Update parameter value
+        switch (id)
+        {
+        case param::ParameterID::MM_I2C_ADDR:
+        {
+            _mmAddr = val._uint8;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+        }
+
+        status_ = Q_RET_HANDLED;
+        break;
+    }
     default:
     {
         status_ = super(&top);
@@ -246,35 +365,12 @@ Q_STATE_DEF(MissionAO, initializing)
     {
     case Q_ENTRY_SIG:
     {
-        // Verify IMU device ID and enable SPI peripheral
-        imu::Fault fault = _imu.Initialize();
-
-        // Set accelerometer ODR
-        fault = _imu.SetAccODR(imu::BMI270::AccODR::ODR_800);
-
-        // Set accelerometer range
-        fault = _imu.SetAccRange(imu::BMI270::AccRange::G_4);
-
-        // Set gyroscope ODR
-        fault = _imu.SetGyrODR(imu::BMI270::GyrODR::ODR_1K6);
-
-        // Set gyroscope range
-        fault = _imu.SetGyrRange(imu::BMI270::GyrRange::DPS_500);
+        // Request parameters
+        param::ParamAO::Inst().RequestUpdate(param::ParameterID::MM_I2C_ADDR);
 
         // Initialize
-        if (fault != imu::Fault::NO_FAULT)
-        {
-            // Update fault status
-            SetFault(_id, Fault::IMU_INIT_FAILED, true);
-
-            static QP::QEvt evt(PrivateSignals::FAULT_SIG);
-            POST(&evt, this);
-        }
-        else
-        {
-            static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
-            POST(&evt, this);
-        }
+        static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
+        POST(&evt, this);
 
         status_ = Q_RET_HANDLED;
         break;
@@ -300,8 +396,6 @@ Q_STATE_DEF(MissionAO, active)
     {
     case Q_ENTRY_SIG:
     {
-        // Arm imu polling timer
-        _imuTimer.armX(_imuTimerInterval, _imuTimerInterval);
         // Arm subsystem fault heartbeat timer
         _faultRequestTimer.armX(_faultRequestTimerInterval, _faultRequestTimerInterval);
         status_ = Q_RET_HANDLED;
@@ -309,68 +403,25 @@ Q_STATE_DEF(MissionAO, active)
     }
     case Q_EXIT_SIG:
     {
-        // Disarm imu polling timer
-        _imuTimer.disarm();
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::IMU_SERVICE_SIG:
-    {
-        imu::Fault fault = _imu.ReadData(_imuData);
-        if (fault)
-        {
-            /// TODO: Log fault in eeprom
-        }
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::RUN_IMU_COMPENSATION_SIG:
-    {
-        imu::Fault fault = _imu.RunCompensation();
-        if (fault != imu::Fault::NO_FAULT)
-        {
-            cli::CLIAO::Inst().Printf("ERROR: Fault during IMU compensation (%hhu)", fault);
-        }
-        else
-        {
-            cli::CLIAO::Inst().Printf("INFO: IMU compensation finished");
-        }
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::START_IMU_STREAM:
-    {
-        // Arm imu stream timer
-        _imuStreamTimer.armX(_imuStreamTimerInterval, _imuStreamTimerInterval);
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::STOP_IMU_STREAM:
-    {
-        // Disarm imu stream timer
-        _imuStreamTimer.disarm();
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::IMU_STREAM_SIG:
-    {
-        // Print IMU data
-        cli::CLIAO::Inst().Printf(
-            ">>>>>>>>>>>>>>\n\r"
-            "Acc X: %+7.2f g\n\r"
-            "Acc Y: %+7.2f g\n\r"
-            "Acc Z: %+7.2f g\n\r"
-            "Gyr X: %+7.2f dps\n\r"
-            "Gyr Y: %+7.2f dps\n\r"
-            "Gyr Z: %+7.2f dps\n\r"
-            ">>>>>>>>>>>>>>\n\r",
-            _imuData.acc[0], _imuData.acc[1], _imuData.acc[2], _imuData.gyr[0], _imuData.gyr[1],
-            _imuData.gyr[2]);
         status_ = Q_RET_HANDLED;
         break;
     }
     case PrivateSignals::SUBS_FAULT_REQUEST_SIG:
     {
+        const char* test    = "test";
+        char        buf[10] = {0};
+        // volatile auto rc1 = HAL_I2C_Master_Transmit(&hi2c1, 0x08<<1, (uint8_t*)test,
+        // strlen(test), 100); volatile auto rc2 = HAL_I2C_Slave_Receive_IT(&hi2c2, (uint8_t*)buf,
+        // 10);
+
+        // volatile auto rc1 = HAL_I2C_EnableListen_IT(&hi2c1);
+        // volatile auto rc2 = HAL_I2C_Master_Transmit(&hi2c2, 0x10<<1, (uint8_t*)test,
+        // strlen(test), 100); volatile auto rc1 = HAL_I2C_DisableListen_IT(&hi2c2); volatile auto
+        // rc1 = HAL_I2C_Slave_Receive_IT(&hi2c1, (uint8_t*)buf, 4U);
+        volatile auto rc1 = HAL_I2C_EnableListen_IT(&hi2c1);
+        volatile auto rc2 = HAL_I2C_Master_Transmit_IT(&hi2c2, 0x10 << 1, (uint8_t*)test, 4U);
+        // HAL_I2C_Slave_Receive_IT(&hi2c1, (uint8_t*)buf, 4U);
+
         QP::QEvt* evt = Q_NEW(QP::QEvt, bsp::PublicSignals::REQUEST_FAULT_SIG);
         PUBLISH(evt, this);
         status_ = Q_RET_HANDLED;

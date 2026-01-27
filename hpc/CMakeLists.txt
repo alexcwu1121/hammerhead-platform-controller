@@ -21,6 +21,7 @@ target_include_directories(${CMAKE_PROJECT_NAME}
         motor-control/
         parameter/
         mission/
+        imu/
 )
 target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE
@@ -36,8 +37,10 @@ target_sources(${CMAKE_PROJECT_NAME}
         parameter/parameter.cpp
         parameter/param_ao.cpp
         parameter/EEPROM_25LC256.cpp
-        mission/bmi270.cpp
+        imu/bmi270.cpp
+        imu/imu_ao.cpp
         mission/mission_ao.cpp
+        mission/i2c_mailbox.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE
