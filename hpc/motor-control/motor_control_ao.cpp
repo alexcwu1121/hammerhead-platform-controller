@@ -121,64 +121,6 @@ void mc::MotorControlAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id
                 nullptr, 0U);  // no stack storage
 }
 
-void mc::MotorControlAO::Reset()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::RESET_SIG);
-        POST(&evt, this);
-    }
-}
-
-void mc::MotorControlAO::SetDir(Dir dir)
-{
-    if (_isStarted)
-    {
-        SetDirEvt* evt = Q_NEW(SetDirEvt, PrivateSignals::SET_DIR_SIG);
-        evt->dir       = dir;
-        POST(evt, this);
-    }
-}
-
-void mc::MotorControlAO::SetDuty(uint16_t duty)
-{
-    if (_isStarted)
-    {
-        SetDutyEvt* evt = Q_NEW(SetDutyEvt, PrivateSignals::SET_DUTY_SIG);
-        evt->duty       = duty;
-        POST(evt, this);
-    }
-}
-
-void mc::MotorControlAO::SetRate(float rate)
-{
-    if (_isStarted)
-    {
-        SetRateEvt* evt = Q_NEW(SetRateEvt, PrivateSignals::SET_RATE_SIG);
-        evt->rate       = rate;
-        POST(evt, this);
-    }
-}
-
-void mc::MotorControlAO::SetMode(Mode mode)
-{
-    if (_isStarted)
-    {
-        SetModeEvt* evt = Q_NEW(SetModeEvt, PrivateSignals::SET_MODE_SIG);
-        evt->mode       = mode;
-        POST(evt, this);
-    }
-}
-
-void mc::MotorControlAO::FaultIT()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::FAULT_IT_SIG);
-        POST(&evt, this);
-    }
-}
-
 void mc::MotorControlAO::UpdateFaults()
 {
     // Check MC fault pin state

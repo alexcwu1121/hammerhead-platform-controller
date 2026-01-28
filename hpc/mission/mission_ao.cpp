@@ -10,36 +10,7 @@
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
 
-// Protocol specification
-// If a valid Mission Module I2C address is defined as a parameter:
-//      HPC periodically tx IMU measurements to MM (forget about this for now)
-//          Master tx
-// Always:
-//      MM tx motor control mode to HPC
-//      MM tx motor 1 rate setpoint to HPC
-//      MM tx motor 1 duty setpoint to HPC
-//      MM tx motor 1 dir setpoint to HPC
-//      MM tx motor 2 rate setpoint to HPC
-//      MM tx motor 2 duty setpoint to HPC
-//      MM tx motor 2 dir setpoint to HPC
-//      MM tx reset motor 1 to HPC
-//      MM tx reset motor 2 to HPC
-//      MM tx reset IMU to HPC
-//      MM tx IMU run compensation to HPC
-//      MM tx param set to HPC
-//      MM tx param commit to HPC
-//          Slave rx
-//
-//      MM tx value to read from HPC (applies to next MM master rx)
-//      - Param value
-//      - IMU data
-//          Slave rx
-//
-//      MM rx data ready from HPC
-//          Slave tx (lock protect)
-//      MM rx data from HPC
-//          Slave tx
-
+// i2c mailbox
 static mission::I2CMailbox i2cMailbox(&hi2c2);
 
 /// @brief I2C slave tx callback
@@ -87,8 +58,6 @@ extern "C" void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef* hi2c)
     }
     else if (hi2c->Instance == I2C2)
     {
-        // Identify the command code
-        // Pack and publish event
     }
 }
 
@@ -99,33 +68,36 @@ extern "C" void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef* hi2c)
 extern "C" void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c, uint8_t TransferDirection,
                                      uint16_t AddrMatchCode)
 {
-    if (hi2c->Instance == I2C1)
+    if (hi2c->Instance == I2C2)
     {
         if (TransferDirection == I2C_DIRECTION_TRANSMIT)
         {
             i2cMailbox.StartSlaveRx();
-            // HAL_I2C_Slave_Receive_IT(&hi2c1, buf, 4);
         }
         else
         {
             i2cMailbox.StartSlaveTx();
-            // HAL_I2C_Slave_Receive_IT(&hi2c1, buf, 4);
         }
-    }
-    else if (hi2c->Instance == I2C2)
-    {
-        // Identify the command code
-        // Pack and publish event
     }
 }
 
 /// @brief Listen mode complete callback
 /// @param hi2c
-extern "C" void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef* hi2c) {}
+extern "C" void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef* hi2c)
+{
+    i2cMailbox.CompleteTransaction();
+}
 
 /// @brief I2C error handler callback
 /// @param hi2c
-extern "C" void HAL_I2C_ErrorCallback(I2C_HandleTypeDef* hi2c) {}
+extern "C" void HAL_I2C_ErrorCallback(I2C_HandleTypeDef* hi2c)
+{
+    if (HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_AF)
+    {
+        // Acknowledge failure often means master stopped, good place to restart
+        i2cMailbox.Reset();
+    }
+}
 
 namespace mission
 {
@@ -144,24 +116,6 @@ void MissionAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
                 _queue,        // event queue storage
                 _queueSize,    // queue size [events]
                 nullptr, 0U);  // no stack storage
-}
-
-void MissionAO::Reset()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::RESET_SIG);
-        POST(&evt, this);
-    }
-}
-
-void MissionAO::PrintFault()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::PRINT_FAULT_SIG);
-        POST(&evt, this);
-    }
 }
 
 void MissionAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
@@ -214,7 +168,11 @@ Q_STATE_DEF(MissionAO, initial)
     Q_UNUSED_PAR(e);
     subscribe(bsp::PublicSignals::FAULT_SIG);
     subscribe(bsp::PublicSignals::PARAMETER_UPDATE_SIG);
+
+    // Initialize I2C mailbox
     i2cMailbox.init(nullptr, 0U);
+    /// TODO: Set callbacks
+
     return tran(&initializing);
 }
 
@@ -365,6 +323,9 @@ Q_STATE_DEF(MissionAO, initializing)
     {
     case Q_ENTRY_SIG:
     {
+        // Reset I2C mailbox
+        i2cMailbox.Reset();
+
         // Request parameters
         param::ParamAO::Inst().RequestUpdate(param::ParameterID::MM_I2C_ADDR);
 
@@ -408,19 +369,27 @@ Q_STATE_DEF(MissionAO, active)
     }
     case PrivateSignals::SUBS_FAULT_REQUEST_SIG:
     {
-        const char* test    = "test";
-        char        buf[10] = {0};
-        // volatile auto rc1 = HAL_I2C_Master_Transmit(&hi2c1, 0x08<<1, (uint8_t*)test,
-        // strlen(test), 100); volatile auto rc2 = HAL_I2C_Slave_Receive_IT(&hi2c2, (uint8_t*)buf,
-        // 10);
+        // const char* test    = "test";
+        // char        buf[10] = {0};
 
-        // volatile auto rc1 = HAL_I2C_EnableListen_IT(&hi2c1);
-        // volatile auto rc2 = HAL_I2C_Master_Transmit(&hi2c2, 0x10<<1, (uint8_t*)test,
-        // strlen(test), 100); volatile auto rc1 = HAL_I2C_DisableListen_IT(&hi2c2); volatile auto
-        // rc1 = HAL_I2C_Slave_Receive_IT(&hi2c1, (uint8_t*)buf, 4U);
-        volatile auto rc1 = HAL_I2C_EnableListen_IT(&hi2c1);
-        volatile auto rc2 = HAL_I2C_Master_Transmit_IT(&hi2c2, 0x10 << 1, (uint8_t*)test, 4U);
-        // HAL_I2C_Slave_Receive_IT(&hi2c1, (uint8_t*)buf, 4U);
+        // volatile auto rc1 = HAL_I2C_Slave_Receive_IT(&hi2c1, (uint8_t*)buf, 4U);
+        // volatile auto rc2 = HAL_I2C_Master_Transmit_IT(&hi2c2, 0x10 << 1, (uint8_t*)test, 4U);
+
+        // volatile auto rc2 = HAL_I2C_Slave_Receive_IT(&hi2c2, (uint8_t*)buf, 4U);
+        // volatile auto rc1 = HAL_I2C_Master_Transmit_IT(&hi2c1, 0x08 << 1, (uint8_t*)test, 4U);
+
+        // uint8_t opcode = (uint8_t)opcode::WRITE_MC_MODE;
+        // volatile auto rc1 = HAL_I2C_Master_Transmit_IT(&hi2c1, 0x08 << 1, &opcode, 1U);
+
+        uint8_t       opcode     = (uint8_t)opcode::WRITE_PARAM_VAL;
+        uint8_t       setting[9] = {0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7};
+        volatile auto rc1        = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, &opcode, 1U, 100);
+        volatile auto rc2        = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, setting, 9U, 100);
+
+        uint8_t opcode2     = (uint8_t)opcode::WRITE_MC1_RATE;
+        uint8_t setting2[4] = {0xF, 0xE, 0xD, 0xC};
+        rc1                 = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, &opcode2, 1U, 100);
+        rc2                 = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, setting2, 4U, 100);
 
         QP::QEvt* evt = Q_NEW(QP::QEvt, bsp::PublicSignals::REQUEST_FAULT_SIG);
         PUBLISH(evt, this);

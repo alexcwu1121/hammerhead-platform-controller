@@ -29,25 +29,25 @@ class ParamAO : public QP::QActive
     void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
     /// @brief Set the value of a parameter
-    void SetParam(ParameterID id, Type value);
+    inline void SetParam(ParameterID id, Type value);
 
     /// @brief Request a parameter update event
-    void RequestUpdate(ParameterID id);
+    inline void RequestUpdate(ParameterID id);
 
     /// @brief Commit parameter values to EEPROM
-    void Commit();
+    inline void Commit();
 
     /// @brief Update parameter values from EEPROM
-    void Update();
+    inline void Update();
 
     /// @brief Print full parameter list to CLI
-    void List();
+    inline void List();
 
     /// @brief Print a parameter to CLI
-    void PrintParam(ParameterID id);
+    inline void PrintParam(ParameterID id);
 
     /// @brief Reset parameter values to default
-    void ResetToDefaults();
+    inline void ResetToDefaults();
 
    private:
     /// @brief Subsystem ID
@@ -127,6 +127,72 @@ class ParamAO : public QP::QActive
     Q_STATE_DECL(error);
 };  // class ParamAO
 
+inline void ParamAO::SetParam(ParameterID id, Type value)
+{
+    if (_isStarted)
+    {
+        SetParamValueEvt* evt = Q_NEW(SetParamValueEvt, PrivateSignals::SET_PARAM_VALUE_SIG);
+        evt->id               = id;
+        evt->value            = value;
+        POST(evt, this);
+    }
+}
+
+inline void ParamAO::RequestUpdate(ParameterID id)
+{
+    if (_isStarted)
+    {
+        ParamIndexEvt* evt = Q_NEW(ParamIndexEvt, PrivateSignals::REQUEST_UPDATE_SIG);
+        evt->id            = id;
+        POST(evt, this);
+    }
+}
+
+inline void ParamAO::Commit()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::COMMIT_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void ParamAO::Update()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::UPDATE_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void ParamAO::List()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::LIST_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void ParamAO::PrintParam(ParameterID id)
+{
+    if (_isStarted)
+    {
+        ParamIndexEvt* evt = Q_NEW(ParamIndexEvt, PrivateSignals::PRINT_PARAM_SIG);
+        evt->id            = id;
+        POST(evt, this);
+    }
+}
+
+inline void ParamAO::ResetToDefaults()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::RESET_TO_DEFAULTS_SIG);
+        POST(&evt, this);
+    }
+}
 }  // namespace param
 
 #endif  // PARAM_AO_HPP_

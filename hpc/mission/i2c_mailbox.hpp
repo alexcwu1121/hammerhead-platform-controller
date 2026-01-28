@@ -5,6 +5,27 @@
 
 namespace mission
 {
+/// @brief Slave operation codes
+enum opcode : uint8_t
+{
+    NO_OP = 0U,
+    WRITE_MC_MODE,
+    WRITE_MC1_RATE,
+    WRITE_MC2_RATE,
+    WRITE_MC1_DUTY,
+    WRITE_MC2_DUTY,
+    WRITE_MC1_DIR,
+    WRITE_MC2_DIR,
+    WRITE_MC1_RESET,
+    WRITE_MC2_RESET,
+    WRITE_IMU_RESET,
+    WRITE_IMU_COMP,
+    WRITE_PARAM_VAL,
+    WRITE_PARAM_COMMIT,
+    READ_PARAM_VAL,
+    READ_IMU_DATA
+};
+
 /// @brief I2C Master tx transaction
 struct I2CMasterTxTransaction
 {
@@ -30,45 +51,52 @@ class I2CMailbox : public QP::QHsm
     I2CMailbox(I2C_HandleTypeDef* device);
 
     /// @brief Initiate a master rx transaction
-    void StartMasterRx();
+    inline void StartMasterRx();
 
     /// @brief Initiate a master rx transaction
-    void StartMasterTx();
+    inline void StartMasterTx();
 
     /// @brief Initiate a slave rx transaction
-    void StartSlaveRx();
+    inline void StartSlaveRx();
 
     /// @brief Initiate a slave tx transaction
-    void StartSlaveTx();
+    inline void StartSlaveTx();
 
     /// @brief Complete a transaction
-    void CompleteTransaction();
+    inline void CompleteTransaction();
 
     /// @brief Reset the mailbox
-    void Reset();
+    inline void Reset();
 
     /// @brief Load tx buffer
     // void LoadTxBuffer();
     /// TODO: Perfect forward a tx transaction to location in queue
 
-    /// @brief Register a callback function for when rx transactions succeed
-    void RegisterRxCallback(RxCallback callback);
+    /// @brief Register a callback function for when master rx transactions succeed
+    void RegisterMasterRxCallback(RxCallback callback);
+
+    /// @brief Register a callback function for when slave rx transactions succeed
+    void RegisterSlaveRxCallback(RxCallback callback);
 
    private:
     /// @brief Rx buffer size
-    static constexpr uint16_t _rxBufSize = 256U;
+    static constexpr uint16_t _rxBufSize = 32U;
     /// @brief Tx buffer size
-    static constexpr uint16_t _txBufSize = 256U;
+    static constexpr uint16_t _txBufSize = 32U;
     /// @brief Rx buffer
     uint8_t _rxBuf[_rxBufSize] = {0};
     /// @brief Tx buffer
     uint8_t _txBuf[_txBufSize] = {0};
     /// @brief I2C peripheral
     I2C_HandleTypeDef* _device;
-    /// @brief Rx transaction callback
-    RxCallback _rxCallback = nullptr;
+    /// @brief Master rx transaction callback
+    RxCallback _masterRxCallback = nullptr;
+    /// @brief Slave rx transaction callback
+    RxCallback _slaveRxCallback = nullptr;
     /// @brief Flag indicating if this state machine has been initialized
     bool _isStarted = false;
+    /// @brief Active operation code set by master
+    opcode _activeOpcode = opcode::NO_OP;
 
     /// @brief Private signals
     enum PrivateSignals : QP::QSignal
@@ -86,32 +114,80 @@ class I2CMailbox : public QP::QHsm
     Q_STATE_DECL(initial);
     /// @brief Root state
     Q_STATE_DECL(root);
-    /// @brief Idle bus status
-    Q_STATE_DECL(idle);
-    /// @brief Rx busy bus status
-    Q_STATE_DECL(busyRx);
-    /// @brief Tx busy bus status
-    Q_STATE_DECL(busyTx);
 
-    /// @brief Initial state
-    Q_STATE_DECL(initial);
-    /// @brief Root state
-    Q_STATE_DECL(root);
-    /// @brief Slave mode
-    Q_STATE_DECL(Slave);
     /// @brief Slave idle
-    Q_STATE_DECL(SlaveIdle);
+    Q_STATE_DECL(slaveIdle);
+    /// @brief Slave busy
+    Q_STATE_DECL(slaveBusy);
+    /// @brief Slave waiting for a command
+    Q_STATE_DECL(slaveWaitCmd);
     /// @brief Slave rx busy mode
-    Q_STATE_DECL(SlaveRxBusy);
+    Q_STATE_DECL(slaveRxBusy);
     /// @brief Slave tx busy mode
-    Q_STATE_DECL(SlaveTxBusy);
+    Q_STATE_DECL(slaveTxBusy);
+
     /// @brief Master mode
-    Q_STATE_DECL(Master);
+    Q_STATE_DECL(master);
     /// @brief Master rx busy mode
-    Q_STATE_DECL(MasterRxBusy);
+    Q_STATE_DECL(masterRxBusy);
     /// @brief Master tx busy mode
-    Q_STATE_DECL(MasterTxBusy);
+    Q_STATE_DECL(masterTxBusy);
 };
+
+inline void I2CMailbox::StartMasterRx()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::START_MASTER_RX_SIG);
+        dispatch(&evt, 0U);
+    }
+}
+
+inline void I2CMailbox::StartMasterTx()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::START_MASTER_TX_SIG);
+        dispatch(&evt, 0U);
+    }
+}
+
+inline void I2CMailbox::StartSlaveRx()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::START_SLAVE_RX_SIG);
+        dispatch(&evt, 0U);
+    }
+}
+
+inline void I2CMailbox::StartSlaveTx()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::START_SLAVE_TX_SIG);
+        dispatch(&evt, 0U);
+    }
+}
+
+inline void I2CMailbox::CompleteTransaction()
+{
+    HAL_I2C_EnableListen_IT(_device);
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::COMPLETE_TRANSACTION_SIG);
+        dispatch(&evt, 0U);
+    }
+}
+
+inline void I2CMailbox::Reset()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::RESET_SIG);
+        dispatch(&evt, 0U);
+    }
+}
 }  // namespace mission
 
 #endif

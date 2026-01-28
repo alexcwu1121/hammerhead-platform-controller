@@ -85,26 +85,26 @@ class MotorControlAO : public QP::QActive
     void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
     /// @brief Reinitialize and attempt to clear faults
-    void Reset();
+    inline void Reset();
 
     /// @brief Set direction
     /// @param dir
-    void SetDir(Dir dir);
+    inline void SetDir(Dir dir);
 
     /// @brief Set PWM duty cycle (0 <= duty <= 1023)
     /// @param duty
-    void SetDuty(uint16_t duty);
+    inline void SetDuty(uint16_t duty);
 
     /// @brief Set an angular rate (-1.0 <= rate <= 1.0)
     /// @param rate
-    void SetRate(float rate);
+    inline void SetRate(float rate);
 
     /// @brief Set motor control mode
     /// @param mode
-    void SetMode(Mode mode);
+    inline void SetMode(Mode mode);
 
     /// @brief Handle motor controller fault interrupt
-    void FaultIT();
+    inline void FaultIT();
 
    private:
     /// @brief Subsystem ID
@@ -225,6 +225,63 @@ class MotorControlAO : public QP::QActive
     Q_STATE_DECL(error);
 };  // class MotorControlAO
 
+inline void MotorControlAO::Reset()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::RESET_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void MotorControlAO::SetDir(Dir dir)
+{
+    if (_isStarted)
+    {
+        SetDirEvt* evt = Q_NEW(SetDirEvt, PrivateSignals::SET_DIR_SIG);
+        evt->dir       = dir;
+        POST(evt, this);
+    }
+}
+
+inline void MotorControlAO::SetDuty(uint16_t duty)
+{
+    if (_isStarted)
+    {
+        SetDutyEvt* evt = Q_NEW(SetDutyEvt, PrivateSignals::SET_DUTY_SIG);
+        evt->duty       = duty;
+        POST(evt, this);
+    }
+}
+
+inline void MotorControlAO::SetRate(float rate)
+{
+    if (_isStarted)
+    {
+        SetRateEvt* evt = Q_NEW(SetRateEvt, PrivateSignals::SET_RATE_SIG);
+        evt->rate       = rate;
+        POST(evt, this);
+    }
+}
+
+inline void MotorControlAO::SetMode(Mode mode)
+{
+    if (_isStarted)
+    {
+        SetModeEvt* evt = Q_NEW(SetModeEvt, PrivateSignals::SET_MODE_SIG);
+        evt->mode       = mode;
+        POST(evt, this);
+    }
+}
+
+inline void MotorControlAO::FaultIT()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::FAULT_IT_SIG);
+        POST(&evt, this);
+    }
+}
 }  // namespace mc
 
 #endif  // MC_AO_HPP_

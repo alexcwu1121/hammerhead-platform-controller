@@ -49,7 +49,7 @@ class CLIAO : public QP::QActive
     void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
     /// @brief Reinitialize and attempt to clear faults
-    void Reset();
+    inline void Reset();
 
     // TODO: wrap in removable macro for release-no-debug builds
     /// @brief Print formatted string to CLI
@@ -132,6 +132,14 @@ class CLIAO : public QP::QActive
     Q_STATE_DECL(error);
 };  // class CLIAO
 
+inline void CLIAO::Reset()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::RESET_SIG);
+        POST(&evt, this);
+    }
+}
 }  // namespace cli
 
 #endif  // CLI_AO_HPP_

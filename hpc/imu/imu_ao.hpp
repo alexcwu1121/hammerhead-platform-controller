@@ -27,16 +27,16 @@ class IMUAO : public QP::QActive
     void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
     /// @brief Run IMU compensation
-    void RunIMUCompensation();
+    inline void RunIMUCompensation();
 
     /// @brief Start IMU stream
-    void StartIMUStream();
+    inline void StartIMUStream();
 
     /// @brief Stop IMU stream
-    void StopIMUStream();
+    inline void StopIMUStream();
 
     /// @brief Reset IMU AO
-    void Reset();
+    inline void Reset();
 
    private:
     /// @brief Subsystem ID
@@ -95,6 +95,43 @@ class IMUAO : public QP::QActive
     /// @brief Fault
     Q_STATE_DECL(error);
 };  // class IMUAO
+
+inline void IMUAO::RunIMUCompensation()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::RUN_IMU_COMPENSATION_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void IMUAO::StartIMUStream()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::START_IMU_STREAM);
+        POST(&evt, this);
+    }
+}
+
+inline void IMUAO::StopIMUStream()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::STOP_IMU_STREAM);
+        POST(&evt, this);
+    }
+}
+
+inline void IMUAO::Reset()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::RESET_SIG);
+        POST(&evt, this);
+    }
+}
+
 }  // namespace imu
 
 #endif

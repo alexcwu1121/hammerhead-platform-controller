@@ -29,42 +29,6 @@ void IMUAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
                 nullptr, 0U);  // no stack storage
 }
 
-void IMUAO::RunIMUCompensation()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::RUN_IMU_COMPENSATION_SIG);
-        POST(&evt, this);
-    }
-}
-
-void IMUAO::StartIMUStream()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::START_IMU_STREAM);
-        POST(&evt, this);
-    }
-}
-
-void IMUAO::StopIMUStream()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::STOP_IMU_STREAM);
-        POST(&evt, this);
-    }
-}
-
-void IMUAO::Reset()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::RESET_SIG);
-        POST(&evt, this);
-    }
-}
-
 void IMUAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
 {
     if (_faultStates[fault] != active)

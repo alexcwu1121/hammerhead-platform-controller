@@ -25,15 +25,6 @@ void cli::CLIAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
                 nullptr, 0U);  // no stack storage
 }
 
-void cli::CLIAO::Reset()
-{
-    if (_isStarted)
-    {
-        static QP::QEvt evt(PrivateSignals::RESET_SIG);
-        POST(&evt, this);
-    }
-}
-
 void cli::CLIAO::Printf(const char* fmt, ...)
 {
     if (_isStarted)

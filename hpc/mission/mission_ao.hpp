@@ -13,6 +13,7 @@
 //  - record motor control and imu timing stability metrics
 
 #include "bsp.hpp"
+#include "i2c_mailbox.hpp"
 
 namespace mission
 {
@@ -72,10 +73,10 @@ class MissionAO : public QP::QActive
     void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
 
     /// @brief Reset mission AO
-    void Reset();
+    inline void Reset();
 
     /// @brief Print system fault state
-    void PrintFault();
+    inline void PrintFault();
 
    private:
     /// @brief Subsystem ID
@@ -108,6 +109,14 @@ class MissionAO : public QP::QActive
         RESET_SIG,
         SUBS_FAULT_REQUEST_SIG,
         PRINT_FAULT_SIG,
+        START_MASTER_RX_SIG,
+        START_MASTER_TX_SIG,
+        START_SLAVE_RX_SIG,
+        START_SLAVE_TX_SIG,
+        COMPLETE_MASTER_RX_SIG,
+        COMPLETE_MASTER_TX_SIG,
+        COMPLETE_SLAVE_RX_SIG,
+        COMPLETE_SLAVE_TX_SIG,
         MAX_PRIV_SIG
     };
 
@@ -125,6 +134,24 @@ class MissionAO : public QP::QActive
     /// @brief Fault
     Q_STATE_DECL(error);
 };  // class MissionAO
+
+inline void MissionAO::Reset()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::RESET_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void MissionAO::PrintFault()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::PRINT_FAULT_SIG);
+        POST(&evt, this);
+    }
+}
 }  // namespace mission
 
 #endif
