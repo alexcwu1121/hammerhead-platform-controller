@@ -34,8 +34,11 @@ Q_STATE_DEF(mission::I2CMailbox, root)
     {
     case PrivateSignals::RESET_SIG:
     {
-        /// TODO: Clear buffers, etc
-        status_ = tran(&slaveIdle);
+        // Clear buffers and opcode
+        memset(_txBuf, 0U, sizeof(_txBuf));
+        memset(_rxBuf, 0U, sizeof(_rxBuf));
+        _activeOpcode = opcode::NO_OP;
+        status_       = tran(&slaveIdle);
         break;
     }
     default:

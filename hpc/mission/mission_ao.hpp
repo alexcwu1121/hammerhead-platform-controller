@@ -109,14 +109,6 @@ class MissionAO : public QP::QActive
         RESET_SIG,
         SUBS_FAULT_REQUEST_SIG,
         PRINT_FAULT_SIG,
-        START_MASTER_RX_SIG,
-        START_MASTER_TX_SIG,
-        START_SLAVE_RX_SIG,
-        START_SLAVE_TX_SIG,
-        COMPLETE_MASTER_RX_SIG,
-        COMPLETE_MASTER_TX_SIG,
-        COMPLETE_SLAVE_RX_SIG,
-        COMPLETE_SLAVE_TX_SIG,
         MAX_PRIV_SIG
     };
 

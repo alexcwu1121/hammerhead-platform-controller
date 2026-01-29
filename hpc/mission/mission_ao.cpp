@@ -10,7 +10,7 @@
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
 
-// i2c mailbox
+// I2C mailbox
 static mission::I2CMailbox i2cMailbox(&hi2c2);
 
 /// @brief I2C slave tx callback
@@ -28,30 +28,6 @@ extern "C" void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef* hi2c)
 /// @brief I2C master rx callback
 /// @param hi2c
 extern "C" void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef* hi2c)
-{
-    if (hi2c->Instance == I2C1)
-    {
-    }
-    else if (hi2c->Instance == I2C2)
-    {
-    }
-}
-
-/// @brief I2C slave tx callback
-/// @param hi2c
-extern "C" void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef* hi2c)
-{
-    if (hi2c->Instance == I2C1)
-    {
-    }
-    else if (hi2c->Instance == I2C2)
-    {
-    }
-}
-
-/// @brief I2C slave rx callback
-/// @param hi2c
-extern "C" void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef* hi2c)
 {
     if (hi2c->Instance == I2C1)
     {
