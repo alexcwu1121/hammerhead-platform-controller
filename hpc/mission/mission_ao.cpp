@@ -10,9 +10,6 @@
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
 
-// I2C mailbox
-static mission::I2CMailbox i2cMailbox(&hi2c2);
-
 /// @brief I2C slave tx callback
 /// @param hi2c
 extern "C" void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef* hi2c)
@@ -48,11 +45,11 @@ extern "C" void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c, uint8_t TransferDi
     {
         if (TransferDirection == I2C_DIRECTION_TRANSMIT)
         {
-            i2cMailbox.StartSlaveRx();
+            mission::MissionAO::Inst().StartSlaveRx();
         }
         else
         {
-            i2cMailbox.StartSlaveTx();
+            mission::MissionAO::Inst().StartSlaveTx();
         }
     }
 }
@@ -61,7 +58,7 @@ extern "C" void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c, uint8_t TransferDi
 /// @param hi2c
 extern "C" void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef* hi2c)
 {
-    i2cMailbox.CompleteTransaction();
+    mission::MissionAO::Inst().CompleteTransaction();
 }
 
 /// @brief I2C error handler callback
@@ -71,8 +68,94 @@ extern "C" void HAL_I2C_ErrorCallback(I2C_HandleTypeDef* hi2c)
     if (HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_AF)
     {
         // Acknowledge failure often means master stopped, good place to restart
-        i2cMailbox.Reset();
+        mission::MissionAO::Inst().ResetMailbox();
     }
+}
+
+/// @brief MC1 Mode
+static mc::Mode mc1Mode = mc::Mode::RATE;
+/// @brief MC2 Mode
+static mc::Mode mc2Mode = mc::Mode::RATE;
+/// @brief MC1 Rate
+static float mc1Rate = 0.0f;
+/// @brief MC2 Rate
+static float mc2Rate = 0.0f;
+/// @brief MC1 Duty
+static uint16_t mc1Duty = 0U;
+/// @brief MC2 Duty
+static uint16_t mc2Duty = 0U;
+/// @brief MC1 Dir
+static mc::Dir mc1Dir = mc::Dir::CW;
+/// @brief MC2 Dir
+static mc::Dir mc2Dir = mc::Dir::CW;
+/// @brief Param data buffer
+// uint8_t _paramData[32] = {0U};
+/// @brief Latest IMU data
+static imu::IMUData imuData = {0U};
+
+void UpdateMC1Mode()
+{
+    mc::MotorControlAO::MC1Inst().SetMode(mc1Mode);
+}
+
+void UpdateMC2Mode()
+{
+    mc::MotorControlAO::MC2Inst().SetMode(mc2Mode);
+}
+
+void UpdateMC1Rate()
+{
+    mc::MotorControlAO::MC1Inst().SetRate(mc1Rate);
+}
+
+void UpdateMC2Rate()
+{
+    mc::MotorControlAO::MC2Inst().SetRate(mc2Rate);
+}
+
+void UpdateMC1Duty()
+{
+    mc::MotorControlAO::MC1Inst().SetDuty(mc1Duty);
+}
+
+void UpdateMC2Duty()
+{
+    mc::MotorControlAO::MC2Inst().SetDuty(mc2Duty);
+}
+
+void UpdateMC1Dir()
+{
+    mc::MotorControlAO::MC1Inst().SetDir(mc1Dir);
+}
+
+void UpdateMC2Dir()
+{
+    mc::MotorControlAO::MC2Inst().SetDir(mc2Dir);
+}
+
+void ResetMC1()
+{
+    mc::MotorControlAO::MC1Inst().Reset();
+}
+
+void ResetMC2()
+{
+    mc::MotorControlAO::MC2Inst().Reset();
+}
+
+void ResetIMU()
+{
+    imu::IMUAO::Inst().Reset();
+}
+
+void CompIMU()
+{
+    imu::IMUAO::Inst().RunIMUCompensation();
+}
+
+void CommitParam()
+{
+    param::ParamAO::Inst().Commit();
 }
 
 namespace mission
@@ -80,8 +163,35 @@ namespace mission
 MissionAO::MissionAO()
     : QP::QActive(&initial),
       _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
-      _faultRequestTimer(this, PrivateSignals::SUBS_FAULT_REQUEST_SIG, 0U)
+      _faultRequestTimer(this, PrivateSignals::SUBS_FAULT_REQUEST_SIG, 0U),
+      _i2cMailbox(&hi2c2)
 {
+    // Set i2c mailbox buffers and callbacks
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC1_MODE, (uint8_t*)&mc1Mode, sizeof(mc1Mode),
+                           &UpdateMC1Mode);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC2_MODE, (uint8_t*)&mc2Mode, sizeof(mc2Mode),
+                           &UpdateMC2Mode);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC1_RATE, (uint8_t*)&mc1Rate, sizeof(mc1Rate),
+                           &UpdateMC1Rate);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC2_RATE, (uint8_t*)&mc2Rate, sizeof(mc2Rate),
+                           &UpdateMC2Rate);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC1_DUTY, (uint8_t*)&mc1Duty, sizeof(mc1Duty),
+                           &UpdateMC1Duty);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC2_DUTY, (uint8_t*)&mc2Duty, sizeof(mc2Duty),
+                           &UpdateMC2Duty);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC1_DIR, (uint8_t*)&mc1Dir, sizeof(mc1Dir),
+                           &UpdateMC1Dir);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC2_DIR, (uint8_t*)&mc2Dir, sizeof(mc2Dir),
+                           &UpdateMC2Dir);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC1_DIR, (uint8_t*)&mc1Dir, sizeof(mc1Dir),
+                           &UpdateMC1Dir);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC2_DIR, (uint8_t*)&mc2Dir, sizeof(mc2Dir),
+                           &UpdateMC2Dir);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC1_RESET, nullptr, 0U, &ResetMC1);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_MC2_RESET, nullptr, 0U, &ResetMC2);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_IMU_RESET, nullptr, 0U, &ResetIMU);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_IMU_COMP, nullptr, 0U, &CompIMU);
+    _i2cMailbox.RegisterOp((uint8_t)opcode::WRITE_PARAM_COMMIT, nullptr, 0U, &CommitParam);
 }
 
 void MissionAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
@@ -144,10 +254,10 @@ Q_STATE_DEF(MissionAO, initial)
     Q_UNUSED_PAR(e);
     subscribe(bsp::PublicSignals::FAULT_SIG);
     subscribe(bsp::PublicSignals::PARAMETER_UPDATE_SIG);
+    subscribe(bsp::PublicSignals::IMU_DATA_SIG);
 
     // Initialize I2C mailbox
-    i2cMailbox.init(nullptr, 0U);
-    /// TODO: Set callbacks
+    _i2cMailbox.init(nullptr, 0U);
 
     return tran(&initializing);
 }
@@ -283,6 +393,36 @@ Q_STATE_DEF(MissionAO, root)
         status_ = Q_RET_HANDLED;
         break;
     }
+    case bsp::PublicSignals::IMU_DATA_SIG:
+    {
+        imuData = Q_EVT_CAST(imu::IMUDataEvt)->data;
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::RESET_MAILBOX_SIG:
+    {
+        _i2cMailbox.Reset();
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::START_SLAVE_RX_SIG:
+    {
+        _i2cMailbox.StartSlaveRx();
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::START_SLAVE_TX_SIG:
+    {
+        _i2cMailbox.StartSlaveTx();
+        status_ = Q_RET_HANDLED;
+        break;
+    }
+    case PrivateSignals::COMPLETE_TRANSACTION_SIG:
+    {
+        _i2cMailbox.CompleteTransaction();
+        status_ = Q_RET_HANDLED;
+        break;
+    }
     default:
     {
         status_ = super(&top);
@@ -300,7 +440,7 @@ Q_STATE_DEF(MissionAO, initializing)
     case Q_ENTRY_SIG:
     {
         // Reset I2C mailbox
-        i2cMailbox.Reset();
+        _i2cMailbox.Reset();
 
         // Request parameters
         param::ParamAO::Inst().RequestUpdate(param::ParameterID::MM_I2C_ADDR);
@@ -357,15 +497,15 @@ Q_STATE_DEF(MissionAO, active)
         // uint8_t opcode = (uint8_t)opcode::WRITE_MC_MODE;
         // volatile auto rc1 = HAL_I2C_Master_Transmit_IT(&hi2c1, 0x08 << 1, &opcode, 1U);
 
-        uint8_t       opcode     = (uint8_t)opcode::WRITE_PARAM_VAL;
-        uint8_t       setting[9] = {0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7};
-        volatile auto rc1        = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, &opcode, 1U, 100);
-        volatile auto rc2        = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, setting, 9U, 100);
+        // uint8_t opcode = (uint8_t)opcode::WRITE_PARAM_VAL;
+        // uint8_t setting[9] = {0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7};
+        // volatile auto rc1 = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, &opcode, 1U, 100);
+        // volatile auto rc2 = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, setting, 9U, 100);
 
-        uint8_t opcode2     = (uint8_t)opcode::WRITE_MC1_RATE;
-        uint8_t setting2[4] = {0xF, 0xE, 0xD, 0xC};
-        rc1                 = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, &opcode2, 1U, 100);
-        rc2                 = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, setting2, 4U, 100);
+        uint8_t       opcode2     = (uint8_t)opcode::WRITE_MC1_RATE;
+        uint8_t       setting2[4] = {0xF, 0xE, 0xD, 0xC};
+        volatile auto rc1         = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, &opcode2, 1U, 100);
+        volatile auto rc2         = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, setting2, 4U, 100);
 
         QP::QEvt* evt = Q_NEW(QP::QEvt, bsp::PublicSignals::REQUEST_FAULT_SIG);
         PUBLISH(evt, this);

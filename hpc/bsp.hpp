@@ -72,6 +72,7 @@ enum PublicSignals : QP::QSignal
     PARAMETER_UPDATE_SIG = QP::Q_USER_SIG,
     ADC_SIG,
     FAULT_SIG,
+    IMU_DATA_SIG,
     REQUEST_FAULT_SIG,
     MAX_PUB_SIG  // Keep this last
 };

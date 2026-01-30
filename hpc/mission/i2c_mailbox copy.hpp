@@ -5,12 +5,41 @@
 
 namespace mission
 {
+/// @brief Slave operation codes
+enum opcode : uint8_t
+{
+    NO_OP = 0U,
+    WRITE_MC_MODE,
+    WRITE_MC1_RATE,
+    WRITE_MC2_RATE,
+    WRITE_MC1_DUTY,
+    WRITE_MC2_DUTY,
+    WRITE_MC1_DIR,
+    WRITE_MC2_DIR,
+    WRITE_MC1_RESET,
+    WRITE_MC2_RESET,
+    WRITE_IMU_RESET,
+    WRITE_IMU_COMP,
+    WRITE_PARAM_VAL,
+    WRITE_PARAM_COMMIT,
+    READ_PARAM_VAL,
+    READ_IMU_DATA,
+    NUM_OPS
+};
+
 /// @brief I2C Mailbox class
+template <uint16_t NUM_OPS>
 class I2CMailbox : public QP::QHsm
 {
    public:
     /// @brief Constructor
     I2CMailbox(I2C_HandleTypeDef* device);
+
+    /// @brief Initiate a master rx transaction
+    inline void StartMasterRx();
+
+    /// @brief Initiate a master rx transaction
+    inline void StartMasterTx();
 
     /// @brief Initiate a slave rx transaction
     inline void StartSlaveRx();
@@ -24,27 +53,19 @@ class I2CMailbox : public QP::QHsm
     /// @brief Reset the mailbox
     inline void Reset();
 
-    /// @brief Operation callback
-    using OpCallback = void (*)(void);
-    /// Tx opcode callbacks run before transmissions are initiated
-    /// Rx opcode callbacks run after receptions complete
-    /// NOOP opcode callbacks
-    /// @brief Register a callback for an opcode
-    /// @param opcode
-    /// @param buf
-    /// @param size
-    /// @param callback
-    void RegisterOp(uint8_t opcode, uint8_t* buf, uint16_t size, OpCallback callback);
+    /// @brief Register an rx buffer for an opcode
+    void RegisterRxBuf(uint8_t opcode, uint8_t* buf, uint16_t size);
+
+    /// @brief Register tx buffer for an opcode
+    void RegisterTxBuf(uint8_t opcode, const uint8_t* buf, uint16_t size);
 
    private:
     /// @brief I2C peripheral
     I2C_HandleTypeDef* _device;
-    /// @brief Operation buffer table
-    uint8_t* _opBufs[UINT8_MAX] = {nullptr};
-    /// @brief Operation buffer max sizes
-    uint16_t _opBufSizes[UINT8_MAX] = {0U};
-    /// @brief Operation callback functions
-    OpCallback _opCallbacks[UINT8_MAX] = {nullptr};
+    /// @brief Rx operation buffer table
+    uint8_t* _rxBufs[NUM_OPS] = nullptr;
+    /// @brief Tx operation buffer table
+    uint8_t* _txBufs[NUM_OPS] = nullptr;
     /// @brief Flag indicating if this state machine has been initialized
     bool _isStarted = false;
     /// @brief Active operation code set by master
@@ -53,7 +74,9 @@ class I2CMailbox : public QP::QHsm
     /// @brief Private signals
     enum PrivateSignals : QP::QSignal
     {
-        START_SLAVE_RX_SIG = bsp::PublicSignals::MAX_PUB_SIG,
+        START_MASTER_RX_SIG = bsp::PublicSignals::MAX_PUB_SIG,
+        START_MASTER_TX_SIG,
+        START_SLAVE_RX_SIG,
         START_SLAVE_TX_SIG,
         COMPLETE_TRANSACTION_SIG,
         RESET_SIG,
@@ -75,7 +98,32 @@ class I2CMailbox : public QP::QHsm
     Q_STATE_DECL(slaveRxBusy);
     /// @brief Slave tx busy mode
     Q_STATE_DECL(slaveTxBusy);
+
+    /// @brief Master mode
+    Q_STATE_DECL(master);
+    /// @brief Master rx busy mode
+    Q_STATE_DECL(masterRxBusy);
+    /// @brief Master tx busy mode
+    Q_STATE_DECL(masterTxBusy);
 };
+
+inline void I2CMailbox::StartMasterRx()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::START_MASTER_RX_SIG);
+        dispatch(&evt, 0U);
+    }
+}
+
+inline void I2CMailbox::StartMasterTx()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::START_MASTER_TX_SIG);
+        dispatch(&evt, 0U);
+    }
+}
 
 inline void I2CMailbox::StartSlaveRx()
 {

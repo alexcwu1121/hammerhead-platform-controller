@@ -6,6 +6,14 @@
 
 namespace imu
 {
+/// @brief IMU data event
+class IMUDataEvt : public QP::QEvt
+{
+   public:
+    /// @brief IMU data
+    IMUData data;
+};
+
 /// @brief IMU AO
 class IMUAO : public QP::QActive
 {

@@ -137,7 +137,6 @@ class Parameter;
 class ParameterList
 {
    public:
-   public:
     ParameterList() {}
     static ParameterList& Inst()
     {
