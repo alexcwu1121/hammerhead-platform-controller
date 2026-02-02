@@ -2,18 +2,233 @@
 
 #include <stdarg.h>
 
+#include <mutex>
+
 #include "bsp.hpp"
 #include "cli_ao.hpp"
 #include "gpio.h"
-#include "i2c_mailbox.hpp"
 #include "imu_ao.hpp"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
 
-// I2C mailbox
-static mission::I2CMailbox i2cMailbox(&hi2c2);
+/// @brief Slave operation codes
+enum opcode : uint8_t
+{
+    NO_OP = 0U,
+    WRITE_MC1_MODE,
+    WRITE_MC2_MODE,
+    WRITE_MC1_RATE,
+    WRITE_MC2_RATE,
+    WRITE_MC1_DUTY,
+    WRITE_MC2_DUTY,
+    WRITE_MC1_DIR,
+    WRITE_MC2_DIR,
+    WRITE_MC1_RESET,
+    WRITE_MC2_RESET,
+    WRITE_IMU_RESET,
+    WRITE_IMU_COMP,
+    READ_IMU_DATA,
+    NUM_OPS
+};
+
+/// @brief Good ol fashioned state machine
+enum mailbox_state
+{
+    SlaveIdle,
+    SlaveWaitCmd,
+    SlaveRxBusy,
+    SlaveTxBusy,
+};
+
+namespace
+{
+/// @brief Operation buffer table
+uint8_t* _opBufs[NUM_OPS] = {nullptr};
+/// @brief Operation buffer max sizes
+uint16_t _opBufSizes[NUM_OPS] = {0U};
+/// @brief Operation callback function
+using OpCallback = void (*)(void);
+/// @brief Operation callback function table
+OpCallback _opCallbacks[NUM_OPS] = {nullptr};
+/// @brief Current state of i2c mailbox state machine
+volatile mailbox_state _state = mailbox_state::SlaveIdle;
+/// @brief Active operation code set by master
+volatile opcode _activeOpcode = NO_OP;
+
+/// @brief Register a mailbox operation
+/// @param op
+/// @param buf
+/// @param size
+/// @param callback
+void RegisterOp(opcode op, uint8_t* buf, uint16_t size, OpCallback callback)
+{
+    _opBufs[(uint8_t)op]      = buf;
+    _opBufSizes[(uint8_t)op]  = size;
+    _opCallbacks[(uint8_t)op] = callback;
+}
+
+/// @brief MC1 Mode. Only accessed in interrupt context.
+volatile mc::Mode mc1Mode = mc::Mode::RATE;
+/// @brief MC2 Mode. Only accessed in interrupt context.
+volatile mc::Mode mc2Mode = mc::Mode::RATE;
+/// @brief MC1 Rate. Only accessed in interrupt context.
+volatile float mc1Rate = 0.0f;
+/// @brief MC2 Rate. Only accessed in interrupt context.
+volatile float mc2Rate = 0.0f;
+/// @brief MC1 Duty. Only accessed in interrupt context.
+volatile uint16_t mc1Duty = 0U;
+/// @brief MC2 Duty. Only accessed in interrupt context.
+volatile uint16_t mc2Duty = 0U;
+/// @brief MC1 Dir. Only accessed in interrupt context.
+volatile mc::Dir mc1Dir = mc::Dir::CW;
+/// @brief MC2 Dir. Only accessed in interrupt context.
+volatile mc::Dir mc2Dir = mc::Dir::CW;
+
+/// @brief Latest IMU data. Accessed in interrupt context and mission AO.
+struct
+{
+    volatile float acc[3] = {0.0f};
+    volatile float gyr[3] = {0.0f};
+} imuData;
+
+/// @brief MC1 mode change mailbox callback
+void UpdateMC1Mode()
+{
+    mc::MotorControlAO::MC1Inst().SetMode(mc1Mode);
+}
+
+/// @brief MC2 mode change mailbox callback
+void UpdateMC2Mode()
+{
+    mc::MotorControlAO::MC2Inst().SetMode(mc2Mode);
+}
+
+/// @brief MC1 rate change mailbox callback
+void UpdateMC1Rate()
+{
+    mc::MotorControlAO::MC1Inst().SetRate(mc1Rate);
+}
+
+/// @brief MC2 rate change mailbox callback
+void UpdateMC2Rate()
+{
+    mc::MotorControlAO::MC2Inst().SetRate(mc2Rate);
+}
+
+/// @brief MC1 duty cycle change mailbox callback
+void UpdateMC1Duty()
+{
+    mc::MotorControlAO::MC1Inst().SetDuty(mc1Duty);
+}
+
+/// @brief MC2 duty cycle change mailbox callback
+void UpdateMC2Duty()
+{
+    mc::MotorControlAO::MC2Inst().SetDuty(mc2Duty);
+}
+
+/// @brief MC1 dir change mailbox callback
+void UpdateMC1Dir()
+{
+    mc::MotorControlAO::MC1Inst().SetDir(mc1Dir);
+}
+
+/// @brief MC2 dir change mailbox callback
+void UpdateMC2Dir()
+{
+    mc::MotorControlAO::MC2Inst().SetDir(mc2Dir);
+}
+
+/// @brief MC1 reset mailbox callback
+void ResetMC1()
+{
+    mc::MotorControlAO::MC1Inst().Reset();
+}
+
+/// @brief MC2 reset mailbox callback
+void ResetMC2()
+{
+    mc::MotorControlAO::MC2Inst().Reset();
+}
+
+/// @brief IMU reset mailbox callback
+void ResetIMU()
+{
+    imu::IMUAO::Inst().Reset();
+}
+
+/// @brief IMU compensation mailbox callback
+void CompIMU()
+{
+    imu::IMUAO::Inst().RunIMUCompensation();
+}
+}  // namespace
 
 /// @brief I2C slave tx callback
+/// @param hi2c
+extern "C" void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef* hi2c)
+{
+    if (hi2c->Instance == I2C1)
+    {
+    }
+    else if (hi2c->Instance == I2C2)
+    {
+        // No matter what, a slave tx operation finishing should result
+        // in a state change back to idle
+        _state = mailbox_state::SlaveIdle;
+    }
+}
+
+/// @brief I2C slave rx callback
+/// @param hi2c
+extern "C" void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef* hi2c)
+{
+    if (hi2c->Instance == I2C1)
+    {
+    }
+    else if (hi2c->Instance == I2C2)
+    {
+        switch (_state)
+        {
+        case mailbox_state::SlaveIdle:
+        case mailbox_state::SlaveWaitCmd:
+        {
+            // Operation code received
+            // If no followup transaction expected, execute callback and return to idle
+            if (_opBufSizes[_activeOpcode] == 0)
+            {
+                // execute callback
+                if (_opCallbacks[_activeOpcode] != nullptr)
+                {
+                    _opCallbacks[_activeOpcode]();
+                }
+                // go back to idle
+                _state = mailbox_state::SlaveIdle;
+            }
+
+            // Otherwise, stay in waiting for the followup operation
+            _state = mailbox_state::SlaveWaitCmd;
+            break;
+        }
+        case mailbox_state::SlaveRxBusy:
+        {
+            // Slave rx finished
+            // Go back to idle
+            _state = mailbox_state::SlaveIdle;
+            break;
+        }
+        case mailbox_state::SlaveTxBusy:
+        default:
+        {
+            // Something is obviously wrong... reset state
+            _state = mailbox_state::SlaveIdle;
+            break;
+        }
+        }
+    }
+}
+
+/// @brief I2C master tx callback
 /// @param hi2c
 extern "C" void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef* hi2c)
 {
@@ -48,11 +263,88 @@ extern "C" void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c, uint8_t TransferDi
     {
         if (TransferDirection == I2C_DIRECTION_TRANSMIT)
         {
-            i2cMailbox.StartSlaveRx();
+            switch (_state)
+            {
+            case mailbox_state::SlaveIdle:
+            {
+                // Master should be sending an opcode. Start a receive
+                auto rc = HAL_I2C_Slave_Seq_Receive_IT(hi2c, (uint8_t*)&_activeOpcode,
+                                                       sizeof(_activeOpcode), I2C_FIRST_FRAME);
+
+                // Check if successful
+                if (rc == HAL_StatusTypeDef::HAL_OK)
+                {
+                    // Wait for opcode to arrive
+                    _state = mailbox_state::SlaveWaitCmd;
+                }
+                else
+                {
+                    _state = mailbox_state::SlaveIdle;
+                }
+                break;
+            }
+            case mailbox_state::SlaveWaitCmd:
+            {
+                // Master is requesting to transmit to the slave
+                auto rc = HAL_I2C_Slave_Seq_Receive_IT(hi2c, _opBufs[_activeOpcode],
+                                                       _opBufSizes[_activeOpcode], I2C_LAST_FRAME);
+
+                // Check if successful
+                if (rc == HAL_StatusTypeDef::HAL_OK)
+                {
+                    // Wait for the rx operation to finish
+                    _state = mailbox_state::SlaveRxBusy;
+                }
+                else
+                {
+                    // Failed somehow, reset
+                    _state = mailbox_state::SlaveIdle;
+                }
+                break;
+            }
+            case mailbox_state::SlaveRxBusy:
+            case mailbox_state::SlaveTxBusy:
+            default:
+            {
+                // Something is obviously wrong, reset state
+                _state = mailbox_state::SlaveIdle;
+                break;
+            }
+            }
         }
         else
         {
-            i2cMailbox.StartSlaveTx();
+            switch (_state)
+            {
+            case mailbox_state::SlaveWaitCmd:
+            {
+                // Master is requesting to receive to the slave
+                auto rc = HAL_I2C_Slave_Seq_Transmit_IT(hi2c, _opBufs[_activeOpcode],
+                                                        _opBufSizes[_activeOpcode], I2C_LAST_FRAME);
+
+                // Check if successful
+                if (rc == HAL_StatusTypeDef::HAL_OK)
+                {
+                    // Wait for the tx operation to finish
+                    _state = mailbox_state::SlaveTxBusy;
+                }
+                else
+                {
+                    // Failed somehow, reset
+                    _state = mailbox_state::SlaveIdle;
+                }
+                break;
+            }
+            case mailbox_state::SlaveIdle:
+            case mailbox_state::SlaveRxBusy:
+            case mailbox_state::SlaveTxBusy:
+            default:
+            {
+                // Something is obviously wrong, reset state
+                _state = mailbox_state::SlaveIdle;
+                break;
+            }
+            }
         }
     }
 }
@@ -61,17 +353,27 @@ extern "C" void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c, uint8_t TransferDi
 /// @param hi2c
 extern "C" void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef* hi2c)
 {
-    i2cMailbox.CompleteTransaction();
+    if (hi2c->Instance == I2C2)
+    {
+        // Enable listening again
+        HAL_I2C_EnableListen_IT(hi2c);
+        // Idle if not already idle
+        _state = mailbox_state::SlaveIdle;
+    }
 }
 
 /// @brief I2C error handler callback
 /// @param hi2c
 extern "C" void HAL_I2C_ErrorCallback(I2C_HandleTypeDef* hi2c)
 {
-    if (HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_AF)
+    if (hi2c->Instance == I2C2)
     {
-        // Acknowledge failure often means master stopped, good place to restart
-        i2cMailbox.Reset();
+        if (HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_AF)
+        {
+            // Acknowledge failure often means master stopped, good place to restart
+            HAL_I2C_EnableListen_IT(hi2c);
+            _state = mailbox_state::SlaveIdle;
+        }
     }
 }
 
@@ -82,6 +384,39 @@ MissionAO::MissionAO()
       _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
       _faultRequestTimer(this, PrivateSignals::SUBS_FAULT_REQUEST_SIG, 0U)
 {
+    // Register i2c mailbox callbacks
+    RegisterOp(opcode::WRITE_MC1_MODE, (uint8_t*)&mc1Mode, sizeof(mc1Mode), &UpdateMC1Mode);
+
+    RegisterOp(opcode::WRITE_MC2_MODE, (uint8_t*)&mc2Mode, sizeof(mc2Mode), &UpdateMC2Mode);
+
+    RegisterOp(opcode::WRITE_MC1_RATE, (uint8_t*)&mc1Rate, sizeof(mc1Rate), &UpdateMC1Rate);
+
+    RegisterOp(opcode::WRITE_MC2_RATE, (uint8_t*)&mc2Rate, sizeof(mc2Rate), &UpdateMC2Rate);
+
+    RegisterOp(opcode::WRITE_MC1_DUTY, (uint8_t*)&mc1Duty, sizeof(mc1Duty), &UpdateMC1Duty);
+
+    RegisterOp(opcode::WRITE_MC2_DUTY, (uint8_t*)&mc2Duty, sizeof(mc2Duty), &UpdateMC2Duty);
+
+    RegisterOp(opcode::WRITE_MC1_DIR, (uint8_t*)&mc1Dir, sizeof(mc1Dir), &UpdateMC1Dir);
+
+    RegisterOp(opcode::WRITE_MC2_DIR, (uint8_t*)&mc2Dir, sizeof(mc2Dir), &UpdateMC2Dir);
+
+    RegisterOp(opcode::WRITE_MC1_DIR, (uint8_t*)&mc1Dir, sizeof(mc1Dir), &UpdateMC1Dir);
+
+    RegisterOp(opcode::WRITE_MC2_DIR, (uint8_t*)&mc2Dir, sizeof(mc2Dir), &UpdateMC2Dir);
+
+    RegisterOp(opcode::WRITE_MC1_RESET, nullptr, 0U, &ResetMC1);
+
+    RegisterOp(opcode::WRITE_MC2_RESET, nullptr, 0U, &ResetMC2);
+
+    RegisterOp(opcode::WRITE_IMU_RESET, nullptr, 0U, &ResetIMU);
+
+    RegisterOp(opcode::WRITE_IMU_COMP, nullptr, 0U, &CompIMU);
+
+    RegisterOp(opcode::READ_IMU_DATA, (uint8_t*)&imuData, sizeof(imuData), nullptr);
+
+    // Start slave listen mode
+    HAL_I2C_EnableListen_IT(&hi2c2);
 }
 
 void MissionAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
@@ -144,10 +479,7 @@ Q_STATE_DEF(MissionAO, initial)
     Q_UNUSED_PAR(e);
     subscribe(bsp::PublicSignals::FAULT_SIG);
     subscribe(bsp::PublicSignals::PARAMETER_UPDATE_SIG);
-
-    // Initialize I2C mailbox
-    i2cMailbox.init(nullptr, 0U);
-    /// TODO: Set callbacks
+    subscribe(bsp::PublicSignals::IMU_SIG);
 
     return tran(&initializing);
 }
@@ -283,6 +615,15 @@ Q_STATE_DEF(MissionAO, root)
         status_ = Q_RET_HANDLED;
         break;
     }
+    case bsp::PublicSignals::IMU_SIG:
+    {
+        // Disable interrupts and update IMU data
+        __disable_irq();
+        memcpy((uint8_t*)&imuData, (uint8_t*)&(Q_EVT_CAST(imu::IMUEvt)->data), sizeof(imuData));
+        __enable_irq();
+        status_ = Q_RET_HANDLED;
+        break;
+    }
     default:
     {
         status_ = super(&top);
@@ -299,9 +640,6 @@ Q_STATE_DEF(MissionAO, initializing)
     {
     case Q_ENTRY_SIG:
     {
-        // Reset I2C mailbox
-        i2cMailbox.Reset();
-
         // Request parameters
         param::ParamAO::Inst().RequestUpdate(param::ParameterID::MM_I2C_ADDR);
 
@@ -335,6 +673,7 @@ Q_STATE_DEF(MissionAO, active)
     {
         // Arm subsystem fault heartbeat timer
         _faultRequestTimer.armX(_faultRequestTimerInterval, _faultRequestTimerInterval);
+
         status_ = Q_RET_HANDLED;
         break;
     }
@@ -345,28 +684,6 @@ Q_STATE_DEF(MissionAO, active)
     }
     case PrivateSignals::SUBS_FAULT_REQUEST_SIG:
     {
-        // const char* test    = "test";
-        // char        buf[10] = {0};
-
-        // volatile auto rc1 = HAL_I2C_Slave_Receive_IT(&hi2c1, (uint8_t*)buf, 4U);
-        // volatile auto rc2 = HAL_I2C_Master_Transmit_IT(&hi2c2, 0x10 << 1, (uint8_t*)test, 4U);
-
-        // volatile auto rc2 = HAL_I2C_Slave_Receive_IT(&hi2c2, (uint8_t*)buf, 4U);
-        // volatile auto rc1 = HAL_I2C_Master_Transmit_IT(&hi2c1, 0x08 << 1, (uint8_t*)test, 4U);
-
-        // uint8_t opcode = (uint8_t)opcode::WRITE_MC_MODE;
-        // volatile auto rc1 = HAL_I2C_Master_Transmit_IT(&hi2c1, 0x08 << 1, &opcode, 1U);
-
-        uint8_t       opcode     = (uint8_t)opcode::WRITE_PARAM_VAL;
-        uint8_t       setting[9] = {0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7};
-        volatile auto rc1        = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, &opcode, 1U, 100);
-        volatile auto rc2        = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, setting, 9U, 100);
-
-        uint8_t opcode2     = (uint8_t)opcode::WRITE_MC1_RATE;
-        uint8_t setting2[4] = {0xF, 0xE, 0xD, 0xC};
-        rc1                 = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, &opcode2, 1U, 100);
-        rc2                 = HAL_I2C_Master_Transmit(&hi2c1, 0x08 << 1, setting2, 4U, 100);
-
         QP::QEvt* evt = Q_NEW(QP::QEvt, bsp::PublicSignals::REQUEST_FAULT_SIG);
         PUBLISH(evt, this);
         status_ = Q_RET_HANDLED;

@@ -173,6 +173,10 @@ class BMI270
     /// @param csPinNum Chip-Select pin number
     /// @param spiDevice SPI interface handle
     BMI270(GPIO_TypeDef* csPort, uint16_t csPinNum, SPI_HandleTypeDef* spiDevice);
+    BMI270(const BMI270&)            = delete;
+    BMI270& operator=(const BMI270&) = delete;
+    BMI270(BMI270&&)                 = delete;
+    BMI270& operator=(BMI270&&)      = delete;
 
     /// @brief Initialize device
     /// @return Fault

@@ -6,12 +6,23 @@
 
 namespace imu
 {
+/// @brief IMU data event
+class IMUEvt : public QP::QEvt
+{
+   public:
+    imu::IMUData data;
+};
+
 /// @brief IMU AO
 class IMUAO : public QP::QActive
 {
    public:
     /// @brief Constructor
     IMUAO();
+    IMUAO(const IMUAO&)            = delete;
+    IMUAO& operator=(const IMUAO&) = delete;
+    IMUAO(IMUAO&&)                 = delete;
+    IMUAO& operator=(IMUAO&&)      = delete;
 
     /// @brief Get instance
     /// @return IMUAO&

@@ -36,7 +36,15 @@ constexpr const char* FaultToStr(Fault fault)
 class CLIAO : public QP::QActive
 {
    public:
+    /// @brief Constructor
     CLIAO();
+    CLIAO(const CLIAO&)            = delete;
+    CLIAO& operator=(const CLIAO&) = delete;
+    CLIAO(CLIAO&&)                 = delete;
+    CLIAO& operator=(CLIAO&&)      = delete;
+
+    /// @brief Get static instance
+    /// @return CLIAO&
     static CLIAO& Inst()
     {
         static CLIAO inst;

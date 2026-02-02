@@ -13,7 +13,6 @@
 //  - record motor control and imu timing stability metrics
 
 #include "bsp.hpp"
-#include "i2c_mailbox.hpp"
 
 namespace mission
 {
@@ -58,6 +57,10 @@ class MissionAO : public QP::QActive
    public:
     /// @brief Constructor
     MissionAO();
+    MissionAO(const MissionAO&)            = delete;
+    MissionAO& operator=(const MissionAO&) = delete;
+    MissionAO(MissionAO&&)                 = delete;
+    MissionAO& operator=(MissionAO&&)      = delete;
 
     /// @brief Get instance
     /// @return MissionAO&

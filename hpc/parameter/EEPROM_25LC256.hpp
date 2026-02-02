@@ -16,6 +16,10 @@ class EEPROM25LC256
     /// @param spiDevice SPI interface handle
     EEPROM25LC256(GPIO_TypeDef* csPort, uint16_t csPinNum, GPIO_TypeDef* wpPort, uint16_t wpPinNum,
                   SPI_HandleTypeDef* spiDevice);
+    EEPROM25LC256(const EEPROM25LC256&)            = delete;
+    EEPROM25LC256& operator=(const EEPROM25LC256&) = delete;
+    EEPROM25LC256(EEPROM25LC256&&)                 = delete;
+    EEPROM25LC256& operator=(EEPROM25LC256&&)      = delete;
 
     /// @brief Enable write protect
     void EnableWriteProtect() const;

@@ -152,7 +152,10 @@ Q_STATE_DEF(IMUAO, active)
         imu::Fault fault = _imu.ReadData(_imuData);
         if (!fault)
         {
-            /// TODO: Publish IMU data
+            // Publish IMU data
+            IMUEvt* evt = Q_NEW(IMUEvt, bsp::PublicSignals::IMU_SIG);
+            evt->data   = _imuData;
+            PUBLISH(evt, nullptr);
         }
         status_ = Q_RET_HANDLED;
         break;

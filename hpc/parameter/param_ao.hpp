@@ -16,7 +16,13 @@ namespace param
 class ParamAO : public QP::QActive
 {
    public:
+    /// @brief Constructor
     ParamAO();
+    ParamAO(const ParamAO&)            = delete;
+    ParamAO& operator=(const ParamAO&) = delete;
+    ParamAO(ParamAO&&)                 = delete;
+    ParamAO& operator=(ParamAO&&)      = delete;
+
     static ParamAO& Inst()
     {
         static ParamAO inst;

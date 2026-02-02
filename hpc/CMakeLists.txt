@@ -40,7 +40,6 @@ target_sources(${CMAKE_PROJECT_NAME}
         imu/bmi270.cpp
         imu/imu_ao.cpp
         mission/mission_ao.cpp
-        mission/i2c_mailbox.cpp
 )
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE

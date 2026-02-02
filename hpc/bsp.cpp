@@ -131,8 +131,7 @@ extern "C"
         QK_ISR_ENTRY();                     // Inform QK about entering an ISR
         HAL_IncTick();                      // Increment global timebase
         QP::QTimeEvt::TICK_X(0U, nullptr);  // Process QP time events at rate 0
-        // ReadADC();
-        QK_ISR_EXIT();  // Inform QK about exiting an ISR
+        QK_ISR_EXIT();                      // Inform QK about exiting an ISR
     }
 
     /// @brief QP assertion callback
@@ -168,8 +167,6 @@ void QF::onStartup()
     NVIC_SetPriorityGrouping(0U);
 
     // I2C interrupts
-    HAL_NVIC_SetPriority(I2C1_EV_IRQn, 4U, 4U);
-    HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
     HAL_NVIC_SetPriority(I2C2_EV_IRQn, 4U, 4U);
     HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
 
@@ -195,14 +192,6 @@ void QF::onStartup()
 /// @brief QF idle callback
 void QK::onIdle() {}
 }  // namespace QP
-
-/// @brief I2C1 interrupt handler
-extern "C" void I2C1_EV_IRQHandler(void)
-{
-    QK_ISR_ENTRY();
-    HAL_I2C_EV_IRQHandler(&hi2c1);
-    QK_ISR_EXIT();
-}
 
 /// @brief I2C2 interrupt handler
 extern "C" void I2C2_EV_IRQHandler(void)

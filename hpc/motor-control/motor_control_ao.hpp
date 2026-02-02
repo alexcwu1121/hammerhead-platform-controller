@@ -70,6 +70,10 @@ class MotorControlAO : public QP::QActive
     /// @brief Constructor
     /// @param mcDevice
     MotorControlAO(MotorControllerDevice* mcDevice);
+    MotorControlAO(const MotorControlAO&)            = delete;
+    MotorControlAO& operator=(const MotorControlAO&) = delete;
+    MotorControlAO(MotorControlAO&&)                 = delete;
+    MotorControlAO& operator=(MotorControlAO&&)      = delete;
 
     /// @brief Get MC1 instance
     /// @return MotorControlAO&
