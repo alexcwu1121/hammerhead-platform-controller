@@ -173,6 +173,12 @@ extern "C" void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef* hi2c)
     }
     else if (hi2c->Instance == I2C2)
     {
+        // Call tx complete callback
+        if (_state == mailbox_state::SlaveTxBusy && _opCallbacks[_activeOpcode] != nullptr)
+        {
+            _opCallbacks[_activeOpcode]();
+        }
+
         // No matter what, a slave tx operation finishing should result
         // in a state change back to idle
         _state = mailbox_state::SlaveIdle;
@@ -212,7 +218,12 @@ extern "C" void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef* hi2c)
         }
         case mailbox_state::SlaveRxBusy:
         {
-            // Slave rx finished
+            // Call tx complete callback
+            if (_opCallbacks[_activeOpcode] != nullptr)
+            {
+                _opCallbacks[_activeOpcode]();
+            }
+
             // Go back to idle
             _state = mailbox_state::SlaveIdle;
             break;
