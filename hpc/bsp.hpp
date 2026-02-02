@@ -50,9 +50,9 @@ constexpr float ADC_TO_VIN_GAIN = ADC_VREF / ADC_RES * (VIN_DIV_R1 + VIN_DIV_R2)
 /// @brief ADC to pre-voltage divider motor output voltage gain
 constexpr float ADC_TO_VMIN_GAIN = ADC_VREF / ADC_RES * (VMIN_DIV_R1 + VMIN_DIV_R2) / VMIN_DIV_R2;
 /// @brief ADC to pre-voltage divider VIN voltage offset
-constexpr float ADC_TO_VIN_OFFSET = 0.2288208f;
+constexpr float ADC_TO_VIN_OFFSET = 0.5764399f;
 /// @brief ADC to pre-voltage divider motor output voltage offset
-constexpr float ADC_TO_VMIN_OFFSET = 0.3917236f;
+constexpr float ADC_TO_VMIN_OFFSET = 0.1334471f;
 
 /// @brief Subsystem IDs
 enum SubsystemID : uint8_t
