@@ -13,4 +13,6 @@
   (lib (name "1985823")(type "KiCad")(uri "C:/Users/alexc/OneDrive/Documents/personal_projects/CAD/1985823/1985823.kicad_sym")(options "")(descr ""))
   (lib (name "B4B_XH_A")(type "KiCad")(uri "C:/Users/alexc/OneDrive/Documents/personal_projects/CAD/B4B_XH_A/B4B-XH-A.kicad_sym")(options "")(descr ""))
   (lib (name "BMI270")(type "KiCad")(uri "C:/Users/alexc/OneDrive/Documents/personal_projects/CAD/ul_BMI270/KiCADv6/2025-12-21_22-39-12.kicad_sym")(options "")(descr ""))
+  (lib (name "TCAN337DR")(type "KiCad")(uri "${KIPRJMOD}/TCAN337DR/KiCADv6/2026-08-21_03-21-10.kicad_sym")(options "")(descr ""))
+  (lib (name "436500427")(type "KiCad")(uri "${KIPRJMOD}/436500427/KiCADv6/2026-08-21_00-04-01.kicad_sym")(options "")(descr ""))
 )

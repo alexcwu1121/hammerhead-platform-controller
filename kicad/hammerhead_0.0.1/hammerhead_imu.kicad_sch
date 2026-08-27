@@ -986,7 +986,7 @@
 			(uuid "c10cec25-ed9e-4eff-a72d-630085afd32e")
 		)
 		(instances
-			(project ""
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/78d68820-8195-4568-a45c-7e7a2e97fe71"
 					(reference "U9")
 					(unit 1)

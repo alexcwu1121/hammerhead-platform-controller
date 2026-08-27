@@ -793,6 +793,10 @@
     [
       "3b93b387-84d5-4f34-971e-51db2e49638b",
       "12V Regulator #2"
+    ],
+    [
+      "f07610ad-2dd2-4002-b8ed-56c85f36d757",
+      "can_transceiver"
     ]
   ],
   "text_variables": {}

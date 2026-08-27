@@ -14,4 +14,6 @@
   (lib (name "218_2LPSTRF")(type "KiCad")(uri "C:/Users/alexc/OneDrive/Documents/personal_projects/CAD/218_2LPSTRF/KiCADv6/footprints.pretty")(options "")(descr ""))
   (lib (name "1985823")(type "KiCad")(uri "C:/Users/alexc/OneDrive/Documents/personal_projects/CAD/1985823")(options "")(descr ""))
   (lib (name "B4B_XH_A")(type "KiCad")(uri "C:/Users/alexc/OneDrive/Documents/personal_projects/CAD/B4B_XH_A")(options "")(descr ""))
+  (lib (name "TCAN337DR")(type "KiCad")(uri "${KIPRJMOD}/TCAN337DR/KiCADv6/footprints.pretty")(options "")(descr ""))
+  (lib (name "436500427")(type "KiCad")(uri "${KIPRJMOD}/436500427/KiCADv6/footprints.pretty")(options "")(descr ""))
 )

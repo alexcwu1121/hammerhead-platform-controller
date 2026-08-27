@@ -1711,7 +1711,7 @@
 			(uuid "e90336c2-9a0b-4d19-b53e-d906a66571a3")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "R24")
 					(unit 1)
@@ -1785,7 +1785,7 @@
 			(uuid "40f53163-7c05-469c-ab54-f04227217708")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "R_EN_B_3")
 					(unit 1)
@@ -1857,7 +1857,7 @@
 			(uuid "d4e51f57-7103-49f1-890e-4d7c587028a2")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "R25")
 					(unit 1)
@@ -1931,7 +1931,7 @@
 			(uuid "269fdf7e-2cbc-4dd3-91e0-a18419f0d8ce")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "C35")
 					(unit 1)
@@ -2002,7 +2002,7 @@
 			(uuid "757c8d84-9da7-4a8f-872e-3382b707e2f4")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "R23")
 					(unit 1)
@@ -2074,7 +2074,7 @@
 			(uuid "c023ba03-2ec0-4796-ac00-c87f9cfb53b8")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "L3")
 					(unit 1)
@@ -2145,7 +2145,7 @@
 			(uuid "043f6a5b-71ea-4d22-af5d-9d4729676160")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "C37")
 					(unit 1)
@@ -2264,7 +2264,7 @@
 			(uuid "fe033361-0149-481a-bf77-dc0bb13c6903")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "U8")
 					(unit 1)
@@ -2338,7 +2338,7 @@
 			(uuid "8080b90e-461e-4196-be4b-9bb6559c32bb")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "C34")
 					(unit 1)
@@ -2412,7 +2412,7 @@
 			(uuid "f2cc12d4-b047-48a6-85ba-35ca758c539c")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "R_FB_B_3")
 					(unit 1)
@@ -2486,7 +2486,7 @@
 			(uuid "4408a1c1-68e8-46a4-b626-8efcd145c0de")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "R_FB_A_3")
 					(unit 1)
@@ -2557,7 +2557,7 @@
 			(uuid "c0673292-3a4b-406e-8d1e-a0858ff1b062")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "C36")
 					(unit 1)
@@ -2631,7 +2631,7 @@
 			(uuid "cf36e81c-8308-4e3d-9471-90bdc463f9b0")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "C38")
 					(unit 1)
@@ -2705,7 +2705,7 @@
 			(uuid "31323088-9265-4bf2-8cae-69a930ffb3be")
 		)
 		(instances
-			(project "hammerhead_kicad_v2"
+			(project "hammerhead_0.0.1"
 				(path "/4823e925-f95e-466f-a588-17588bfe004a/cc9658a9-197c-4e3b-890f-ab0f2990473a/3b93b387-84d5-4f34-971e-51db2e49638b"
 					(reference "R_EN_A_3")
 					(unit 1)
