@@ -1,0 +1,10 @@
+(unit MM)
+
+(package "SN74LVC541ARGYR"
+    (type UNDEF)
+    (uver 2)
+    (mountForm default
+        (footprintRef "SN74LVC541ARGYR")
+        (spec "default")
+    )
+)

@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 10TPE220ML
+D Panasonic 220uF SMD Solid Polymer Tantalum Capacitor, 10 V dc +/-20%, POSCAP Series
+K
+F http://industrial.panasonic.com/cdbs/www-data/pdf/AAA8000/AAA8000C36.pdf
+$ENDCMP
+#
+#End Doc Library

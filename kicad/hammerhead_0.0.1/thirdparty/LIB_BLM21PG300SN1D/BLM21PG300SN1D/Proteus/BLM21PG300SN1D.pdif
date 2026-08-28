@@ -1,0 +1,93 @@
+;Proteus Design Interchange Format
+(PDIF
+ (vendor "SamacSys Limited")
+ (version 1 0)
+ (library
+  (part "BLM21PG300SN1D"
+   (description "30 Ohms @ 100MHz 1 Power Line Ferrite Bead 0805 (2012 Metric) 4A 14mOhm")
+   (family "ANA")
+   (package "BEADC2012X105N")
+   (attribute "Datasheet Link" "https://www.murata.com/en-global/products/productdetail?partno=BLM21PG300SN1%23")
+   (attribute "Geometry.Height" "1.05mm")
+   (attribute "Manufacturer_Name" "Murata Electronics")
+   (attribute "Manufacturer_Part_Number" "BLM21PG300SN1D")
+   (attribute "Mouser Part Number" "81-BLM21P300S")
+   (attribute "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Murata-Electronics/BLM21PG300SN1D?qs=vSIcEeo8lXttJMV%2F1g5%2F6A%3D%3D")
+   (attribute "Arrow Part Number" "BLM21PG300SN1D")
+   (attribute "Arrow Price/Stock" "https://www.arrow.com/en/products/blm21pg300sn1d/murata-manufacturing?utm_currency=USD&region=nac")
+   (gate
+    (symbol "BLM21PG300SN1D")
+    (pin "1" 1 PS)
+    (pin "2" 2 PS)
+   )
+  )
+  (symbol "BLM21PG300SN1D"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 200 100) (pt 600 100) (pt 600 -200) (pt 200 -200) (pt 200 100) (closed))
+   )
+   (terminal
+    (body (symbol "PIN") (pt 0 0) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 0 -100) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+  )
+  (symbol "PIN"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 200 0))))
+  (symbol "PINSHORT"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 100 0))))
+  (package "BEADC2012X105N"
+   (units MM)
+   (layer OCCA
+    (graphic
+     (stroke 0.05)
+     (path
+      (closed true)
+      (pt -1.725 1)
+      (pt 1.725 1)
+      (pt 1.725 -1)
+      (pt -1.725 -1)
+      (pt -1.725 1))))
+   (layer TASM
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed true)
+      (pt -1 0.625)
+      (pt 1 0.625)
+      (pt 1 -0.625)
+      (pt -1 -0.625)
+      (pt -1 0.625))))
+   (layer TSLK
+    (graphic
+     (stroke 0.2)
+     (path
+      (closed false)
+      (pt 0 0.525)
+      (pt 0 -0.525))))
+   (leg 1 (pt -0.9 0) (padstack 0))
+   (leg 2 (pt 0.9 0) (padstack 0))
+   (padstack 0
+    (plated false)
+    (pad (layer TCOP) (rectf 1.15 1.45 0 0 90))
+   )
+   (model "BLM21PG300SN1D.stp"
+    (euler 0 0 0)
+    (offset 0 0 0)
+   )
+  )
+ )
+)

@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "SFH_4715AS"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2024-01-30-14:23:31)
+    (mountForm default
+        (footprintRef "GHCSHPM1244T2U10")
+        (spec "System")
+    )
+)

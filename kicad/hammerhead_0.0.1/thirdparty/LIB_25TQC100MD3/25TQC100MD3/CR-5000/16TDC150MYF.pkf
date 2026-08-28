@@ -1,0 +1,10 @@
+(unit MM)
+
+(package "16TDC150MYF"
+    (type UNDEF)
+    (uver 2)
+    (mountForm default
+        (footprintRef "16TDC150MYF")
+        (spec "default")
+    )
+)

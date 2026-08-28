@@ -1,0 +1,18 @@
+.BM04B-SRSS-TB_LF__SN_ :1 ;JST (JAPAN SOLDERLESS TERMINALS) - BM04B-SRSS-TB(LF)(SN) - HEADER, TOP ENTRY, 4WAY
+BM04B-SRSS-TB_LFSN_
+*STM J
+*NGS
+*PLB 1="1" 2="2" 3="3" 4="4"
+*MXP 6
+*DFN BM04B-SRSS-TB_LF__SN_
+~!Manufacturer_Name (JST (JAPAN SOLDERLESS TERMINALS))
+~!Manufacturer_Part_Number (BM04B-SRSS-TB(LF)(SN))
+~!Mouser Part Number (N/A)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/JST-Commercial/BM04B-SRSS-TBLFSN?qs=IKkN%2F947nfAyYAo%252BwvUjeQ%3D%3D)
+~!Arrow Part Number (-)
+~!Arrow Price/Stock (-)
+~!Link Datasheet (http://www.jst.fr/core/file.get?path=doc/jst/family/pdf/eSH.pdf)
+~!Height (-)
+~!3D_Model (BM04B-SRSS-TB_LF__SN_)
+BM04B-SRSS-TB_LF__SN_
+1.1!U 2.1!U 3.1!U 4.1!U 

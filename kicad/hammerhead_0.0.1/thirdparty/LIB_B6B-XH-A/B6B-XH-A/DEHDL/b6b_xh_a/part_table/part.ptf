@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'B6B_XH_A'
+CLASS = IO
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "JST (JAPAN SOLDERLESS TERMINALS)", "B6B-XH-A" (!) = "", "B6BXHA", "Other", "", "", "", "", "Connector Header, XH Series, 6 Position, 2.50mm, Through Hole, Press-Fit, Solder, Natural", "https://www.jst.com/wp-content/uploads/2021/01/eXH-new.pdf", "7 mm"
+END_PART
+
+END.

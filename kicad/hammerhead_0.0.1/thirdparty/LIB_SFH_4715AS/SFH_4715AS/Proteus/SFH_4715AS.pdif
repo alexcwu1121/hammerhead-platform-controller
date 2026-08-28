@@ -1,0 +1,120 @@
+;Proteus Design Interchange Format
+(PDIF
+ (vendor "SamacSys Limited")
+ (version 1 0)
+ (library
+  (part "SFH_4715AS"
+   (description "Osram Opto SFH 4715AS, OSLON Black 860nm IR LED, 3.85 x 3.85 mm SMD package")
+   (family "DIO")
+   (package "GHCSHPM1244T2U10")
+   (attribute "Datasheet Link" "https://datasheet.datasheetarchive.com/originals/distributors/DKDS41/DSANUWW0036947.pdf")
+   (attribute "Geometry.Height" "1.51mm")
+   (attribute "Manufacturer_Name" "ams OSRAM")
+   (attribute "Manufacturer_Part_Number" "SFH 4715AS")
+   (attribute "Mouser Part Number" "720-SFH4715AS")
+   (attribute "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/ams-OSRAM/SFH-4715AS?qs=SzIX745sIXGcHIuWuiIgFw%3D%3D")
+   (attribute "Arrow Part Number" "SFH 4715AS")
+   (attribute "Arrow Price/Stock" "https://www.arrow.com/en/products/sfh4715as/osram-opto-semiconductors?region=nac")
+   (gate
+    (symbol "SFH_4715AS")
+    (pin "K" 1 PS)
+    (pin "A" 2 PS)
+    (pin "THERMAL_PAD" 3 PS)
+   )
+  )
+  (symbol "SFH_4715AS"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 200 100) (pt 1100 100) (pt 1100 -300) (pt 200 -300) (pt 200 100) (closed))
+   )
+   (terminal
+    (body (symbol "PIN") (pt 0 -200) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 0 0) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PIN") (pt 0 -100) (rot 0) (mir 0) (visible true))
+    (name (pt 230 0) (rot 0) (just MIDDLE LEFT) (visible true))
+    (number (pt 140 20) (rot 0) (just BOTTOM RIGHT) (visible true)))
+  )
+  (symbol "PIN"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 200 0))))
+  (symbol "PINSHORT"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 100 0))))
+  (package "GHCSHPM1244T2U10"
+   (units MM)
+   (layer TASM
+    (graphic
+     (stroke 0.2)
+     (path
+      (closed true)
+      (pt -1.5 1.55)
+      (pt 1.5 1.55)
+      (pt 1.5 -1.55)
+      (pt -1.5 -1.55)
+      (pt -1.5 1.55))))
+   (layer OCCA
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed true)
+      (pt -2.5 2.55)
+      (pt 2.5 2.55)
+      (pt 2.5 -2.55)
+      (pt -2.5 -2.55)
+      (pt -2.5 2.55))))
+   (layer TSLK
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed false)
+      (pt -1.5 1.55)
+      (pt 1.5 1.55))))
+   (layer TSLK
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed false)
+      (pt -1.5 -1.55)
+      (pt 1.5 -1.55))))
+   (layer TSLK
+    (graphic
+     (stroke 0.2)
+     (path
+      (closed true)
+      (pt 2 0.1)
+      (arc (pt 2.000 0.100) (pt 1.900 -0.100) (pt 2.100 0.100) (start 180.0) (sweep 90.0))
+      (pt 2 -0.1)
+      (arc (pt 2.000 -0.100) (pt 1.900 -0.100) (pt 2.100 0.100) (start 180.0) (sweep -90.0))
+      (pt 2 0.1))))
+   (leg 1 (pt 1.125 0.000) (padstack 0))
+   (leg 2 (pt -1.125 0.000) (padstack 0))
+   (leg 3 (pt 0.000 0.000) (padstack 3))
+   (padstack 0
+    (plated false)
+    (pad (layer TCOP) (rectf 0.550 2.800 0 0 90.000))
+   )
+   (padstack 3
+    (plated false)
+    (pad (layer TCOP) (rectf 1.000 2.800 0 0 90.000))
+   )
+   (model "SFH_4715AS.stp"
+    (euler 0 0 0)
+    (offset 0 0 0)
+   )
+  )
+ )
+)

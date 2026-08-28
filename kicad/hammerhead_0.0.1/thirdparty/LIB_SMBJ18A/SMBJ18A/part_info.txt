@@ -1,0 +1,9 @@
+Manufacturer=Vishay
+PartNumber=SMBJ18A
+PartCategory=TVS Diode (Uni-directional)
+PackageCategory=Diodes Moulded
+PinCount=2
+Version=1.2
+Released=2017-12-15 11:59:34
+Downloaded=2026-07-24 02:05:42
+3D=Y

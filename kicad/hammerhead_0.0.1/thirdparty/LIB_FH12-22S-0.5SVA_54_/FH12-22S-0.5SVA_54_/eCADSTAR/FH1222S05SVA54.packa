@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "FH12-22S-0_5SVA_54_"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2021-08-06-10:24:51)
+    (mountForm default
+        (footprintRef "FH1222S05SVA54")
+        (spec "System")
+    )
+)

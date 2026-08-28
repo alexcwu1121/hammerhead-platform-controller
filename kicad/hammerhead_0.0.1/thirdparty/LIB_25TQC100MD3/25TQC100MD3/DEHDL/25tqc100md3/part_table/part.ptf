@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART '25TQC100MD3'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET";
+{========================================================================================}
+ "Panasonic", "25TQC100MD3" (!) = "", "16TDC150MYF", "Other", "667-25TQC100MD3", "https://www.mouser.co.uk/ProductDetail/Panasonic/25TQC100MD3?qs=hd1VzrDQEGgoo22WT1RZlA%3D%3D", "25TQC100MD3", "https://www.arrow.com/en/products/25tqc100md3/panasonic?utm_currency=USD&region=nac", "PANASONIC - 25TQC100MD3 - Tantalum Polymer Capacitor, 100 F, 25 V, POSCAP TQC Series, +/- 20%, D3L, 0.06 ohm", "http://industrial.panasonic.com/cdbs/www-data/pdf/AAA8000/AAA8000C62.pdf"
+END_PART
+
+END.

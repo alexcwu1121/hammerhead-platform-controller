@@ -1,0 +1,9 @@
+Manufacturer=Texas Instruments
+PartNumber=TXB0108RGYR
+PartCategory=Integrated Circuit
+PackageCategory=Other
+PinCount=21
+Version=1.2
+Released=2018-07-03 09:24:19
+Downloaded=2026-06-04 05:29:18
+3D=Y

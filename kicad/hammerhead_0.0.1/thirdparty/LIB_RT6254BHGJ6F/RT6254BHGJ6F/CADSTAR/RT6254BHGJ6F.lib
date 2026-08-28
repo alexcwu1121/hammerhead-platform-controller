@@ -1,0 +1,18 @@
+.RT6254BHGJ6F :1 ;RICHTEK - RT6254BHGJ6F - DC/DC CONV, SYNC BUCK, 500KHZ, TSOT-23-6
+SOT95P280X100-6N
+*STM IC
+*NGS
+*PLB 1="FB" 2="EN" 3="GND" 4="VIN" 5="LX" 6="BOOT"
+*MXP 6
+*DFN RT6254BHGJ6F
+~!Manufacturer_Name (RICHTEK)
+~!Manufacturer_Part_Number (RT6254BHGJ6F)
+~!Mouser Part Number (835-RT6254BHGJ6F)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Richtek/RT6254BHGJ6F?qs=amGC7iS6iy9rwZmDNPA8RA%3D%3D)
+~!Arrow Part Number (-)
+~!Arrow Price/Stock (-)
+~!Link Datasheet (https://4donline.ihs.com/images/VipMasterIC/IC/RHTK/RHTK-S-A0009164484/RHTK-S-A0009164484-1.pdf?hkey=EF798316E3902B6ED9A73243A3159BB0)
+~!Height (1mm)
+~!3D_Model (RT6254BHGJ6F)
+RT6254BHGJ6F
+1.1!U 2.1!U 3.1!U 6.1!U 5.1!U 4.1!U 

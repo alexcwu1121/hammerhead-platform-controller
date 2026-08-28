@@ -1,0 +1,10 @@
+(unit MM)
+
+(package "APCI0105P001A"
+    (type UNDEF)
+    (uver 2)
+    (mountForm default
+        (footprintRef "APCI0105P001A")
+        (spec "default")
+    )
+)

@@ -1,0 +1,9 @@
+Manufacturer=JST (JAPAN SOLDERLESS TERMINALS)
+PartNumber=B6B-XH-A
+PartCategory=Connector
+PackageCategory=Other
+PinCount=6
+Version=1.5
+Released=2025-02-14 05:21:30
+Downloaded=2026-06-03 22:25:42
+3D=Y

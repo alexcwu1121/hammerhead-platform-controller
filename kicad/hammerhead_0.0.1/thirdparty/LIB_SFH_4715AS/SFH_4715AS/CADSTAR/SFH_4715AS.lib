@@ -1,0 +1,18 @@
+.SFH_4715AS :1 ;Osram Opto SFH 4715AS, OSLON Black 860nm IR LED, 3.85 x 3.85 mm SMD package
+GHCSHPM1244T2U10
+*STM LED
+*NGS
+*PLB 1="K" 2="A" 3="THERMAL PAD"
+*MXP 3
+*DFN SFH_4715AS
+~!Manufacturer_Name (ams OSRAM)
+~!Manufacturer_Part_Number (SFH 4715AS)
+~!Mouser Part Number (720-SFH4715AS)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/ams-OSRAM/SFH-4715AS?qs=SzIX745sIXGcHIuWuiIgFw%3D%3D)
+~!Arrow Part Number (SFH 4715AS)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/sfh4715as/osram-opto-semiconductors?region=nac)
+~!Link Datasheet (https://datasheet.datasheetarchive.com/originals/distributors/DKDS41/DSANUWW0036947.pdf)
+~!Height (1.51mm)
+~!3D_Model (SFH_4715AS)
+SFH_4715AS
+1.1!U 2.1!U 3.1!U 

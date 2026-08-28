@@ -1,0 +1,9 @@
+Manufacturer=Panasonic
+PartNumber=10TPE220ML
+PartCategory=Capacitor Polarised
+PackageCategory=Other
+PinCount=2
+Version=13.3
+Released=2020-07-14 12:25:03
+Downloaded=2026-03-11 03:03:07
+3D=Y

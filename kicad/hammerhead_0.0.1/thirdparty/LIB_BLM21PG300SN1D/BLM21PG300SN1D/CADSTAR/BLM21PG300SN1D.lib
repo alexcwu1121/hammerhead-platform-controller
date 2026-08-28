@@ -1,0 +1,18 @@
+.BLM21PG300SN1D :1 ;30 Ohms @ 100MHz 1 Power Line Ferrite Bead 0805 (2012 Metric) 4A 14mOhm
+BEADC2012X105N
+*STM FB
+*NGS
+*PLB 1="1" 2="2"
+*MXP 2
+*DFN BLM21PG300SN1D
+~!Manufacturer_Name (Murata Electronics)
+~!Manufacturer_Part_Number (BLM21PG300SN1D)
+~!Mouser Part Number (81-BLM21P300S)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Murata-Electronics/BLM21PG300SN1D?qs=vSIcEeo8lXttJMV%2F1g5%2F6A%3D%3D)
+~!Arrow Part Number (BLM21PG300SN1D)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/blm21pg300sn1d/murata-manufacturing?utm_currency=USD&region=nac)
+~!Link Datasheet (https://www.murata.com/en-global/products/productdetail?partno=BLM21PG300SN1%23)
+~!Height (1.05mm)
+~!3D_Model (BLM21PG300SN1D)
+BLM21PG300SN1D
+1.1!U 2.1!U 

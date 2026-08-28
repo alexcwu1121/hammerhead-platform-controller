@@ -1,0 +1,18 @@
+.SMBJ18A :1 ;SMBJ18A
+DIOM5436X244N
+*STM D
+*NGS
+*PLB 1="K" 2="A"
+*MXP 2
+*DFN SMBJ18A
+~!Manufacturer_Name (Vishay)
+~!Manufacturer_Part_Number (SMBJ18A)
+~!Mouser Part Number (-)
+~!Mouser Price/Stock (-)
+~!Arrow Part Number (-)
+~!Arrow Price/Stock (-)
+~!Link Datasheet (http://www.vishay.com/docs/88392/smbj.pdf)
+~!Height (2.44mm)
+~!3D_Model (SMBJ18A)
+SMBJ18A
+1.1!U 2.1!U 

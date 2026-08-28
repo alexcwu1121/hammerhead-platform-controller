@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "APCI0105-P001A"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2024-06-13-07:49:54)
+    (mountForm default
+        (footprintRef "APCI0105P001A")
+        (spec "System")
+    )
+)

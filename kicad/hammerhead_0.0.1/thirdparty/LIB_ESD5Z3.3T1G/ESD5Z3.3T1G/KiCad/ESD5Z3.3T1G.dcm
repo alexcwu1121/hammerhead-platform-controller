@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ESD5Z3.3T1G
+D Low Clamping Voltage; Small Body Outline Dimensions: 0.047 x 0.032 (1.20 mm x 0.80 mm); Low Leakage; Response Time is Typically < 1 ns; IEC6100042 Level 4 ESD Protection and IEC6100044 Level 4 EFT Protection; SZ Prefix for Automotive and Other Applications Requiring Unique Site and Control Change Requirements; AECQ101 Qualified and PPAP Capable; Peak Power up to 240 Watts @ 8 x 20 s Pulse; Low Body Height: 0.028 (0.7 mm); ESD Rating of Class 3 (> 16 kV) per Human Body Model; These Devices are PbFre
+K
+F https://www.onsemi.com/pub/Collateral/ESD5Z2.5T1-D.PDF
+$ENDCMP
+#
+#End Doc Library

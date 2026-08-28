@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'FH12_22S_0.5SVA_54_'
+CLASS = IO
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Hirose", "FH12-22S-0.5SVA(54)" (!) = "", "FH1222S05SVA54", "Other", "798-FH1222S0.5SVA54", "https://www.mouser.co.uk/ProductDetail/Hirose-Connector/FH12-22S-0.5SVA54?qs=Gufeu08L%2Fl2Z7MeB1X5%252BAA%3D%3D", "", "", "CONN FFC VERT 22POS 0.50MM SMD", "https://www.hirose.com/en/product/document?clcode=CL0586-0813-6-54&productname=FH12-22S-0.5SVA(54)&series=FH12&documenttype=Catalog&lang=en&documentid=D31648_en", "5.7 mm"
+END_PART
+
+END.

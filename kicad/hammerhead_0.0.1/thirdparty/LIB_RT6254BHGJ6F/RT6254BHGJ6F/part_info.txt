@@ -1,0 +1,9 @@
+Manufacturer=RICHTEK
+PartNumber=RT6254BHGJ6F
+PartCategory=Integrated Circuit
+PackageCategory=SOT23 (6-Pin)
+PinCount=6
+Version=1.1
+Released=2022-07-08 08:26:47
+Downloaded=2026-03-11 02:06:15
+3D=Y

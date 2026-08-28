@@ -1,0 +1,18 @@
+.25TQC100MD3 :1 ;PANASONIC - 25TQC100MD3 - Tantalum Polymer Capacitor, 100 F, 25 V, POSCAP TQC Series, +/- 20%, D3L, 0.06 ohm
+"16TDC150MYF"
+*STM C
+*NGS
+*PLB 1="+" 2="-"
+*MXP 2
+*DFN 25TQC100MD3
+~!Manufacturer_Name (Panasonic)
+~!Manufacturer_Part_Number (25TQC100MD3)
+~!Mouser Part Number (667-25TQC100MD3)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Panasonic/25TQC100MD3?qs=hd1VzrDQEGgoo22WT1RZlA%3D%3D)
+~!Arrow Part Number (25TQC100MD3)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/25tqc100md3/panasonic?utm_currency=USD&region=nac)
+~!Link Datasheet (http://industrial.panasonic.com/cdbs/www-data/pdf/AAA8000/AAA8000C62.pdf)
+~!Height (-)
+~!3D_Model (25TQC100MD3)
+"25TQC100MD3"
+1.1!U 2.1!U 

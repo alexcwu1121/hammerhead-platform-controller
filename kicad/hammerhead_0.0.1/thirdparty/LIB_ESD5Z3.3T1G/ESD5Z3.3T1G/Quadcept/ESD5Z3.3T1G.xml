@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--/224661/1805047/2.50/2/2/Diode/-->
+<quadcept_library>
+  <setting unit="mil" />
+  <textstyle name="Default" height="47.244094488189" strokewidth="7.8740157480315" charwidth="47.244094488189" />
+  <textstyle name="Dimension" height="19.6850393700787" strokewidth="0" charwidth="19.6850393700787" />
+  <textstyle name="H127W0635TH00762" height="50" strokewidth="3" charwidth="25" />
+  <textstyle name="H15W15TH02" height="59.0551181102362" strokewidth="7.8740157480315" charwidth="59.0551181102362" />
+  <padstyle name="r64_42" surface="True" plated="False" isvia="False" nopaste="False" nomask="True" complex="False" holesize="0">
+    <padshape layer="TOP" shape="rectangle" width="16.535433070866" height="25.1968503937" />
+    <padshape layer="TOP_SOLDER_MASK" shape="rectangle" width="24.409448818897" height="33.070866141732" />
+    <padshape layer="TOP_SOLDER_PASTE" shape="rectangle" width="16.535433070866" height="25.1968503937" />
+  </padstyle>
+  <footprint name="SODFL1608X70N" originx="0" originy="0" pickpointx="0" pickpointy="0">
+    <pcbpin number="1" name="1" style="r64_42" originx="-29.527559055118" originy="0" rotation="90" />
+    <pcbpin number="2" name="2" style="r64_42" originx="29.527559055118" originy="0" rotation="90" />
+    <line layer="TOP_PLACE_BOUND" originx="-48.031496062992" originy="23.622047244094" endx="48.031496062992" endy="23.622047244094" width="1.9685039370079" />
+    <line layer="TOP_PLACE_BOUND" originx="48.031496062992" originy="23.622047244094" endx="48.031496062992" endy="-23.622047244094" width="1.9685039370079" />
+    <line layer="TOP_PLACE_BOUND" originx="48.031496062992" originy="-23.622047244094" endx="-48.031496062992" endy="-23.622047244094" width="1.9685039370079" />
+    <line layer="TOP_PLACE_BOUND" originx="-48.031496062992" originy="-23.622047244094" endx="-48.031496062992" endy="23.622047244094" width="1.9685039370079" />
+    <line layer="TOP_ASSEMBLY" originx="-23.622047244094" originy="15.748031496063" endx="23.622047244094" endy="15.748031496063" width="3.9370078740157" />
+    <line layer="TOP_ASSEMBLY" originx="23.622047244094" originy="15.748031496063" endx="23.622047244094" endy="-15.748031496063" width="3.9370078740157" />
+    <line layer="TOP_ASSEMBLY" originx="23.622047244094" originy="-15.748031496063" endx="-23.622047244094" endy="-15.748031496063" width="3.9370078740157" />
+    <line layer="TOP_ASSEMBLY" originx="-23.622047244094" originy="-15.748031496063" endx="-23.622047244094" endy="15.748031496063" width="3.9370078740157" />
+    <line layer="TOP_ASSEMBLY" originx="-23.622047244094" originy="3.1496062992126" endx="-11.023622047244" endy="15.748031496063" width="3.9370078740157" />
+    <line layer="TOP_SILKSCREEN" originx="-42.125984251968" originy="15.748031496063" endx="23.622047244094" endy="15.748031496063" width="7.8740157480314" />
+    <line layer="TOP_SILKSCREEN" originx="-23.622047244094" originy="-15.748031496063" endx="23.622047244094" endy="-15.748031496063" width="7.8740157480314" />
+  </footprint>
+  <symbol name="ESD5Z3.3T1G" originx="0" originy="0">
+    <line originx="200" originy="100" endx="200" endy="-100" width="0" />
+    <line originx="100" originy="0" endx="200" endy="0" width="0" />
+    <line originx="400" originy="0" endx="500" endy="0" width="0" />
+    <sympin number="1" originx="100" originy="0" rotation="180" length="100" width="7.8740157480315" flipped="False">
+      <text name="pinname" originx="140" originy="10" style="Default" rotation="0" justify="left" flipped="False" hidden="True" data="K" />
+      <text name="pindes" originx="60" originy="10" style="Default" rotation="0" justify="lowerright" flipped="False" hidden="False" data="1" />
+    </sympin>
+    <sympin number="2" originx="500" originy="0" rotation="0" length="100" width="7.8740157480315" flipped="False">
+      <text name="pinname" originx="460" originy="10" style="Default" rotation="0" justify="right" flipped="False" hidden="True" data="A" />
+      <text name="pindes" originx="540" originy="10" style="Default" rotation="0" justify="lowerleft" flipped="False" hidden="False" data="2" />
+    </sympin>
+    <polygon type="polygon">
+      <point x="200" y="0" />
+      <point x="400" y="100" />
+      <point x="400" y="-100" />
+    </polygon>
+  </symbol>
+  <component name="ESD5Z3.3T1G" designatorprefix="D" height="27.55905511811" footprint="SODFL1608X70N">
+    <comppin designator="1" sympin="1" pinswap="0" gateswap="0" gate="1" group="1" side="" type="Any" name="K" />
+    <comppin designator="2" sympin="2" pinswap="0" gateswap="0" gate="1" group="1" side="" type="Any" name="A" />
+    <attached_symbol gate="1" name="ESD5Z3.3T1G" />
+    <pinmap designator="1" footprintpin="1" />
+    <pinmap designator="2" footprintpin="2" />
+    <text name="Datasheet" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="https://www.onsemi.com/pub/Collateral/ESD5Z2.5T1-D.PDF" />
+    <text name="Description" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="Low Clamping Voltage; Small Body Outline Dimensions: 0.047 x 0.032 (1.20 mm x 0.80 mm); Low Leakage; Response Time is Typically &lt; 1 ns; IEC6100042 Level 4 ESD Protection and IEC6100044 Level 4 EFT Protection; SZ Prefix for Automotive and Other Applications Requiring Unique Site and Control Change Requirements; AECQ101 Qualified and PPAP Capable; Peak Power up to 240 Watts @ 8 x 20 s Pulse; Low Body Height: 0.028 (0.7 mm); ESD Rating of Class 3 (&gt; 16 kV) per Human Body Model; These Devices are PbFre" />
+    <text name="Manufacturer_Name" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="onsemi" />
+    <text name="Manufacturer_Part_Number" originx="450" originy="100" style="Default" rotation="0" justify="left" flipped="False" hidden="False" data="ESD5Z3.3T1G" />
+    <text name="Mouser Part Number" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="863-ESD5Z3.3T1G" />
+    <text name="Mouser Price/Stock" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="https://www.mouser.co.uk/ProductDetail/onsemi/ESD5Z3.3T1G?qs=OSf9jACorvaH3Y8oRWEcuQ%3D%3D" />
+    <text name="Arrow Part Number" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="ESD5Z3.3T1G" />
+    <text name="Arrow Price/Stock" originx="0" originy="0" style="Default" rotation="0" justify="" flipped="False" hidden="True" data="https://www.arrow.com/en/products/esd5z3.3t1g/on-semiconductor?utm_currency=USD&amp;region=nac" />
+  </component>
+</quadcept_library>

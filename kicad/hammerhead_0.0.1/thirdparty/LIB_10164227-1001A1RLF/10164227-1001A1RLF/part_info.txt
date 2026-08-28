@@ -1,0 +1,9 @@
+Manufacturer=Amphenol
+PartNumber=10164227-1001A1RLF
+PartCategory=Connector
+PackageCategory=Other
+PinCount=100
+Version=1.3
+Released=2023-06-15 09:59:52
+Downloaded=2026-07-24 21:35:54
+3D=Y

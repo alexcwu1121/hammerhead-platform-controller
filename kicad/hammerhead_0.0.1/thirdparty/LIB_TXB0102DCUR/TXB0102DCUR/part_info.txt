@@ -1,0 +1,9 @@
+Manufacturer=Texas Instruments
+PartNumber=TXB0102DCUR
+PartCategory=Integrated Circuit
+PackageCategory=Small Outline Packages
+PinCount=8
+Version=2.1
+Released=2019-10-07 08:18:08
+Downloaded=2026-03-11 03:39:25
+3D=Y

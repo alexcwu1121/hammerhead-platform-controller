@@ -1,0 +1,68 @@
+(Japanese_coding: sjis)
+(function "ECS_13042134"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2020-10-06-08:52:46)
+    (utime 2023-03-07-16:10:32)
+    (interface
+        (port "1" (symbPinId 1) (portType INOUT))
+        (port "2" (symbPinId 2) (portType INOUT))
+    )
+    (property "symbolName" "BLM21PG300SN1D")
+)
+
+
+(pinAssign "ECS_13042134"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2020-10-06-08:52:46)
+    (utime 2023-03-07-16:10:32)
+    (interface
+        (port "1" (symbPinId 1) (portName "1") (portType INOUT))
+        (port "2" (symbPinId 2) (portName "2") (portType INOUT))
+    )
+    (internal
+        (funcInst (functionRef "ECS_13042134")
+                (port "1" (match "1"))
+                (port "2" (match "2"))
+        )
+    )
+    (property "usePowerBox" "No")
+    (property "symbolName" "BLM21PG300SN1D")
+)
+
+
+(part "BLM21PG300SN1D"
+    (uver 1)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (ctime 2020-10-06-08:52:46)
+    (utime 2023-03-07-16:10:32)
+    (packageRef "BLM21PG300SN1D")
+    (pinAssignRef "ECS_13042134")
+    (interface
+        (port "1" (symbPinId 1) (portName "1") (portType INOUT))
+        (port "2" (symbPinId 2) (portName "2") (portType INOUT))
+    )
+    (partClass UNDEF)
+    (useInSchema Y)
+    (useInLayout Y)
+    (inPartsList Y)
+    (partType NORMAL)
+    (placeRestriction FREE)
+    (property "enetNonSeries" "YES")
+    (property "refDesPrefix" "FB")
+    (property "description" "30 Ohms @ 100MHz 1 Power Line Ferrite Bead 0805 (2012 Metric) 4A 14mOhm")
+    (property "Manufacturer_Name" "Murata Electronics")
+    (property "Manufacturer_Part_Number" "BLM21PG300SN1D")
+    (property "Mouser_Part_Number" "81-BLM21P300S")
+    (property "Mouser_Price/Stock" "https://www.mouser.co.uk/ProductDetail/Murata-Electronics/BLM21PG300SN1D?qs=vSIcEeo8lXttJMV%2F1g5%2F6A%3D%3D")
+    (property "Arrow_Part_Number" "BLM21PG300SN1D")
+    (property "Arrow_Price/Stock" "https://www.arrow.com/en/products/blm21pg300sn1d/murata-manufacturing?utm_currency=USD&region=nac")
+    (property "Datasheet_Link" "https://www.murata.com/en-global/products/productdetail?partno=BLM21PG300SN1%23")
+    (property "compAreaTopHeight" 1.05)
+)
+
+

@@ -1,0 +1,18 @@
+.10TPE220ML :1 ;Panasonic 220uF SMD Solid Polymer Tantalum Capacitor, 10 V dc +/-20%, POSCAP Series
+"16TDC150MYF"
+*STM C
+*NGS
+*PLB 1="+" 2="-"
+*MXP 2
+*DFN 10TPE220ML
+~!Manufacturer_Name (Panasonic)
+~!Manufacturer_Part_Number (10TPE220ML)
+~!Mouser Part Number (667-10TPE220ML)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Panasonic/10TPE220ML?qs=OE1iw1LrrPE6JSiJ7pp4ww%3D%3D)
+~!Arrow Part Number (10TPE220ML)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/10tpe220ml/panasonic?region=nac)
+~!Link Datasheet (http://industrial.panasonic.com/cdbs/www-data/pdf/AAA8000/AAA8000C36.pdf)
+~!Height (-)
+~!3D_Model (10TPE220ML)
+"10TPE220ML"
+1.1!U 2.1!U 

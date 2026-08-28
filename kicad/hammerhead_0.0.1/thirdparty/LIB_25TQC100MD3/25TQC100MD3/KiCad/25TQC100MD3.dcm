@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 25TQC100MD3
+D PANASONIC - 25TQC100MD3 - Tantalum Polymer Capacitor, 100 F, 25 V, POSCAP TQC Series, +/- 20%, D3L, 0.06 ohm
+K
+F http://industrial.panasonic.com/cdbs/www-data/pdf/AAA8000/AAA8000C62.pdf
+$ENDCMP
+#
+#End Doc Library

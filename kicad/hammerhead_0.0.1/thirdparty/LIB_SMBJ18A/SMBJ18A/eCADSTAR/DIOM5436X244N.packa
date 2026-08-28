@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "SMBJ18A"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2024-09-13-11:23:34)
+    (mountForm default
+        (footprintRef "DIOM5436X244N")
+        (spec "System")
+    )
+)

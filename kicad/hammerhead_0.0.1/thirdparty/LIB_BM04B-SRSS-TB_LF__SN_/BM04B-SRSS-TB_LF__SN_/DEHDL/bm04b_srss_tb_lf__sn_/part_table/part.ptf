@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'BM04B_SRSS_TB_LF__SN_'
+CLASS = IO
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET";
+{========================================================================================}
+ "JST (JAPAN SOLDERLESS TERMINALS)", "BM04B-SRSS-TB(LF)(SN)" (!) = "", "BM04B-SRSS-TB_LFSN_", "Other", "N/A", "https://www.mouser.co.uk/ProductDetail/JST-Commercial/BM04B-SRSS-TBLFSN?qs=IKkN%2F947nfAyYAo%252BwvUjeQ%3D%3D", "", "", "JST (JAPAN SOLDERLESS TERMINALS) - BM04B-SRSS-TB(LF)(SN) - HEADER, TOP ENTRY, 4WAY", "http://www.jst.fr/core/file.get?path=doc/jst/family/pdf/eSH.pdf"
+END_PART
+
+END.

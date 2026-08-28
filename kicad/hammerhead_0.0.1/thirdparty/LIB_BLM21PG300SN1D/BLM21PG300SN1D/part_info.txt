@@ -1,0 +1,9 @@
+Manufacturer=Murata Electronics
+PartNumber=BLM21PG300SN1D
+PartCategory=Ferrite Bead
+PackageCategory=Ferrite Bead Chip
+PinCount=2
+Version=1.1
+Released=2020-10-06 08:52:46
+Downloaded=2026-03-11 03:16:21
+3D=Y

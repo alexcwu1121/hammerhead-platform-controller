@@ -1,0 +1,10 @@
+(unit MM)
+
+(package "ETQP3M1R0KVN"
+    (type UNDEF)
+    (uver 2)
+    (mountForm default
+        (footprintRef "ETQP3M1R0KVN")
+        (spec "default")
+    )
+)

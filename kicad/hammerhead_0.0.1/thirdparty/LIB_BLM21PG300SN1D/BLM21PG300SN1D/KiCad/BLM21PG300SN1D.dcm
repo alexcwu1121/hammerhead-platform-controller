@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP BLM21PG300SN1D
+D 30 Ohms @ 100MHz 1 Power Line Ferrite Bead 0805 (2012 Metric) 4A 14mOhm
+K
+F https://www.murata.com/en-global/products/productdetail?partno=BLM21PG300SN1%23
+$ENDCMP
+#
+#End Doc Library

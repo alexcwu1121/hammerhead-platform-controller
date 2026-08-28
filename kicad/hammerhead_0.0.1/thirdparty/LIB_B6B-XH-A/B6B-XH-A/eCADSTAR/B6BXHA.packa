@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "B6B-XH-A"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2025-02-14-05:21:30)
+    (mountForm default
+        (footprintRef "B6BXHA")
+        (spec "System")
+    )
+)

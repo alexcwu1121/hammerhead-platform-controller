@@ -1,0 +1,9 @@
+Manufacturer=Hirose
+PartNumber=FH12-22S-0.5SVA(54)
+PartCategory=Connector
+PackageCategory=Other
+PinCount=26
+Version=1.3
+Released=2021-08-06 10:24:51
+Downloaded=2026-08-22 21:54:37
+3D=Y

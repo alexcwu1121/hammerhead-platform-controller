@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "RT6254BHGJ6F"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2020-01-21-09:24:46)
+    (mountForm default
+        (footprintRef "SOT95P280X100-6N")
+        (spec "System")
+    )
+)

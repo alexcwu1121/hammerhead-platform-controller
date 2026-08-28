@@ -1,0 +1,9 @@
+Manufacturer=LOTES
+PartNumber=APCI0105-P001A
+PartCategory=Connector
+PackageCategory=Other
+PinCount=69
+Version=1.3
+Released=2024-06-13 07:49:54
+Downloaded=2026-03-13 01:25:10
+3D=Y

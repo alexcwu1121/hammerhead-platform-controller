@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'TXB0108RGYR'
+CLASS = IC
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Texas Instruments", "TXB0108RGYR" (!) = "", "SN74LVC541ARGYR", "Other", "595-TXB0108RGYR", "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/TXB0108RGYR?qs=oFXvjAmG9EjlwpBG6jCg6w%3D%3D", "TXB0108RGYR", "https://www.arrow.com/en/products/txb0108rgyr/texas-instruments.html?utm_currency=USD&region=nac", "8-Bit Bidirectional Voltage-Level Shifter with Auto Direction Sensing and +/-15-kV ESD Protect", "http://www.ti.com/lit/gpn/txb0108", "1 mm"
+END_PART
+
+END.

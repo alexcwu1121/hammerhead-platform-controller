@@ -1932,7 +1932,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MAX14870ETC_T:SON50P300X300X80-13N"
+		(property "Footprint" "MAX14870ETC_T:21-0664B_MXM"
 			(at 143.51 118.11 0)
 			(effects
 				(font

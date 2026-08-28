@@ -1,0 +1,10 @@
+(unit MM)
+
+(package "GHCSHPM1244T2U10"
+    (type UNDEF)
+    (uver 2)
+    (mountForm default
+        (footprintRef "GHCSHPM1244T2U10")
+        (spec "default")
+    )
+)

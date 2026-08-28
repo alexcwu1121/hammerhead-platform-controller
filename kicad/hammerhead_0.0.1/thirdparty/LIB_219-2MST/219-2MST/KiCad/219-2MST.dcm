@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 219-2MST
+D 2 Way Surface Mount DIP Switch Single Pole Single Throw (SPST)
+K
+F https://www.ctscorp.com/wp-content/uploads/219.pdf
+$ENDCMP
+#
+#End Doc Library

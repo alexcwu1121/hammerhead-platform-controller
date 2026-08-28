@@ -1,0 +1,18 @@
+.219-2MST :1 ;2 Way Surface Mount DIP Switch Single Pole Single Throw (SPST)
+"2192MST"
+*STM S
+*NGS
+*PLB 1="COM_1" 2="COM_2" 3="NO_1" 4="NO_2"
+*MXP 4
+*DFN 219-2MST
+~!Manufacturer_Name (CTS)
+~!Manufacturer_Part_Number (219-2MST)
+~!Mouser Part Number (774-2192MST)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/CTS-Electronic-Components/219-2MST?qs=qNzHFtQhdJ%2Fo21NPrPz09Q%3D%3D)
+~!Arrow Part Number (219-2MST)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/219-2mst/cts)
+~!Link Datasheet (https://www.ctscorp.com/wp-content/uploads/219.pdf)
+~!Height (3.85mm)
+~!3D_Model (219-2MST)
+"219-2MST"
+1.1!U 2.1!U 3.1!U 4.1!U 

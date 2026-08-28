@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART '10TPE220ML'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET";
+{========================================================================================}
+ "Panasonic", "10TPE220ML" (!) = "", "16TDC150MYF", "Other", "667-10TPE220ML", "https://www.mouser.co.uk/ProductDetail/Panasonic/10TPE220ML?qs=OE1iw1LrrPE6JSiJ7pp4ww%3D%3D", "10TPE220ML", "https://www.arrow.com/en/products/10tpe220ml/panasonic?region=nac", "Panasonic 220uF SMD Solid Polymer Tantalum Capacitor, 10 V dc +/-20%, POSCAP Series", "http://industrial.panasonic.com/cdbs/www-data/pdf/AAA8000/AAA8000C36.pdf"
+END_PART
+
+END.

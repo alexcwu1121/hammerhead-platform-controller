@@ -1,0 +1,119 @@
+;Proteus Design Interchange Format
+(PDIF
+ (vendor "SamacSys Limited")
+ (version 1 0)
+ (library
+  (part "ESD5Z3.3T1G"
+   (description "Low Clamping Voltage; Small Body Outline Dimensions: 0.047 x 0.032 (1.20 mm x 0.80 mm); Low Leakage; Response Time is Typically < 1 ns; IEC6100042 Level 4 ESD Protection and IEC6100044 Level 4 EFT Protection; SZ Prefix for Automotive and Other Applications Requiring Unique Site and Control Change Requirements; AECQ101 Qualified and PPAP Capable; Peak Power up to 240 Watts @ 8 x 20 s Pulse; Low Body Height: 0.028 (0.7 mm); ESD Rating of Class 3 (> 16 kV) per Human Body Model; These Devices are PbFre")
+   (family "DIO")
+   (package "SODFL1608X70N")
+   (attribute "Datasheet Link" "https://www.onsemi.com/pub/Collateral/ESD5Z2.5T1-D.PDF")
+   (attribute "Geometry.Height" "0.7mm")
+   (attribute "Manufacturer_Name" "onsemi")
+   (attribute "Manufacturer_Part_Number" "ESD5Z3.3T1G")
+   (attribute "Mouser Part Number" "863-ESD5Z3.3T1G")
+   (attribute "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/onsemi/ESD5Z3.3T1G?qs=OSf9jACorvaH3Y8oRWEcuQ%3D%3D")
+   (attribute "Arrow Part Number" "ESD5Z3.3T1G")
+   (attribute "Arrow Price/Stock" "https://www.arrow.com/en/products/esd5z3.3t1g/on-semiconductor?utm_currency=USD&region=nac")
+   (gate
+    (symbol "ESD5Z3.3T1G")
+    (pin "K" 1 PS)
+    (pin "A" 2 PS)
+   )
+  )
+  (symbol "ESD5Z3.3T1G"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 200 100) (pt 200 -100))
+   )
+   (graphic
+    (stroke 10)
+    (path (pt 100 0) (pt 200 0))
+   )
+   (graphic
+    (stroke 10)
+    (path (pt 400 0) (pt 500 0))
+   )
+   (graphic
+    (stroke 10)
+    (path (closed true) (pt 200 0) (pt 400 100) (pt 400 -100) (pt 200 0))
+   )
+   (terminal
+    (body (symbol "PINSHORT") (pt 0 0) (rot 0) (mir 0) (visible true))
+    (name (pt 140 10) (rot 0) (just MIDDLE LEFT) (visible false))
+    (number (pt 60 10) (rot 0) (just BOTTOM RIGHT) (visible true)))
+   (terminal
+    (body (symbol "PINSHORT") (pt 600 0) (rot 0) (mir X) (visible true))
+    (name (pt 140 10) (rot 0) (just MIDDLE LEFT) (visible false))
+    (number (pt 60 10) (rot 0) (just BOTTOM RIGHT) (visible true)))
+  )
+  (symbol "PIN"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 200 0))))
+  (symbol "PINSHORT"
+   (units THOU)
+   (origin (pt 0 0))
+   (graphic
+    (stroke 10)
+    (path (pt 0 0) (pt 100 0))))
+  (package "SODFL1608X70N"
+   (units MM)
+   (layer OCCA
+    (graphic
+     (stroke 0.05)
+     (path
+      (closed true)
+      (pt -1.22 0.6)
+      (pt 1.22 0.6)
+      (pt 1.22 -0.6)
+      (pt -1.22 -0.6)
+      (pt -1.22 0.6))))
+   (layer TASM
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed true)
+      (pt -0.6 0.4)
+      (pt 0.6 0.4)
+      (pt 0.6 -0.4)
+      (pt -0.6 -0.4)
+      (pt -0.6 0.4))))
+   (layer TASM
+    (graphic
+     (stroke 0.1)
+     (path
+      (closed false)
+      (pt -0.6 0.08)
+      (pt -0.28 0.4))))
+   (layer TSLK
+    (graphic
+     (stroke 0.2)
+     (path
+      (closed false)
+      (pt -1.07 0.4)
+      (pt 0.6 0.4))))
+   (layer TSLK
+    (graphic
+     (stroke 0.2)
+     (path
+      (closed false)
+      (pt -0.6 -0.4)
+      (pt 0.6 -0.4))))
+   (leg 1 (pt -0.75 0) (padstack 0))
+   (leg 2 (pt 0.75 0) (padstack 0))
+   (padstack 0
+    (plated false)
+    (pad (layer TCOP) (rectf 0.42 0.64 0 0 0))
+   )
+   (model "ESD5Z3.3T1G.stp"
+    (euler 0 0 0)
+    (offset 0 0 0)
+   )
+  )
+ )
+)

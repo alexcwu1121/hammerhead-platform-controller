@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART '219_2MST'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "CTS", "219-2MST" (!) = "", "2192MST", "Other", "774-2192MST", "https://www.mouser.co.uk/ProductDetail/CTS-Electronic-Components/219-2MST?qs=qNzHFtQhdJ%2Fo21NPrPz09Q%3D%3D", "219-2MST", "https://www.arrow.com/en/products/219-2mst/cts", "2 Way Surface Mount DIP Switch Single Pole Single Throw (SPST)", "https://www.ctscorp.com/wp-content/uploads/219.pdf", "3.85 mm"
+END_PART
+
+END.

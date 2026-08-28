@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'SFH_4715AS'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "ams OSRAM", "SFH 4715AS" (!) = "", "GHCSHPM1244T2U10", "Other", "720-SFH4715AS", "https://www.mouser.co.uk/ProductDetail/ams-OSRAM/SFH-4715AS?qs=SzIX745sIXGcHIuWuiIgFw%3D%3D", "SFH 4715AS", "https://www.arrow.com/en/products/sfh4715as/osram-opto-semiconductors?region=nac", "Osram Opto SFH 4715AS, OSLON Black 860nm IR LED, 3.85 x 3.85 mm SMD package", "https://datasheet.datasheetarchive.com/originals/distributors/DKDS41/DSANUWW0036947.pdf", "1.51 mm"
+END_PART
+
+END.

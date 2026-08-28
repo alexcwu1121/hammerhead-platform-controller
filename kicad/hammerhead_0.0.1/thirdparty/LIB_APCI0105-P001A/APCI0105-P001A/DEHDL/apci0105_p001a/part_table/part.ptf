@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'APCI0105_P001A'
+CLASS = IO
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "LOTES", "APCI0105-P001A" (!) = "", "APCI0105P001A", "Other", "", "", "", "", "M.2 0.5mm Surface Mount Right Angle SMD,P=0.5mm,Surface Mount Right Angle  Card Edge Connectors ROHS", "https://wmsc.lcsc.com/wmsc/upload/file/pdf/v2/lcsc/2010161204_LOTES-APCI0105-P001A_C841658.pdf", "4.2 mm"
+END_PART
+
+END.
