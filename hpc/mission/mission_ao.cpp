@@ -10,6 +10,7 @@
 #include "imu_ao.hpp"
 #include "motor_control_ao.hpp"
 #include "param_ao.hpp"
+#include "thirdparty/printf.h"
 
 /// @brief Slave operation codes
 enum opcode : uint8_t
@@ -531,6 +532,7 @@ Q_STATE_DEF(MissionAO, root)
         for (uint8_t fault = 0; fault < mission::Fault::NUM_FAULTS; fault++)
         {
             bool state = _faultStates[bsp::SubsystemID::MISSION_SUBSYSTEM][fault];
+
             ptr += snprintf(ptr, buf + cli::CLIAO::cliPrintBufSize - ptr, fmt,
                             mission::FaultToStr((mission::Fault)fault), state);
         }
