@@ -24,6 +24,7 @@ int main(void)
     MX_TIM2_Init();
     MX_TIM3_Init();
     MX_USART1_UART_Init();
+    MX_CAN_Init();
 
     /// TODO: Why do I need to do this to unstick the i2c peripheral
     HAL_I2C_DeInit(&hi2c2);

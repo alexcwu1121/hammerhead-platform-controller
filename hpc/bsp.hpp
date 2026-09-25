@@ -2,6 +2,7 @@
 #define BSP_HPP_
 
 #include "adc.h"
+#include "can.h"
 #include "dma.h"
 #include "gpio.h"
 #include "i2c.h"
