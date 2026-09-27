@@ -18,9 +18,7 @@ extern "C"
         // Reset
         /// TODO: Enable in release only
         // NVIC_SystemReset();
-        for (;;)
-        {
-        }
+        for (;;) {}
     }
 
     /// @brief Hardfault handler
@@ -38,13 +36,14 @@ extern "C"
     /// @param stack
     void hardfault_c(uint32_t* stack)
     {
-        volatile uint32_t r0  = stack[0];
-        volatile uint32_t r1  = stack[1];
-        volatile uint32_t r2  = stack[2];
-        volatile uint32_t r3  = stack[3];
+        /// TODO: Consider writing pc and lr to eeprom
+        volatile uint32_t r0 = stack[0];
+        volatile uint32_t r1 = stack[1];
+        volatile uint32_t r2 = stack[2];
+        volatile uint32_t r3 = stack[3];
         volatile uint32_t r12 = stack[4];
-        volatile uint32_t lr  = stack[5];
-        volatile uint32_t pc  = stack[6];
+        volatile uint32_t lr = stack[5];
+        volatile uint32_t pc = stack[6];
         volatile uint32_t psr = stack[7];
 
         (void)r0;
@@ -57,9 +56,7 @@ extern "C"
         (void)psr;
 
         __BKPT(1);
-        for (;;)
-        {
-        }
+        for (;;) {}
     }
 
     /// @brief ADC conversion buffer
@@ -79,19 +76,17 @@ extern "C"
             accum[i % bsp::ADCChannels::NUM_ADC_CHANNELS] += adcBuf[i];
 
         // Pack event
-        float vin = static_cast<float>(accum[bsp::ADCChannels::VIN]) / bsp::NUM_ADC_SAMPLES
-                        * bsp::ADC_TO_VIN_GAIN
-                    + bsp::ADC_TO_VIN_OFFSET;
-        float vmout1 = static_cast<float>(accum[bsp::ADCChannels::VMOUT1]) / bsp::NUM_ADC_SAMPLES
-                           * bsp::ADC_TO_VMIN_GAIN
-                       + bsp::ADC_TO_VMIN_OFFSET;
-        float vmout2 = static_cast<float>(accum[bsp::ADCChannels::VMOUT2]) / bsp::NUM_ADC_SAMPLES
-                           * bsp::ADC_TO_VMIN_GAIN
-                       + bsp::ADC_TO_VMIN_OFFSET;
+        float vin = static_cast<float>(accum[bsp::ADCChannels::VIN]) / bsp::NUM_ADC_SAMPLES * bsp::ADC_TO_VIN_GAIN +
+                    bsp::ADC_TO_VIN_OFFSET;
+        float vmout1 =
+            static_cast<float>(accum[bsp::ADCChannels::VMOUT1]) / bsp::NUM_ADC_SAMPLES * bsp::ADC_TO_VMIN_GAIN +
+            bsp::ADC_TO_VMIN_OFFSET;
+        float vmout2 =
+            static_cast<float>(accum[bsp::ADCChannels::VMOUT2]) / bsp::NUM_ADC_SAMPLES * bsp::ADC_TO_VMIN_GAIN +
+            bsp::ADC_TO_VMIN_OFFSET;
 
         // IIR filter
-        auto iir = [](float& prior, const float& obs)
-        { prior += bsp::ADC_IIR_ALPHA * (obs - prior); };
+        auto iir = [](float& prior, const float& obs) { prior += bsp::ADC_IIR_ALPHA * (obs - prior); };
         iir(adcIIR[bsp::ADCChannels::VIN], vin);
         iir(adcIIR[bsp::ADCChannels::VMOUT1], vmout1);
         iir(adcIIR[bsp::ADCChannels::VMOUT2], vmout2);
@@ -113,7 +108,7 @@ extern "C"
             {
                 // Publish ADC event
                 bsp::ADCEvt* evt = Q_NEW(bsp::ADCEvt, bsp::PublicSignals::ADC_SIG);
-                evt->adcVoltages[bsp::ADCChannels::VIN]    = adcIIR[bsp::ADCChannels::VIN];
+                evt->adcVoltages[bsp::ADCChannels::VIN] = adcIIR[bsp::ADCChannels::VIN];
                 evt->adcVoltages[bsp::ADCChannels::VMOUT1] = adcIIR[bsp::ADCChannels::VMOUT1];
                 evt->adcVoltages[bsp::ADCChannels::VMOUT2] = adcIIR[bsp::ADCChannels::VMOUT2];
                 QP::QF::PUBLISH(evt, nullptr);
@@ -166,10 +161,6 @@ void QF::onStartup()
     // Assign all priority bits for preemption-prio. And none to sub-prio.
     NVIC_SetPriorityGrouping(0U);
 
-    // I2C interrupts
-    HAL_NVIC_SetPriority(I2C2_EV_IRQn, 4U, 4U);
-    HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
-
     // UART RX interrupt
     HAL_NVIC_SetPriority(USART1_IRQn, 4U, 4U);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
@@ -192,14 +183,6 @@ void QF::onStartup()
 /// @brief QF idle callback
 void QK::onIdle() {}
 }  // namespace QP
-
-/// @brief I2C2 interrupt handler
-extern "C" void I2C2_EV_IRQHandler(void)
-{
-    QK_ISR_ENTRY();
-    HAL_I2C_EV_IRQHandler(&hi2c2);
-    QK_ISR_EXIT();
-}
 
 /// @brief USART1 interrupt handler
 extern "C" void USART1_IRQHandler(void)
@@ -239,44 +222,34 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
 /// @brief System clock configuration
 void SystemClock_Config(void)
 {
-    RCC_OscInitTypeDef       RCC_OscInitStruct = {0};
-    RCC_ClkInitTypeDef       RCC_ClkInitStruct = {0};
-    RCC_PeriphCLKInitTypeDef PeriphClkInit     = {0};
+    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
     /** Initializes the RCC Oscillators according to the specified parameters
      * in the RCC_OscInitTypeDef structure.
      */
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-    RCC_OscInitStruct.HSEState       = RCC_HSE_ON;
+    RCC_OscInitStruct.HSEState = RCC_HSE_ON;
     RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-    RCC_OscInitStruct.HSIState       = RCC_HSI_ON;
-    RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;
-    RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;
-    RCC_OscInitStruct.PLL.PLLMUL     = RCC_PLL_MUL2;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+    RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL2;
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) { Error_Handler(); }
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
-    RCC_ClkInitStruct.ClockType =
-        RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-    RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
-    RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) { Error_Handler(); }
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-    PeriphClkInit.AdcClockSelection    = RCC_ADCPCLK2_DIV4;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV4;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) { Error_Handler(); }
 }
 
 /// @brief Application error handler callback
@@ -284,7 +257,5 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
     __disable_irq();
-    for (;;)
-    {
-    }
+    for (;;) {}
 }

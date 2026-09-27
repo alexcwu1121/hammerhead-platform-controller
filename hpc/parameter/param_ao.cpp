@@ -2,16 +2,14 @@
 
 #include "cli_ao.hpp"
 
-param::ParamAO::ParamAO()
-    : QP::QActive(&initial),
-      _eeprom(P_EEPROM_CS_GPIO_Port, P_EEPROM_CS_Pin, P_EEPROM_WP_GPIO_Port, P_EEPROM_WP_Pin,
-              &hspi2)
-{
-}
+param::ParamAO::ParamAO() :
+    QP::QActive(&initial),
+    _eeprom(P_EEPROM_CS_GPIO_Port, P_EEPROM_CS_Pin, P_EEPROM_WP_GPIO_Port, P_EEPROM_WP_Pin, &hspi2)
+{}
 
 void param::ParamAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
-    _id        = id;
+    _id = id;
     _isStarted = true;
     this->start(priority,      // QP prio. of the AO
                 _queue,        // event queue storage
@@ -27,19 +25,19 @@ void param::ParamAO::SetFault(param::Fault fault, bool active)
         _faultStates[fault] = active;
         // Publish fault update
         bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
-        evt->id            = _id;
-        evt->fault         = fault;
-        evt->active        = active;
+        evt->id = _id;
+        evt->fault = fault;
+        evt->active = active;
         PUBLISH(evt, this);
     }
 }
 
 void param::ParamAO::PrintParam_h(ParameterID id)
 {
-    Fault       fault;
-    TypeID      typeID;
-    Type        value;
-    Type        defaultValue;
+    Fault fault;
+    TypeID typeID;
+    Type value;
+    Type defaultValue;
     const char* name;
     const char* desc;
 
@@ -89,57 +87,56 @@ void param::ParamAO::PrintParam_h(ParameterID id)
     // Print current and default values
     switch (typeID)
     {
-    case TypeID::FLOAT32:
-    {
-        cli::CLIAO::Inst().Printf("\tCurrent value: %.4f\n\r\tDefault value: %.4f\n\r",
-                                  value._float32, defaultValue._float32);
-        break;
-    }
-    case TypeID::UINT8:
-    {
-        cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._uint8,
-                                  defaultValue._uint8);
-        break;
-    }
-    case TypeID::UINT16:
-    {
-        cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._uint16,
-                                  defaultValue._uint16);
-        break;
-    }
-    case TypeID::UINT32:
-    {
-        cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._uint32,
-                                  defaultValue._uint32);
-        break;
-    }
-    case TypeID::INT8:
-    {
-        cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._int8,
-                                  defaultValue._int8);
-        break;
-    }
-    case TypeID::INT16:
-    {
-        cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._int16,
-                                  defaultValue._int16);
-        break;
-    }
-    case TypeID::INT32:
-    {
-        cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._int32,
-                                  defaultValue._int32);
-        break;
-    }
+        case TypeID::FLOAT32:
+        {
+            cli::CLIAO::Inst().Printf("\tCurrent value: %.4f\n\r\tDefault value: %.4f\n\r", value._float32,
+                                      defaultValue._float32);
+            break;
+        }
+        case TypeID::UINT8:
+        {
+            cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._uint8,
+                                      defaultValue._uint8);
+            break;
+        }
+        case TypeID::UINT16:
+        {
+            cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._uint16,
+                                      defaultValue._uint16);
+            break;
+        }
+        case TypeID::UINT32:
+        {
+            cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._uint32,
+                                      defaultValue._uint32);
+            break;
+        }
+        case TypeID::INT8:
+        {
+            cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._int8,
+                                      defaultValue._int8);
+            break;
+        }
+        case TypeID::INT16:
+        {
+            cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._int16,
+                                      defaultValue._int16);
+            break;
+        }
+        case TypeID::INT32:
+        {
+            cli::CLIAO::Inst().Printf("\tCurrent value: %u\n\r\tDefault value: %u\n\r", value._int32,
+                                      defaultValue._int32);
+            break;
+        }
     }
 }
 
 void param::ParamAO::PublishParameterUpdated(ParameterID id)
 {
     // Publish a parameter update event
-    bsp::ParameterUpdateEvt* evt =
-        Q_NEW(bsp::ParameterUpdateEvt, bsp::PublicSignals::PARAMETER_UPDATE_SIG);
-    evt->id     = id;
+    bsp::ParameterUpdateEvt* evt = Q_NEW(bsp::ParameterUpdateEvt, bsp::PublicSignals::PARAMETER_UPDATE_SIG);
+    evt->id = id;
     Fault fault = ParameterList::Inst().Get(evt->id, evt->value);
     if (fault != param::Fault::NO_FAULT)
     {
@@ -147,10 +144,7 @@ void param::ParamAO::PublishParameterUpdated(ParameterID id)
         // Garbage collect the unpublished event
         QP::QF::gc(evt);
     }
-    else
-    {
-        PUBLISH(evt, this);
-    }
+    else { PUBLISH(evt, this); }
 }
 
 void param::ParamAO::ReadParameters()
@@ -167,10 +161,7 @@ void param::ParamAO::ReadParameters()
     for (uint16_t i = 0; i < _readRetryCount; i++)
     {
         fault = ParameterList::Inst().Deserialize(_rxBuf, _rxBufSize, deserialize_size);
-        if (fault == param::Fault::NO_FAULT)
-        {
-            break;
-        }
+        if (fault == param::Fault::NO_FAULT) { break; }
     }
 
     if (fault != param::Fault::NO_FAULT)
@@ -198,134 +189,134 @@ Q_STATE_DEF(param::ParamAO, active)
     QP::QState status_;
     switch (e->sig)
     {
-    case Q_ENTRY_SIG:
-    {
-        // Initialize slave select to high
-        _eeprom.Deselect();
-        ReadParameters();
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::UPDATE_SIG:
-    {
-        ReadParameters();
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::SET_PARAM_VALUE_SIG:
-    {
-        // Set a parameter value
-        ParameterID id    = Q_EVT_CAST(SetParamValueEvt)->id;
-        Type        value = Q_EVT_CAST(SetParamValueEvt)->value;
-        Fault       fault = ParameterList::Inst().Set(id, value);
-        if (fault != param::Fault::NO_FAULT)
+        case Q_ENTRY_SIG:
         {
-            cli::CLIAO::Inst().Printf("ERROR: Parameter set fault (%u)", fault);
-            SetFault(fault, true);
+            // Initialize slave select to high
+            _eeprom.Deselect();
+            ReadParameters();
+            status_ = Q_RET_HANDLED;
+            break;
         }
-
-        // Publish a parameter update event
-        PublishParameterUpdated(id);
-
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::REQUEST_UPDATE_SIG:
-    {
-        // Publish a parameter update event
-        PublishParameterUpdated(Q_EVT_CAST(ParamIndexEvt)->id);
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::COMMIT_SIG:
-    {
-        // Serialize parameters
-        uint16_t     size;
-        param::Fault fault = ParameterList::Inst().Serialize(_txBuf, _txBufSize, size);
-        if (fault != param::Fault::NO_FAULT)
+        case PrivateSignals::UPDATE_SIG:
         {
-            cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
-            SetFault(fault, true);
+            ReadParameters();
+            status_ = Q_RET_HANDLED;
+            break;
         }
-
-        // Write and read back
-        _eeprom.Write(_txBuf, size, _paramBlockAddr);
-        _eeprom.Read(_rxBuf, size, _paramBlockAddr);
-
-        // Deserialize into parameter table
-        fault = ParameterList::Inst().Deserialize(_rxBuf, _rxBufSize, size);
-
-        if (fault != param::Fault::NO_FAULT)
+        case PrivateSignals::SET_PARAM_VALUE_SIG:
         {
-            cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
-            SetFault(fault, true);
-        }
-
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::LIST_SIG:
-    {
-        for (ParamIndex i = 0U; i < ParameterList::Inst().GetNumParams(); i++)
-        {
-            PrintParam_h(static_cast<ParameterID>(i));
-        }
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::RESET_TO_DEFAULTS_SIG:
-    {
-        for (ParamIndex i = 0U; i < ParameterList::Inst().GetNumParams(); i++)
-        {
-            Fault       fault;
-            ParameterID id = static_cast<ParameterID>(i);
-            Type        defaultValue;
-            fault = ParameterList::Inst().GetDefault(id, defaultValue);
+            // Set a parameter value
+            ParameterID id = Q_EVT_CAST(SetParamValueEvt)->id;
+            Type value = Q_EVT_CAST(SetParamValueEvt)->value;
+            Fault fault = ParameterList::Inst().Set(id, value);
             if (fault != param::Fault::NO_FAULT)
             {
-                cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+                cli::CLIAO::Inst().Printf("ERROR: Parameter set fault (%u)", fault);
                 SetFault(fault, true);
-                continue;
-            }
-            fault = ParameterList::Inst().Set(id, defaultValue);
-            if (fault != param::Fault::NO_FAULT)
-            {
-                cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
-                SetFault(fault, true);
-                continue;
             }
 
             // Publish a parameter update event
             PublishParameterUpdated(id);
+
+            status_ = Q_RET_HANDLED;
+            break;
         }
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::PRINT_PARAM_SIG:
-    {
-        PrintParam_h(Q_EVT_CAST(ParamIndexEvt)->id);
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case bsp::PublicSignals::REQUEST_FAULT_SIG:
-    {
-        // Publish all fault states
-        for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
+        case PrivateSignals::REQUEST_UPDATE_SIG:
         {
-            bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
-            evt->id            = _id;
-            evt->fault         = fault;
-            evt->active        = _faultStates[fault];
-            PUBLISH(evt, this);
+            // Publish a parameter update event
+            PublishParameterUpdated(Q_EVT_CAST(ParamIndexEvt)->id);
+            status_ = Q_RET_HANDLED;
+            break;
         }
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    default:
-    {
-        status_ = super(&top);
-        break;
-    }
+        case PrivateSignals::COMMIT_SIG:
+        {
+            // Serialize parameters
+            uint16_t size;
+            param::Fault fault = ParameterList::Inst().Serialize(_txBuf, _txBufSize, size);
+            if (fault != param::Fault::NO_FAULT)
+            {
+                cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+                SetFault(fault, true);
+            }
+
+            // Write and read back
+            _eeprom.Write(_txBuf, size, _paramBlockAddr);
+            _eeprom.Read(_rxBuf, size, _paramBlockAddr);
+
+            // Deserialize into parameter table
+            fault = ParameterList::Inst().Deserialize(_rxBuf, _rxBufSize, size);
+
+            if (fault != param::Fault::NO_FAULT)
+            {
+                cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+                SetFault(fault, true);
+            }
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::LIST_SIG:
+        {
+            for (ParamIndex i = 0U; i < ParameterList::Inst().GetNumParams(); i++)
+            {
+                PrintParam_h(static_cast<ParameterID>(i));
+            }
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::RESET_TO_DEFAULTS_SIG:
+        {
+            for (ParamIndex i = 0U; i < ParameterList::Inst().GetNumParams(); i++)
+            {
+                Fault fault;
+                ParameterID id = static_cast<ParameterID>(i);
+                Type defaultValue;
+                fault = ParameterList::Inst().GetDefault(id, defaultValue);
+                if (fault != param::Fault::NO_FAULT)
+                {
+                    cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+                    SetFault(fault, true);
+                    continue;
+                }
+                fault = ParameterList::Inst().Set(id, defaultValue);
+                if (fault != param::Fault::NO_FAULT)
+                {
+                    cli::CLIAO::Inst().Printf("ERROR: Parameter fault (%u)", fault);
+                    SetFault(fault, true);
+                    continue;
+                }
+
+                // Publish a parameter update event
+                PublishParameterUpdated(id);
+            }
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::PRINT_PARAM_SIG:
+        {
+            PrintParam_h(Q_EVT_CAST(ParamIndexEvt)->id);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case bsp::PublicSignals::REQUEST_FAULT_SIG:
+        {
+            // Publish all fault states
+            for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
+            {
+                bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+                evt->id = _id;
+                evt->fault = fault;
+                evt->active = _faultStates[fault];
+                PUBLISH(evt, this);
+            }
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default:
+        {
+            status_ = super(&top);
+            break;
+        }
     }
     return status_;
 }
@@ -335,11 +326,11 @@ Q_STATE_DEF(param::ParamAO, error)
     QP::QState status_;
     switch (e->sig)
     {
-    default:
-    {
-        status_ = super(&top);
-        break;
-    }
+        default:
+        {
+            status_ = super(&top);
+            break;
+        }
     }
     return status_;
 }

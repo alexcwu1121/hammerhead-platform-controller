@@ -1,17 +1,6 @@
 #ifndef MISSION_AO_HPP_
 #define MISSION_AO_HPP_
 
-/// TODO: stuff to do here:
-//  - send IMU data up to MM on every read
-//  - Define MM i2c protocol
-//      - listen and convert MC commands from MM
-//      - listen and convert parameter commands from MM
-
-/// TODO: Nice to haves:
-//  - report battery life from input voltage sense
-//      - test ADC voltage readings and implement battery polynomial
-//  - record motor control and imu timing stability metrics
-
 #include "bsp.hpp"
 
 namespace mission
@@ -22,6 +11,7 @@ enum Fault : uint8_t
     MISSION_INIT_FAILED = 0U,
     BATT_LOW,
     BATT_CRITICAL,
+    MISSION_CAN_TX_FAILED,
     NUM_FAULTS
 };
 
@@ -32,35 +22,40 @@ constexpr const char* FaultToStr(Fault fault)
 {
     switch (fault)
     {
-    case Fault::MISSION_INIT_FAILED:
-    {
-        return "MISSION_INIT_FAILED";
-    }
-    case Fault::BATT_LOW:
-    {
-        return "BATT_LOW";
-    }
-    case Fault::BATT_CRITICAL:
-    {
-        return "BATT_CRITICAL";
-    }
-    default:
-    {
-        return "";
-    }
+        case Fault::MISSION_INIT_FAILED:
+        {
+            return "MISSION_INIT_FAILED";
+        }
+        case Fault::BATT_LOW:
+        {
+            return "BATT_LOW";
+        }
+        case Fault::BATT_CRITICAL:
+        {
+            return "BATT_CRITICAL";
+        }
+        case Fault::MISSION_CAN_TX_FAILED:
+        {
+            return "MISSION_CAN_TX_FAILED";
+        }
+        default:
+        {
+            return "";
+        }
     }
 }
 
 /// @brief Mission AO
 class MissionAO : public QP::QActive
 {
-   public:
+public:
     /// @brief Constructor
     MissionAO();
-    MissionAO(const MissionAO&)            = delete;
+    ~MissionAO() = default;
+    MissionAO(const MissionAO&) = delete;
     MissionAO& operator=(const MissionAO&) = delete;
-    MissionAO(MissionAO&&)                 = delete;
-    MissionAO& operator=(MissionAO&&)      = delete;
+    MissionAO(MissionAO&&) = delete;
+    MissionAO& operator=(MissionAO&&) = delete;
 
     /// @brief Get instance
     /// @return MissionAO&
@@ -73,7 +68,7 @@ class MissionAO : public QP::QActive
     /// @brief Start MCAO
     /// @param priority
     /// @param id
-    void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);
+    void Start(const QP::QPrioSpec priority, bsp::SubsystemID id);  // NOLINT
 
     /// @brief Reset mission AO
     inline void Reset();
@@ -81,7 +76,7 @@ class MissionAO : public QP::QActive
     /// @brief Print system fault state
     inline void PrintFault();
 
-   private:
+private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
     /// @brief Event queue size
@@ -90,6 +85,7 @@ class MissionAO : public QP::QActive
     QP::QEvtPtr _queue[_queueSize] = {0};
     /// @brief Flag indicating if AO has executed initial transition
     bool _isStarted = false;
+
     /// @brief Internal fault recovery timer
     QP::QTimeEvt _faultRecoveryTimer;
     /// @brief Internal fault recovery timer period in ticks
@@ -100,10 +96,15 @@ class MissionAO : public QP::QActive
     uint32_t _faultRequestTimerInterval = bsp::TICKS_PER_SEC / 20U;
     /// @brief Latest faults from all subsystems, including mission subsystem
     bool _faultStates[bsp::SubsystemID::NUM_SUBSYSTEMS][bsp::MAX_SUBSYSTEM_FAULTS] = {0};
-    /// @brief Mission Module I2C address
-    uint8_t _mmAddr = 0x00;
 
-   private:
+    /// @brief CAN TX header
+    CAN_TxHeaderTypeDef _canTxHeader;
+    /// @brief CAN TX data
+    uint8_t _canTxData[8];
+    /// @brief CAN TX mailbox
+    uint32_t _canTxMailbox;
+
+private:  // NOLINT
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {

@@ -16,7 +16,7 @@
 namespace bsp
 {
 /// @brief Number of ticks per second
-constexpr std::uint32_t TICKS_PER_SEC{1000U};
+constexpr std::uint32_t TICKS_PER_SEC {1000U};
 /// @brief Number of samples per channel
 constexpr uint16_t NUM_ADC_SAMPLES = 8U;
 /// @brief Period at which ADC publishes QP events in # conversions
@@ -35,7 +35,25 @@ enum ADCChannels : uint8_t
 
 /// @brief VIN voltage divider R1
 constexpr float VIN_DIV_R1 = 100000.0f;
-/// @brief VIN voltage divider R2
+/// @brief VIN voltage divider R2/// @brief Slave operation codes
+enum opcode : uint8_t
+{
+    NO_OP = 0U,
+    WRITE_MC1_MODE,
+    WRITE_MC2_MODE,
+    WRITE_MC1_RATE,
+    WRITE_MC2_RATE,
+    WRITE_MC1_DUTY,
+    WRITE_MC2_DUTY,
+    WRITE_MC1_DIR,
+    WRITE_MC2_DIR,
+    WRITE_MC1_RESET,
+    WRITE_MC2_RESET,
+    WRITE_IMU_RESET,
+    WRITE_IMU_COMP,
+    READ_IMU_DATA,
+    NUM_OPS
+};
 constexpr float VIN_DIV_R2 = 10000.0f;
 /// @brief Motor driver output voltage divider R1
 constexpr float VMIN_DIV_R1 = 68000.0f;
@@ -81,7 +99,7 @@ enum PublicSignals : QP::QSignal
 /// @brief Parameter update event
 class ParameterUpdateEvt : public QP::QEvt
 {
-   public:
+public:
     /// @brief Parameter id
     param::ParameterID id;
     /// @brief Parameter value
@@ -94,7 +112,7 @@ constexpr uint8_t MAX_SUBSYSTEM_FAULTS = 16U;
 /// @brief Fault event
 class FaultEvt : public QP::QEvt
 {
-   public:
+public:
     /// @brief Originating subsystem
     SubsystemID id;
     /// @brief Fault code
@@ -106,7 +124,7 @@ class FaultEvt : public QP::QEvt
 /// @brief ADC event
 class ADCEvt : public QP::QEvt
 {
-   public:
+public:
     /// @brief ADC voltages
     float adcVoltages[ADCChannels::NUM_ADC_CHANNELS];
 };

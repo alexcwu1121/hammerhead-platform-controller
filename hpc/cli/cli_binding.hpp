@@ -9,40 +9,40 @@ namespace cli
 /// @param cli
 /// @param args
 /// @param context
-void onClear(EmbeddedCli *cli, char *args, void *context);
+void onClear(EmbeddedCli* cli, char* args, void* context);
 
 /// @brief Motor control cli binding
 /// @param cli
 /// @param args
 /// @param context
-void onMC(EmbeddedCli *cli, char *args, void *context);
+void onMC(EmbeddedCli* cli, char* args, void* context);
 
 /// @brief Parameter system cli binding
 /// @param cli
 /// @param args
 /// @param context
-void onParam(EmbeddedCli *cli, char *args, void *context);
+void onParam(EmbeddedCli* cli, char* args, void* context);
 
 /// @brief IMU cli binding
 /// @param cli
 /// @param args
 /// @param context
-void onIMU(EmbeddedCli *cli, char *args, void *context);
+void onIMU(EmbeddedCli* cli, char* args, void* context);
 
 /// @brief Mission cli binding
 /// @param cli
 /// @param args
 /// @param context
-void onMission(EmbeddedCli *cli, char *args, void *context);
+void onMission(EmbeddedCli* cli, char* args, void* context);
 
 /// @brief Initialize bindings for a CLI
 /// @param cli ptr to CLI instance
-void InitBindings(EmbeddedCli *cli);
+void InitBindings(EmbeddedCli* cli);
 
 /// @brief Small strtof
 /// @param s
 /// @return
-inline float strtofS(const char *s)
+inline float strtofS(const char* s)
 {
     bool neg = false;
     if (*s == '-')
@@ -78,7 +78,7 @@ inline float strtofS(const char *s)
 /// @param s
 /// @return
 template <typename T>
-inline T strtoulS(const char *s)
+inline T strtoulS(const char* s)
 {
     T value = 0;
     while (*s >= '0' && *s <= '9')
@@ -94,7 +94,7 @@ inline T strtoulS(const char *s)
 /// @param s
 /// @return
 template <typename T>
-inline T strtolS(const char *s)
+inline T strtolS(const char* s)
 {
     bool neg = false;
     if (*s == '-')

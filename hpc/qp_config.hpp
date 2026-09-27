@@ -86,7 +86,7 @@
 // <o>Maximum # Active Objects (QF_MAX_ACTIVE) <1-64>
 // <i>Maximum # Active Objects in the system <1..64>
 // <i>Default: 32
-#define QF_MAX_ACTIVE  32U
+#define QF_MAX_ACTIVE 32U
 
 // <o>Maximum # event pools (QF_MAX_EPOOL)
 // <0=>0 no event pools
@@ -112,7 +112,7 @@
 //   <4U=>4
 // <i>Size of the dynamic events for QF [bytes]
 // <i>Default: 2 (64K bytes maximum event size)
-#define QF_EVENT_SIZ_SIZE   2U
+#define QF_EVENT_SIZ_SIZE 2U
 
 // <o>Time event counter size (QF_TIMEEVT_CTR_SIZE)
 //   <1U=>1
@@ -127,7 +127,7 @@
 //   <2U=>2
 // <i>Size of event queue counter [bytes]
 // <i>Default: 1 (255 events maximum in a queue)
-#define QF_EQUEUE_CTR_SIZE  1U
+#define QF_EQUEUE_CTR_SIZE 1U
 
 // <o>Memory pool counter size (QF_MPOOL_CTR_SIZE)
 //   <1U=>1
@@ -193,7 +193,7 @@
 // <i>NOTE: The BASEPRI threshold can be adjusted in the "Text Editor" mode.
 #define QF_USE_BASEPRI 0x3F
 // </c>
-#endif // (__ARM_ARCH > 6)
+#endif  // (__ARM_ARCH > 6)
 
 // <c2>QK Kernel uses IRQ for return-from-preemption
 // <i>NOTE: Use "editor mode" to edit QK_USE_IRQ_NUM
@@ -239,4 +239,4 @@
 
 //------------- <<< end of configuration section >>> -----------------------
 
-#endif // QP_CONFIG_HPP_
+#endif  // QP_CONFIG_HPP_

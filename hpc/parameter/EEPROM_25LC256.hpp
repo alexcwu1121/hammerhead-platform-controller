@@ -7,7 +7,7 @@ namespace eeprom
 {
 class EEPROM25LC256
 {
-   public:
+public:
     /// @brief EEPROM25LC256 Constructor
     /// @param csPort Chip-Select pin port
     /// @param csPinNum Chip-Select pin number
@@ -16,10 +16,10 @@ class EEPROM25LC256
     /// @param spiDevice SPI interface handle
     EEPROM25LC256(GPIO_TypeDef* csPort, uint16_t csPinNum, GPIO_TypeDef* wpPort, uint16_t wpPinNum,
                   SPI_HandleTypeDef* spiDevice);
-    EEPROM25LC256(const EEPROM25LC256&)            = delete;
+    EEPROM25LC256(const EEPROM25LC256&) = delete;
     EEPROM25LC256& operator=(const EEPROM25LC256&) = delete;
-    EEPROM25LC256(EEPROM25LC256&&)                 = delete;
-    EEPROM25LC256& operator=(EEPROM25LC256&&)      = delete;
+    EEPROM25LC256(EEPROM25LC256&&) = delete;
+    EEPROM25LC256& operator=(EEPROM25LC256&&) = delete;
 
     /// @brief Enable write protect
     void EnableWriteProtect() const;
@@ -47,7 +47,7 @@ class EEPROM25LC256
     /// @return
     void Read(uint8_t* outBuf, uint16_t readSize, uint16_t address);
 
-   private:
+private:
     /// @brief Chip-Select pin port
     GPIO_TypeDef* _csPort;
     /// @brief Chip-Select pin num

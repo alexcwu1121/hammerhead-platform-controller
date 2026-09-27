@@ -22,26 +22,26 @@ constexpr const char* FaultToStr(Fault fault)
 {
     switch (fault)
     {
-    case Fault::INIT_FAILED:
-    {
-        return "INIT_FAILED";
-    }
-    default:
-    {
-        return "";
-    }
+        case Fault::INIT_FAILED:
+        {
+            return "INIT_FAILED";
+        }
+        default:
+        {
+            return "";
+        }
     }
 }
 
 class CLIAO : public QP::QActive
 {
-   public:
+public:
     /// @brief Constructor
     CLIAO();
-    CLIAO(const CLIAO&)            = delete;
+    CLIAO(const CLIAO&) = delete;
     CLIAO& operator=(const CLIAO&) = delete;
-    CLIAO(CLIAO&&)                 = delete;
-    CLIAO& operator=(CLIAO&&)      = delete;
+    CLIAO(CLIAO&&) = delete;
+    CLIAO& operator=(CLIAO&&) = delete;
 
     /// @brief Get static instance
     /// @return CLIAO&
@@ -71,7 +71,7 @@ class CLIAO : public QP::QActive
     /// @brief Maximum size of string to print
     static constexpr uint16_t cliPrintBufSize = 500U;
 
-   private:
+private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
     /// @brief CLI total memory size
@@ -107,7 +107,7 @@ class CLIAO : public QP::QActive
     /// @brief Fault states
     bool _faultStates[cli::Fault::NUM_FAULTS] = {false};
 
-   private:
+private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {
@@ -124,7 +124,7 @@ class CLIAO : public QP::QActive
     /// @brief Print string evt
     class PrintEvt : public QP::QEvt
     {
-       public:
+    public:
         char buf[cliPrintBufSize];
     };
 

@@ -29,22 +29,22 @@ constexpr const char* FaultToStr(Fault fault)
 {
     switch (fault)
     {
-    case Fault::UNDERVOLTAGE_FAULT:
-    {
-        return "UNDERVOLTAGE_FAULT";
-    }
-    case Fault::OVERVOLTAGE_FAULT:
-    {
-        return "OVERVOLTAGE_FAULT";
-    }
-    case Fault::OVERCURRENT_THERMAL_FAULT:
-    {
-        return "OVERCURRENT_THERMAL_FAULT";
-    }
-    default:
-    {
-        return "";
-    }
+        case Fault::UNDERVOLTAGE_FAULT:
+        {
+            return "UNDERVOLTAGE_FAULT";
+        }
+        case Fault::OVERVOLTAGE_FAULT:
+        {
+            return "OVERVOLTAGE_FAULT";
+        }
+        case Fault::OVERCURRENT_THERMAL_FAULT:
+        {
+            return "OVERCURRENT_THERMAL_FAULT";
+        }
+        default:
+        {
+            return "";
+        }
     }
 }
 
@@ -66,14 +66,14 @@ struct MotorControllerDevice;
 /// @brief Motor Control AO
 class MotorControlAO : public QP::QActive
 {
-   public:
+public:
     /// @brief Constructor
     /// @param mcDevice
     MotorControlAO(MotorControllerDevice* mcDevice);
-    MotorControlAO(const MotorControlAO&)            = delete;
+    MotorControlAO(const MotorControlAO&) = delete;
     MotorControlAO& operator=(const MotorControlAO&) = delete;
-    MotorControlAO(MotorControlAO&&)                 = delete;
-    MotorControlAO& operator=(MotorControlAO&&)      = delete;
+    MotorControlAO(MotorControlAO&&) = delete;
+    MotorControlAO& operator=(MotorControlAO&&) = delete;
 
     /// @brief Get MC1 instance
     /// @return MotorControlAO&
@@ -110,7 +110,7 @@ class MotorControlAO : public QP::QActive
     /// @brief Handle motor controller fault interrupt
     inline void FaultIT();
 
-   private:
+private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
     /// @brief Event queue size
@@ -165,7 +165,7 @@ class MotorControlAO : public QP::QActive
     /// @brief Check if initialized
     bool IsInitialized();
 
-   private:
+private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {
@@ -186,7 +186,7 @@ class MotorControlAO : public QP::QActive
     /// @brief Set duty evt
     class SetDutyEvt : public QP::QEvt
     {
-       public:
+    public:
         SetDutyEvt(QP::QSignal sig) : QP::QEvt(sig) {}
         uint16_t duty;
     };
@@ -194,7 +194,7 @@ class MotorControlAO : public QP::QActive
     /// @brief Set direction evt
     class SetDirEvt : public QP::QEvt
     {
-       public:
+    public:
         SetDirEvt(QP::QSignal sig) : QP::QEvt(sig) {}
         Dir dir;
     };
@@ -202,7 +202,7 @@ class MotorControlAO : public QP::QActive
     /// @brief Set rate evt
     class SetRateEvt : public QP::QEvt
     {
-       public:
+    public:
         SetRateEvt(QP::QSignal sig) : QP::QEvt(sig) {}
         float rate;
     };
@@ -210,7 +210,7 @@ class MotorControlAO : public QP::QActive
     /// @brief Set mode evt
     class SetModeEvt : public QP::QEvt
     {
-       public:
+    public:
         SetModeEvt(QP::QSignal sig) : QP::QEvt(sig) {}
         Mode mode;
     };
@@ -243,7 +243,7 @@ inline void MotorControlAO::SetDir(Dir dir)
     if (_isStarted)
     {
         SetDirEvt* evt = Q_NEW(SetDirEvt, PrivateSignals::SET_DIR_SIG);
-        evt->dir       = dir;
+        evt->dir = dir;
         POST(evt, this);
     }
 }
@@ -253,7 +253,7 @@ inline void MotorControlAO::SetDuty(uint16_t duty)
     if (_isStarted)
     {
         SetDutyEvt* evt = Q_NEW(SetDutyEvt, PrivateSignals::SET_DUTY_SIG);
-        evt->duty       = duty;
+        evt->duty = duty;
         POST(evt, this);
     }
 }
@@ -263,7 +263,7 @@ inline void MotorControlAO::SetRate(float rate)
     if (_isStarted)
     {
         SetRateEvt* evt = Q_NEW(SetRateEvt, PrivateSignals::SET_RATE_SIG);
-        evt->rate       = rate;
+        evt->rate = rate;
         POST(evt, this);
     }
 }
@@ -273,7 +273,7 @@ inline void MotorControlAO::SetMode(Mode mode)
     if (_isStarted)
     {
         SetModeEvt* evt = Q_NEW(SetModeEvt, PrivateSignals::SET_MODE_SIG);
-        evt->mode       = mode;
+        evt->mode = mode;
         POST(evt, this);
     }
 }

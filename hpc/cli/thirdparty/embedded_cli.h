@@ -30,9 +30,9 @@ extern "C"
 // if bytes is not divisible by size of single CLI_UINT)
 #define BYTES_TO_CLI_UINTS(bytes) (((bytes) + CLI_UINT_SIZE - 1) / CLI_UINT_SIZE)
 
-    typedef struct CliCommand        CliCommand;
+    typedef struct CliCommand CliCommand;
     typedef struct CliCommandBinding CliCommandBinding;
-    typedef struct EmbeddedCli       EmbeddedCli;
+    typedef struct EmbeddedCli EmbeddedCli;
     typedef struct EmbeddedCliConfig EmbeddedCliConfig;
 
     struct CliCommand
@@ -41,7 +41,7 @@ extern "C"
          * Name of the command.
          * In command "set led 1 1" "set" is name
          */
-        const char *name;
+        const char* name;
 
         /**
          * String of arguments of the command.
@@ -49,7 +49,7 @@ extern "C"
          * Is ended with double 0x00 char
          * Use tokenize functions to easily get individual tokens
          */
-        char *args;
+        char* args;
     };
 
     /**
@@ -60,14 +60,14 @@ extern "C"
         /**
          * Name of command to bind. Should not be NULL.
          */
-        const char *name;
+        const char* name;
 
         /**
          * Help string that will be displayed when "help <cmd>" is executed.
          * Can have multiple lines separated with "\r\n"
          * Can be NULL if no help is provided.
          */
-        const char *help;
+        const char* help;
 
         /**
          * Flag to perform tokenization before calling binding function.
@@ -78,7 +78,7 @@ extern "C"
          * Pointer to any specific app context that is required for this binding.
          * It will be provided in binding callback.
          */
-        void *context;
+        void* context;
 
         /**
          * Binding function for when command is received.
@@ -87,7 +87,7 @@ extern "C"
          * @param args - string of args (if tokenizeArgs is false) or tokens otherwise
          * @param context
          */
-        void (*binding)(EmbeddedCli *cli, char *args, void *context);
+        void (*binding)(EmbeddedCli* cli, char* args, void* context);
     };
 
     struct EmbeddedCli
@@ -97,7 +97,7 @@ extern "C"
          * @param cli - pointer to cli that executed this function
          * @param c   - actual character to write
          */
-        void (*writeChar)(EmbeddedCli *cli, char c);
+        void (*writeChar)(EmbeddedCli* cli, char c);
 
         /**
          * Called when command is received and command not found in list of
@@ -105,17 +105,17 @@ extern "C"
          * @param cli     - pointer to cli that executed this function
          * @param command - pointer to received command
          */
-        void (*onCommand)(EmbeddedCli *cli, CliCommand *command);
+        void (*onCommand)(EmbeddedCli* cli, CliCommand* command);
 
         /**
          * Can be used for any application context
          */
-        void *appContext;
+        void* appContext;
 
         /**
          * Pointer to actual implementation, do not use.
          */
-        void *_impl;
+        void* _impl;
     };
 
     /**
@@ -127,7 +127,7 @@ extern "C"
          * Invitation string. Is printed at the beginning of each line with user
          * input
          */
-        const char *invitation;
+        const char* invitation;
 
         /**
          * Size of buffer that is used to store characters until they're processed
@@ -159,7 +159,7 @@ extern "C"
          * be allocated dynamically. Otherwise this buffer is used and no
          * allocations are made
          */
-        CLI_UINT *cliBuffer;
+        CLI_UINT* cliBuffer;
 
         /**
          * Size of buffer for cli and internal structures (in bytes).
@@ -191,7 +191,7 @@ extern "C"
      * </ul>
      * @return configuration for cli creation
      */
-    EmbeddedCliConfig *embeddedCliDefaultConfig(void);
+    EmbeddedCliConfig* embeddedCliDefaultConfig(void);
 
     /**
      * Returns how many space in config buffer is required for cli creation
@@ -201,7 +201,7 @@ extern "C"
      * @param config
      * @return
      */
-    uint16_t embeddedCliRequiredSize(EmbeddedCliConfig *config);
+    uint16_t embeddedCliRequiredSize(EmbeddedCliConfig* config);
 
     /**
      * Create new CLI.
@@ -210,13 +210,13 @@ extern "C"
      * @param config - config for cli creation
      * @return pointer to created CLI
      */
-    EmbeddedCli *embeddedCliNew(EmbeddedCliConfig *config);
+    EmbeddedCli* embeddedCliNew(EmbeddedCliConfig* config);
 
     /**
      * Same as calling embeddedCliNew with default config.
      * @return
      */
-    EmbeddedCli *embeddedCliNewDefault(void);
+    EmbeddedCli* embeddedCliNewDefault(void);
 
     /**
      * Receive character and put it to internal buffer
@@ -227,13 +227,13 @@ extern "C"
      * @param cli
      * @param c   - received char
      */
-    void embeddedCliReceiveChar(EmbeddedCli *cli, char c);
+    void embeddedCliReceiveChar(EmbeddedCli* cli, char c);
 
     /**
      * Process rx/tx buffers. Command callbacks are called from here
      * @param cli
      */
-    void embeddedCliProcess(EmbeddedCli *cli);
+    void embeddedCliProcess(EmbeddedCli* cli);
 
     /**
      * Add specified binding to list of bindings. If list is already full, binding
@@ -242,7 +242,7 @@ extern "C"
      * @param binding
      * @return true if binding was added, false otherwise
      */
-    bool embeddedCliAddBinding(EmbeddedCli *cli, CliCommandBinding binding);
+    bool embeddedCliAddBinding(EmbeddedCli* cli, CliCommandBinding binding);
 
     /**
      * Print specified string and account for currently entered but not submitted
@@ -252,13 +252,13 @@ extern "C"
      * @param cli
      * @param string
      */
-    void embeddedCliPrint(EmbeddedCli *cli, const char *string);
+    void embeddedCliPrint(EmbeddedCli* cli, const char* string);
 
     /**
      * Free allocated for cli memory
      * @param cli
      */
-    void embeddedCliFree(EmbeddedCli *cli);
+    void embeddedCliFree(EmbeddedCli* cli);
 
     /**
      * Perform tokenization of arguments string. Original string is modified and
@@ -272,7 +272,7 @@ extern "C"
      * @param args - string to tokenize (must have extra writable char after 0x00)
      * @return
      */
-    void embeddedCliTokenizeArgs(char *args);
+    void embeddedCliTokenizeArgs(char* args);
 
     /**
      * Return specific token from tokenized string
@@ -280,7 +280,7 @@ extern "C"
      * @param pos (counted from 1)
      * @return token
      */
-    const char *embeddedCliGetToken(const char *tokenizedStr, uint16_t pos);
+    const char* embeddedCliGetToken(const char* tokenizedStr, uint16_t pos);
 
     /**
      * Same as embeddedCliGetToken but works on non-const buffer
@@ -288,7 +288,7 @@ extern "C"
      * @param pos (counted from 1)
      * @return token
      */
-    char *embeddedCliGetTokenVariable(char *tokenizedStr, uint16_t pos);
+    char* embeddedCliGetTokenVariable(char* tokenizedStr, uint16_t pos);
 
     /**
      * Find token in provided tokens string and return its position (counted from 1)
@@ -297,14 +297,14 @@ extern "C"
      * @param token - token to find
      * @return position (increased by 1) or zero if no such token found
      */
-    uint16_t embeddedCliFindToken(const char *tokenizedStr, const char *token);
+    uint16_t embeddedCliFindToken(const char* tokenizedStr, const char* token);
 
     /**
      * Return number of tokens in tokenized string
      * @param tokenizedStr
      * @return number of tokens
      */
-    uint16_t embeddedCliGetTokenCount(const char *tokenizedStr);
+    uint16_t embeddedCliGetTokenCount(const char* tokenizedStr);
 
 #ifdef __cplusplus
 }

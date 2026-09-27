@@ -8,10 +8,7 @@ namespace param
 
     ParamIndex index = static_cast<ParamIndex>(param->id);
 
-    if (index >= maxParameters)
-    {
-        fault = Fault::TOO_MANY_PARAMETERS;
-    }
+    if (index >= maxParameters) { fault = Fault::TOO_MANY_PARAMETERS; }
     else if (index != _numParameters)
     {
         // Only permit contiguous registration
@@ -32,14 +29,8 @@ namespace param
 
     ParamIndex index = static_cast<ParamIndex>(id);
 
-    if (index >= _numParameters || index >= maxParameters)
-    {
-        fault = Fault::NO_SUCH_PARAM;
-    }
-    else
-    {
-        defaultValue = _parameters[index]->defaultValue;
-    }
+    if (index >= _numParameters || index >= maxParameters) { fault = Fault::NO_SUCH_PARAM; }
+    else { defaultValue = _parameters[index]->defaultValue; }
 
     return fault;
 }
@@ -50,14 +41,8 @@ namespace param
 
     ParamIndex index = static_cast<ParamIndex>(id);
 
-    if (index >= _numParameters || index >= maxParameters)
-    {
-        fault = Fault::NO_SUCH_PARAM;
-    }
-    else
-    {
-        type = _parameters[index]->typeID;
-    }
+    if (index >= _numParameters || index >= maxParameters) { fault = Fault::NO_SUCH_PARAM; }
+    else { type = _parameters[index]->typeID; }
 
     return fault;
 }
@@ -68,14 +53,8 @@ namespace param
 
     ParamIndex index = static_cast<ParamIndex>(id);
 
-    if (index >= _numParameters || index >= maxParameters)
-    {
-        fault = Fault::NO_SUCH_PARAM;
-    }
-    else
-    {
-        name = _parameters[index]->name;
-    }
+    if (index >= _numParameters || index >= maxParameters) { fault = Fault::NO_SUCH_PARAM; }
+    else { name = _parameters[index]->name; }
 
     return fault;
 }
@@ -86,14 +65,8 @@ namespace param
 
     ParamIndex index = static_cast<ParamIndex>(id);
 
-    if (index >= _numParameters || index >= maxParameters)
-    {
-        fault = Fault::NO_SUCH_PARAM;
-    }
-    else
-    {
-        desc = _parameters[index]->desc;
-    }
+    if (index >= _numParameters || index >= maxParameters) { fault = Fault::NO_SUCH_PARAM; }
+    else { desc = _parameters[index]->desc; }
 
     return fault;
 }
@@ -112,10 +85,7 @@ uint16_t ParameterList::GetSize() const
     {
         fault = _parameters[i]->Serialize(outBuf + writeSize, outSize - writeSize);
 
-        if (fault != Fault::NO_FAULT)
-        {
-            break;
-        }
+        if (fault != Fault::NO_FAULT) { break; }
 
         writeSize += sizeof(ParameterPayload);
     }
@@ -132,10 +102,7 @@ uint16_t ParameterList::GetSize() const
     {
         fault = _parameters[i]->Deserialize(inBuf + readSize, inSize - readSize);
 
-        if (fault != Fault::NO_FAULT)
-        {
-            break;
-        }
+        if (fault != Fault::NO_FAULT) { break; }
 
         readSize += sizeof(ParameterPayload);
     }
@@ -149,14 +116,8 @@ uint16_t ParameterList::GetSize() const
 
     ParamIndex index = static_cast<ParamIndex>(id);
 
-    if (index >= _numParameters || index >= maxParameters)
-    {
-        fault = Fault::NO_SUCH_PARAM;
-    }
-    else
-    {
-        _parameters[index]->currentValue = value;
-    }
+    if (index >= _numParameters || index >= maxParameters) { fault = Fault::NO_SUCH_PARAM; }
+    else { _parameters[index]->currentValue = value; }
 
     return fault;
 }
@@ -167,14 +128,8 @@ uint16_t ParameterList::GetSize() const
 
     ParamIndex index = static_cast<ParamIndex>(id);
 
-    if (index >= _numParameters || index >= maxParameters)
-    {
-        fault = Fault::NO_SUCH_PARAM;
-    }
-    else
-    {
-        value = _parameters[index]->currentValue;
-    }
+    if (index >= _numParameters || index >= maxParameters) { fault = Fault::NO_SUCH_PARAM; }
+    else { value = _parameters[index]->currentValue; }
 
     return fault;
 }

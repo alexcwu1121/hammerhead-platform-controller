@@ -9,20 +9,20 @@ namespace imu
 /// @brief IMU data event
 class IMUEvt : public QP::QEvt
 {
-   public:
+public:
     imu::IMUData data;
 };
 
 /// @brief IMU AO
 class IMUAO : public QP::QActive
 {
-   public:
+public:
     /// @brief Constructor
     IMUAO();
-    IMUAO(const IMUAO&)            = delete;
+    IMUAO(const IMUAO&) = delete;
     IMUAO& operator=(const IMUAO&) = delete;
-    IMUAO(IMUAO&&)                 = delete;
-    IMUAO& operator=(IMUAO&&)      = delete;
+    IMUAO(IMUAO&&) = delete;
+    IMUAO& operator=(IMUAO&&) = delete;
 
     /// @brief Get instance
     /// @return IMUAO&
@@ -49,7 +49,7 @@ class IMUAO : public QP::QActive
     /// @brief Reset IMU AO
     inline void Reset();
 
-   private:
+private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
     /// @brief Event queue size
@@ -77,7 +77,7 @@ class IMUAO : public QP::QActive
     /// @brief Fault states
     bool _faultStates[imu::Fault::NUM_FAULTS] = {false};
 
-   private:
+private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {

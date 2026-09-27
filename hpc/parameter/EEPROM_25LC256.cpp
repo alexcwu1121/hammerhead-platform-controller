@@ -5,27 +5,26 @@
 namespace eeprom
 {
 // EEPROM SPI opcodes
-constexpr uint8_t CMD_WREN  = 0x06;
-constexpr uint8_t CMD_WRDI  = 0x04;
-constexpr uint8_t CMD_RDSR  = 0x05;
-constexpr uint8_t CMD_WRSR  = 0x01;
-constexpr uint8_t CMD_READ  = 0x03;
+constexpr uint8_t CMD_WREN = 0x06;
+constexpr uint8_t CMD_WRDI = 0x04;
+constexpr uint8_t CMD_RDSR = 0x05;
+constexpr uint8_t CMD_WRSR = 0x01;
+constexpr uint8_t CMD_READ = 0x03;
 constexpr uint8_t CMD_WRITE = 0x02;
 
 // Transaction sizes
 constexpr uint32_t OPCODE_SIZE = 1U;
-constexpr uint32_t ADDR_SIZE   = 2U;
-constexpr uint32_t PAGE_SIZE   = 64U;
+constexpr uint32_t ADDR_SIZE = 2U;
+constexpr uint32_t PAGE_SIZE = 64U;
 
-EEPROM25LC256::EEPROM25LC256(GPIO_TypeDef* csPort, uint16_t csPinNum, GPIO_TypeDef* wpPort,
-                             uint16_t wpPinNum, SPI_HandleTypeDef* spiDevice)
-    : _csPort(csPort),
-      _csPinNum(csPinNum),
-      _wpPort(wpPort),
-      _wpPinNum(wpPinNum),
-      _spiDevice(spiDevice)
-{
-}
+EEPROM25LC256::EEPROM25LC256(GPIO_TypeDef* csPort, uint16_t csPinNum, GPIO_TypeDef* wpPort, uint16_t wpPinNum,
+                             SPI_HandleTypeDef* spiDevice) :
+    _csPort(csPort),
+    _csPinNum(csPinNum),
+    _wpPort(wpPort),
+    _wpPinNum(wpPinNum),
+    _spiDevice(spiDevice)
+{}
 
 void EEPROM25LC256::EnableWriteProtect() const
 {
@@ -53,12 +52,12 @@ void EEPROM25LC256::Write(uint8_t* inBuf, uint16_t writeSize, uint16_t address)
     while (writeSize > 0)
     {
         // Compute chunk size
-        uint16_t page_offset    = address % PAGE_SIZE;
+        uint16_t page_offset = address % PAGE_SIZE;
         uint16_t page_remaining = PAGE_SIZE - page_offset;
-        uint16_t chunk          = (writeSize < page_remaining) ? writeSize : page_remaining;
+        uint16_t chunk = (writeSize < page_remaining) ? writeSize : page_remaining;
 
         // Allocate tx buffer
-        uint8_t  txbuf[OPCODE_SIZE + ADDR_SIZE + PAGE_SIZE];
+        uint8_t txbuf[OPCODE_SIZE + ADDR_SIZE + PAGE_SIZE];
         uint16_t index = 0;
 
         // Write enable
@@ -105,11 +104,10 @@ void EEPROM25LC256::Read(uint8_t* outBuf, uint16_t readSize, uint16_t address)
 void EEPROM25LC256::WaitForWriteEnd(void)
 {
     static uint8_t cmd = CMD_RDSR;
-    uint8_t        status;
+    uint8_t status;
 
     // TODO: timeout
-    do
-    {
+    do {
         Select();
         HAL_SPI_Transmit(_spiDevice, &cmd, 1, HAL_MAX_DELAY);
         HAL_SPI_Receive(_spiDevice, &status, 1, HAL_MAX_DELAY);

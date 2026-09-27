@@ -17,7 +17,7 @@ cli::CLIAO::CLIAO() : QP::QActive(&initial), _processTimer(this, PrivateSignals:
 
 void cli::CLIAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
-    _id        = id;
+    _id = id;
     _isStarted = true;
     this->start(priority,      // QP prio. of the AO
                 _queue,        // event queue storage
@@ -40,10 +40,7 @@ void cli::CLIAO::Printf(const char* fmt, ...)
         // Check if string fits in buffer
         // TODO: automatically blockify and inject multiple events if
         //  buffer size exceeded
-        if (length > 0)
-        {
-            CLIAO::Inst().POST(evt, this);
-        }
+        if (length > 0) { CLIAO::Inst().POST(evt, this); }
         else
         {
             // Otherwise, gc the event so it doesn't leak
@@ -75,60 +72,57 @@ Q_STATE_DEF(cli::CLIAO, root)
     QP::QState status_;
     switch (e->sig)
     {
-    case PrivateSignals::RESET_SIG:
-    {
-        status_ = tran(&initializing);
-        break;
-    }
-    case bsp::PublicSignals::PARAMETER_UPDATE_SIG:
-    {
-        param::ParameterID id  = Q_EVT_CAST(bsp::ParameterUpdateEvt)->id;
-        param::Type        val = Q_EVT_CAST(bsp::ParameterUpdateEvt)->value;
+        case PrivateSignals::RESET_SIG:
+        {
+            status_ = tran(&initializing);
+            break;
+        }
+        case bsp::PublicSignals::PARAMETER_UPDATE_SIG:
+        {
+            param::ParameterID id = Q_EVT_CAST(bsp::ParameterUpdateEvt)->id;
+            param::Type val = Q_EVT_CAST(bsp::ParameterUpdateEvt)->value;
 
-        // Update parameter value
-        switch (id)
-        {
-        case param::ParameterID::CLI_UPDATE_FREQ:
-        {
-            // Set new process interval
-            if (val._float32 > 0)
+            // Update parameter value
+            switch (id)
             {
-                _processInterval = bsp::TICKS_PER_SEC / val._float32;
+                case param::ParameterID::CLI_UPDATE_FREQ:
+                {
+                    // Set new process interval
+                    if (val._float32 > 0) { _processInterval = bsp::TICKS_PER_SEC / val._float32; }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
+
+            // Self-post event indicating a parameter has been updated
+            static QP::QEvt evt(PrivateSignals::PARAMS_UPDATED);
+            POST(&evt, this);
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case bsp::PublicSignals::REQUEST_FAULT_SIG:
+        {
+            // Publish all fault states
+            for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
+            {
+                bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+                evt->id = _id;
+                evt->fault = fault;
+                evt->active = _faultStates[fault];
+                PUBLISH(evt, this);
+            }
+            status_ = Q_RET_HANDLED;
             break;
         }
         default:
         {
+            status_ = super(&top);
             break;
         }
-        }
-
-        // Self-post event indicating a parameter has been updated
-        static QP::QEvt evt(PrivateSignals::PARAMS_UPDATED);
-        POST(&evt, this);
-
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case bsp::PublicSignals::REQUEST_FAULT_SIG:
-    {
-        // Publish all fault states
-        for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
-        {
-            bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
-            evt->id            = _id;
-            evt->fault         = fault;
-            evt->active        = _faultStates[fault];
-            PUBLISH(evt, this);
-        }
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    default:
-    {
-        status_ = super(&top);
-        break;
-    }
     }
     return status_;
 }
@@ -138,77 +132,76 @@ Q_STATE_DEF(cli::CLIAO, initializing)
     QP::QState status_;
     switch (e->sig)
     {
-    case Q_ENTRY_SIG:
-    {
-        // Initialize the CLI configuration settings
-        EmbeddedCliConfig* config = embeddedCliDefaultConfig();
-        config->cliBuffer         = _cliBuf;
-        config->cliBufferSize     = _cliBufSize;
-        config->rxBufferSize      = _cliRxBufSize;
-        config->cmdBufferSize     = _cliCmdBufSize;
-        config->historyBufferSize = _cliHistorySize;
-        config->maxBindingCount   = _cliMaxBindingCount;
-
-        // Create new CLI instance
-        _cli = embeddedCliNew(config);
-
-        // Register character write function
-        auto write_char_to_cli = [](EmbeddedCli* embeddedCli, char c)
+        case Q_ENTRY_SIG:
         {
-            uint8_t char_to_send = c;
-            HAL_UART_Transmit(_uartCliPeriph, &char_to_send, 1, 100);
-        };
-        _cli->writeChar = write_char_to_cli;
+            // Initialize the CLI configuration settings
+            EmbeddedCliConfig* config = embeddedCliDefaultConfig();
+            config->cliBuffer = _cliBuf;
+            config->cliBufferSize = _cliBufSize;
+            config->rxBufferSize = _cliRxBufSize;
+            config->cmdBufferSize = _cliCmdBufSize;
+            config->historyBufferSize = _cliHistorySize;
+            config->maxBindingCount = _cliMaxBindingCount;
 
-        // CLI init failed - most likely not enough memory
-        if (_cli == NULL)
-        {
-            static QP::QEvt evt(PrivateSignals::FAULT_SIG);
-            POST(&evt, this);
-        }
+            // Create new CLI instance
+            _cli = embeddedCliNew(config);
 
-        // Request parameters
-        param::ParamAO::Inst().RequestUpdate(param::ParameterID::CLI_UPDATE_FREQ);
+            // Register character write function
+            auto write_char_to_cli = [](EmbeddedCli* embeddedCli, char c) {
+                uint8_t char_to_send = c;
+                HAL_UART_Transmit(_uartCliPeriph, &char_to_send, 1, 100);
+            };
+            _cli->writeChar = write_char_to_cli;
 
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::FAULT_SIG:
-    {
-        // Publish fault
-        _faultStates[Fault::INIT_FAILED] = true;
-        bsp::FaultEvt* evt               = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
-        evt->id                          = _id;
-        evt->fault                       = Fault::INIT_FAILED;
-        evt->active                      = _faultStates[Fault::INIT_FAILED];
-        PUBLISH(evt, this);
-        status_ = tran(&error);
-        break;
-    }
-    case PrivateSignals::PARAMS_UPDATED:
-    {
-        // Check if all parameters have been initialized
-        if (_processInterval != UINT32_MAX)
-        {
-            // Add all the initial command bindings
-            InitBindings(_cli);
-            // Clear the cli
-            onClear(_cli, NULL, NULL);
-            // Start processing
-            status_ = tran(&active);
-        }
-        else
-        {
-            // Keep waiting
+            // CLI init failed - most likely not enough memory
+            if (_cli == NULL)
+            {
+                static QP::QEvt evt(PrivateSignals::FAULT_SIG);
+                POST(&evt, this);
+            }
+
+            // Request parameters
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::CLI_UPDATE_FREQ);
+
             status_ = Q_RET_HANDLED;
+            break;
         }
-        break;
-    }
-    default:
-    {
-        status_ = super(&root);
-        break;
-    }
+        case PrivateSignals::FAULT_SIG:
+        {
+            // Publish fault
+            _faultStates[Fault::INIT_FAILED] = true;
+            bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+            evt->id = _id;
+            evt->fault = Fault::INIT_FAILED;
+            evt->active = _faultStates[Fault::INIT_FAILED];
+            PUBLISH(evt, this);
+            status_ = tran(&error);
+            break;
+        }
+        case PrivateSignals::PARAMS_UPDATED:
+        {
+            // Check if all parameters have been initialized
+            if (_processInterval != UINT32_MAX)
+            {
+                // Add all the initial command bindings
+                InitBindings(_cli);
+                // Clear the cli
+                onClear(_cli, NULL, NULL);
+                // Start processing
+                status_ = tran(&active);
+            }
+            else
+            {
+                // Keep waiting
+                status_ = Q_RET_HANDLED;
+            }
+            break;
+        }
+        default:
+        {
+            status_ = super(&root);
+            break;
+        }
     }
     return status_;
 }
@@ -218,57 +211,57 @@ Q_STATE_DEF(cli::CLIAO, active)
     QP::QState status_;
     switch (e->sig)
     {
-    case Q_ENTRY_SIG:
-    {
-        // Arm uart receive interrupt
-        HAL_UART_Receive_IT(_uartCliPeriph, _uartRxBuf, _uartRxBufSize);
-        // Arm cli process timer
-        _processTimer.armX(_processInterval, _processInterval);
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case Q_EXIT_SIG:
-    {
-        // Disarm cli process timer
-        _processTimer.disarm();
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::RX_CHAR_SIG:
-    {
-        // Receive char and rearm interrupt
-        HAL_UART_Receive_IT(_uartCliPeriph, _uartRxBuf, _uartRxBufSize);
-        embeddedCliReceiveChar(_cli, _uartRxBuf[0]);
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::PROCESS_SIG:
-    {
-        // Service CLI once
-        embeddedCliProcess(_cli);
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::PRINT_SIG:
-    {
-        // Call embeddedCliPrint with the formatted string
-        embeddedCliPrint(_cli, Q_EVT_CAST(PrintEvt)->buf);
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    case PrivateSignals::PARAMS_UPDATED:
-    {
-        // Rearm cli process timer
-        _processTimer.disarm();
-        _processTimer.armX(_processInterval, _processInterval);
-        status_ = super(&root);
-        break;
-    }
-    default:
-    {
-        status_ = super(&root);
-        break;
-    }
+        case Q_ENTRY_SIG:
+        {
+            // Arm uart receive interrupt
+            HAL_UART_Receive_IT(_uartCliPeriph, _uartRxBuf, _uartRxBufSize);
+            // Arm cli process timer
+            _processTimer.armX(_processInterval, _processInterval);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case Q_EXIT_SIG:
+        {
+            // Disarm cli process timer
+            _processTimer.disarm();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::RX_CHAR_SIG:
+        {
+            // Receive char and rearm interrupt
+            HAL_UART_Receive_IT(_uartCliPeriph, _uartRxBuf, _uartRxBufSize);
+            embeddedCliReceiveChar(_cli, _uartRxBuf[0]);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::PROCESS_SIG:
+        {
+            // Service CLI once
+            embeddedCliProcess(_cli);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::PRINT_SIG:
+        {
+            // Call embeddedCliPrint with the formatted string
+            embeddedCliPrint(_cli, Q_EVT_CAST(PrintEvt)->buf);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::PARAMS_UPDATED:
+        {
+            // Rearm cli process timer
+            _processTimer.disarm();
+            _processTimer.armX(_processInterval, _processInterval);
+            status_ = super(&root);
+            break;
+        }
+        default:
+        {
+            status_ = super(&root);
+            break;
+        }
     }
     return status_;
 }
@@ -278,29 +271,29 @@ Q_STATE_DEF(cli::CLIAO, error)
     QP::QState status_;
     switch (e->sig)
     {
-    case Q_EXIT_SIG:
-    {
-        // Clear all faults on exit
-        for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
+        case Q_EXIT_SIG:
         {
-            if (_faultStates[fault])
+            // Clear all faults on exit
+            for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++)
             {
-                _faultStates[fault] = false;
-                bsp::FaultEvt* evt  = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
-                evt->id             = _id;
-                evt->fault          = fault;
-                evt->active         = _faultStates[fault];
-                PUBLISH(evt, this);
+                if (_faultStates[fault])
+                {
+                    _faultStates[fault] = false;
+                    bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+                    evt->id = _id;
+                    evt->fault = fault;
+                    evt->active = _faultStates[fault];
+                    PUBLISH(evt, this);
+                }
             }
+            status_ = Q_RET_HANDLED;
+            break;
         }
-        status_ = Q_RET_HANDLED;
-        break;
-    }
-    default:
-    {
-        status_ = super(&root);
-        break;
-    }
+        default:
+        {
+            status_ = super(&root);
+            break;
+        }
     }
     return status_;
 }

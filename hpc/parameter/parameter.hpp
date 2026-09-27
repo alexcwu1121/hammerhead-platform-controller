@@ -30,46 +30,46 @@ constexpr const char* FaultToStr(Fault fault)
 {
     switch (fault)
     {
-    case Fault::NO_FAULT:
-    {
-        return "NO_FAULT";
-    }
-    case Fault::ID_MISMATCH:
-    {
-        return "ID_MISMATCH";
-    }
-    case Fault::TYPE_MISMATCH:
-    {
-        return "TYPE_MISMATCH";
-    }
-    case Fault::OUTBUF_TOO_SMALL:
-    {
-        return "OUTBUF_TOO_SMALL";
-    }
-    case Fault::INBUF_TOO_SMALL:
-    {
-        return "INBUF_TOO_SMALL";
-    }
-    case Fault::NONCONTIGUOUS_REGISTRATION:
-    {
-        return "NONCONTIGUOUS_REGISTRATION";
-    }
-    case Fault::TOO_MANY_PARAMETERS:
-    {
-        return "TOO_MANY_PARAMETERS";
-    }
-    case Fault::NO_SUCH_PARAM:
-    {
-        return "NO_SUCH_PARAM";
-    }
-    case Fault::UNSUPPORTED_TYPE:
-    {
-        return "UNSUPPORTED_TYPE";
-    }
-    default:
-    {
-        return "";
-    }
+        case Fault::NO_FAULT:
+        {
+            return "NO_FAULT";
+        }
+        case Fault::ID_MISMATCH:
+        {
+            return "ID_MISMATCH";
+        }
+        case Fault::TYPE_MISMATCH:
+        {
+            return "TYPE_MISMATCH";
+        }
+        case Fault::OUTBUF_TOO_SMALL:
+        {
+            return "OUTBUF_TOO_SMALL";
+        }
+        case Fault::INBUF_TOO_SMALL:
+        {
+            return "INBUF_TOO_SMALL";
+        }
+        case Fault::NONCONTIGUOUS_REGISTRATION:
+        {
+            return "NONCONTIGUOUS_REGISTRATION";
+        }
+        case Fault::TOO_MANY_PARAMETERS:
+        {
+            return "TOO_MANY_PARAMETERS";
+        }
+        case Fault::NO_SUCH_PARAM:
+        {
+            return "NO_SUCH_PARAM";
+        }
+        case Fault::UNSUPPORTED_TYPE:
+        {
+            return "UNSUPPORTED_TYPE";
+        }
+        default:
+        {
+            return "";
+        }
     }
 }
 
@@ -90,30 +90,22 @@ constexpr const char* TypeIDToStr(TypeID typeID)
 {
     switch (typeID)
     {
-    case TypeID::FLOAT32:
-        return "FLOAT32";
-    case TypeID::UINT8:
-        return "UINT8";
-    case TypeID::UINT16:
-        return "UINT16";
-    case TypeID::UINT32:
-        return "UINT32";
-    case TypeID::INT8:
-        return "INT8";
-    case TypeID::INT16:
-        return "INT16";
-    case TypeID::INT32:
-        return "INT32";
-    default:
-        return "";
+        case TypeID::FLOAT32: return "FLOAT32";
+        case TypeID::UINT8: return "UINT8";
+        case TypeID::UINT16: return "UINT16";
+        case TypeID::UINT32: return "UINT32";
+        case TypeID::INT8: return "INT8";
+        case TypeID::INT16: return "INT16";
+        case TypeID::INT32: return "INT32";
+        default: return "";
     }
 }
 
 /// @brief Parameter payload type
 union Type
 {
-    float    _float32;
-    uint8_t  _uint8;
+    float _float32;
+    uint8_t _uint8;
     uint16_t _uint16;
     uint32_t _uint32;
     uint8_t _int8;
@@ -136,8 +128,8 @@ enum class ParameterID : ParamIndex;
 class Parameter;
 class ParameterList
 {
-   public:
-   public:
+public:
+public:
     ParameterList() {}
     static ParameterList& Inst()
     {
@@ -228,7 +220,7 @@ class ParameterList
     /// @return param::Fault
     [[nodiscard]] Fault Deserialize(uint8_t* inBuf, uint16_t inSize, uint16_t& readSize);
 
-   private:
+private:
     /// @brief Number of registered parameters
     ParamIndex _numParameters = 0U;
     /// @brief Parameters
@@ -257,14 +249,8 @@ struct ParameterPayload
         uint16_t param_size = sizeof(ParameterPayload);
 
         // See if it'll fit
-        if (param_size <= outSize)
-        {
-            memcpy(outBuf, this, param_size);
-        }
-        else
-        {
-            fault = Fault::OUTBUF_TOO_SMALL;
-        }
+        if (param_size <= outSize) { memcpy(outBuf, this, param_size); }
+        else { fault = Fault::OUTBUF_TOO_SMALL; }
 
         return fault;
     }
@@ -287,23 +273,11 @@ struct ParameterPayload
             memcpy(&staged, inBuf, param_size);
 
             // Check if param IDs and types match
-            if (staged.id != id)
-            {
-                fault = Fault::ID_MISMATCH;
-            }
-            else if (staged.typeID != typeID)
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
-            else
-            {
-                *this = staged;
-            }
+            if (staged.id != id) { fault = Fault::ID_MISMATCH; }
+            else if (staged.typeID != typeID) { fault = Fault::TYPE_MISMATCH; }
+            else { *this = staged; }
         }
-        else
-        {
-            fault = INBUF_TOO_SMALL;
-        }
+        else { fault = INBUF_TOO_SMALL; }
 
         return fault;
     }
@@ -313,10 +287,11 @@ struct ParameterPayload
     /// @param id
     /// @param typeID
     /// @param currentValue
-    ParameterPayload(ParameterID id, TypeID typeID, Type currentValue)
-        : id(id), typeID(typeID), currentValue(currentValue)
-    {
-    }
+    ParameterPayload(ParameterID id, TypeID typeID, Type currentValue) :
+        id(id),
+        typeID(typeID),
+        currentValue(currentValue)
+    {}
 };
 
 /// @brief Full parameter structure with metadata
@@ -341,9 +316,9 @@ struct Parameter : ParameterPayload
     /// @param defaultValue
     /// @param _name
     /// @param _desc
-    Parameter(ParameterID id, TypeID typeID, Type defaultValue, const char* _name,
-              const char* _desc)
-        : ParameterPayload(id, typeID, defaultValue), defaultValue(defaultValue)
+    Parameter(ParameterID id, TypeID typeID, Type defaultValue, const char* _name, const char* _desc) :
+        ParameterPayload(id, typeID, defaultValue),
+        defaultValue(defaultValue)
     {
         std::memcpy(name, _name, std::min(std::strlen(_name), sizeof(name) - 1));
         std::memcpy(desc, _desc, std::min(std::strlen(_desc), sizeof(desc) - 1));
@@ -362,8 +337,7 @@ struct Parameter : ParameterPayload
 
 // Parameter shorthand
 #define DEFINE_PARAMETER(id, typeID, defaultValue, name, desc) \
-    static param::Parameter UNIQUE_NAME(_reg_, __COUNTER__) =  \
-        param::Parameter(id, typeID, defaultValue, name, desc);
+    static param::Parameter UNIQUE_NAME(_reg_, __COUNTER__) = param::Parameter(id, typeID, defaultValue, name, desc);
 
 template <typename T>
 [[nodiscard]] Fault ParameterList::Set(ParameterID id, T value)
@@ -372,93 +346,45 @@ template <typename T>
 
     ParamIndex index = static_cast<ParamIndex>(id);
 
-    if (index >= _numParameters || index >= maxParameters)
-    {
-        fault = Fault::NO_SUCH_PARAM;
-    }
+    if (index >= _numParameters || index >= maxParameters) { fault = Fault::NO_SUCH_PARAM; }
     else
     {
         if constexpr (std::is_same_v<T, float>)
         {
-            if (_parameters[index]->typeID == TypeID::FLOAT32)
-            {
-                _parameters[index]->currentValue._float32 = value;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::FLOAT32) { _parameters[index]->currentValue._float32 = value; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, uint8_t>)
         {
-            if (_parameters[index]->typeID == TypeID::UINT8)
-            {
-                _parameters[index]->currentValue._uint8 = value;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::UINT8) { _parameters[index]->currentValue._uint8 = value; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, uint16_t>)
         {
-            if (_parameters[index]->typeID == TypeID::UINT16)
-            {
-                _parameters[index]->currentValue._uint16 = value;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::UINT16) { _parameters[index]->currentValue._uint16 = value; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, uint32_t>)
         {
-            if (_parameters[index]->typeID == TypeID::UINT32)
-            {
-                _parameters[index]->currentValue._uint32 = value;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::UINT32) { _parameters[index]->currentValue._uint32 = value; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, int8_t>)
         {
-            if (_parameters[index]->typeID == TypeID::INT8)
-            {
-                _parameters[index]->currentValue._int8 = value;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::INT8) { _parameters[index]->currentValue._int8 = value; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, int16_t>)
         {
-            if (_parameters[index]->typeID == TypeID::INT16)
-            {
-                _parameters[index]->currentValue._int16 = value;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::INT16) { _parameters[index]->currentValue._int16 = value; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, int32_t>)
         {
-            if (_parameters[index]->typeID == TypeID::INT32)
-            {
-                _parameters[index]->currentValue._int32 = value;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::INT32) { _parameters[index]->currentValue._int32 = value; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
-        else
-        {
-            static_assert(always_false<T>, "Unsupported type");
-        }
+        else { static_assert(always_false<T>, "Unsupported type"); }
     }
 
     return fault;
@@ -471,93 +397,45 @@ template <typename T>
 
     ParamIndex index = static_cast<ParamIndex>(id);
 
-    if (index >= _numParameters || index >= maxParameters)
-    {
-        fault = Fault::NO_SUCH_PARAM;
-    }
+    if (index >= _numParameters || index >= maxParameters) { fault = Fault::NO_SUCH_PARAM; }
     else
     {
         if constexpr (std::is_same_v<T, float>)
         {
-            if (_parameters[index]->typeID == TypeID::FLOAT32)
-            {
-                value = _parameters[index]->currentValue._float32;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::FLOAT32) { value = _parameters[index]->currentValue._float32; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, uint8_t>)
         {
-            if (_parameters[index]->typeID == TypeID::UINT8)
-            {
-                value = _parameters[index]->currentValue._uint8;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::UINT8) { value = _parameters[index]->currentValue._uint8; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, uint16_t>)
         {
-            if (_parameters[index]->typeID == TypeID::UINT16)
-            {
-                value = _parameters[index]->currentValue._uint16;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::UINT16) { value = _parameters[index]->currentValue._uint16; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, uint32_t>)
         {
-            if (_parameters[index]->typeID == TypeID::UINT32)
-            {
-                value = _parameters[index]->currentValue._uint32;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::UINT32) { value = _parameters[index]->currentValue._uint32; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, int8_t>)
         {
-            if (_parameters[index]->typeID == TypeID::INT8)
-            {
-                value = _parameters[index]->currentValue._int8;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::INT8) { value = _parameters[index]->currentValue._int8; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, int16_t>)
         {
-            if (_parameters[index]->typeID == TypeID::INT16)
-            {
-                value = _parameters[index]->currentValue._int16;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::INT16) { value = _parameters[index]->currentValue._int16; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
         else if constexpr (std::is_same_v<T, int32_t>)
         {
-            if (_parameters[index]->typeID == TypeID::INT32)
-            {
-                value = _parameters[index]->currentValue._int32;
-            }
-            else
-            {
-                fault = Fault::TYPE_MISMATCH;
-            }
+            if (_parameters[index]->typeID == TypeID::INT32) { value = _parameters[index]->currentValue._int32; }
+            else { fault = Fault::TYPE_MISMATCH; }
         }
-        else
-        {
-            static_assert(always_false<T>, "Unsupported type");
-        }
+        else { static_assert(always_false<T>, "Unsupported type"); }
     }
 
     return fault;

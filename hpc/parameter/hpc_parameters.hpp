@@ -20,6 +20,6 @@ enum class ParameterID : param::ParamIndex
     MM_I2C_ADDR,
     NUM_PARAMS,  // keep this at the end
 };
-}
+}  // namespace param
 
 #endif

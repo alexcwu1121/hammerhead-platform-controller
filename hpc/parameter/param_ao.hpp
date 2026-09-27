@@ -15,13 +15,13 @@ namespace param
 /// @brief Parameter management Active Object
 class ParamAO : public QP::QActive
 {
-   public:
+public:
     /// @brief Constructor
     ParamAO();
-    ParamAO(const ParamAO&)            = delete;
+    ParamAO(const ParamAO&) = delete;
     ParamAO& operator=(const ParamAO&) = delete;
-    ParamAO(ParamAO&&)                 = delete;
-    ParamAO& operator=(ParamAO&&)      = delete;
+    ParamAO(ParamAO&&) = delete;
+    ParamAO& operator=(ParamAO&&) = delete;
 
     static ParamAO& Inst()
     {
@@ -55,7 +55,7 @@ class ParamAO : public QP::QActive
     /// @brief Reset parameter values to default
     inline void ResetToDefaults();
 
-   private:
+private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
     /// @brief Event queue size
@@ -96,7 +96,7 @@ class ParamAO : public QP::QActive
     /// @brief Set and publish fault
     void SetFault(param::Fault fault, bool active);
 
-   private:
+private:
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
     {
@@ -113,15 +113,15 @@ class ParamAO : public QP::QActive
     /// @brief Set parameter value event
     class SetParamValueEvt : public QP::QEvt
     {
-       public:
+    public:
         ParameterID id;
-        Type        value;
+        Type value;
     };
 
     /// @brief Request parameter update event
     class ParamIndexEvt : public QP::QEvt
     {
-       public:
+    public:
         ParameterID id;
     };
 
@@ -138,8 +138,8 @@ inline void ParamAO::SetParam(ParameterID id, Type value)
     if (_isStarted)
     {
         SetParamValueEvt* evt = Q_NEW(SetParamValueEvt, PrivateSignals::SET_PARAM_VALUE_SIG);
-        evt->id               = id;
-        evt->value            = value;
+        evt->id = id;
+        evt->value = value;
         POST(evt, this);
     }
 }
@@ -149,7 +149,7 @@ inline void ParamAO::RequestUpdate(ParameterID id)
     if (_isStarted)
     {
         ParamIndexEvt* evt = Q_NEW(ParamIndexEvt, PrivateSignals::REQUEST_UPDATE_SIG);
-        evt->id            = id;
+        evt->id = id;
         POST(evt, this);
     }
 }
@@ -186,7 +186,7 @@ inline void ParamAO::PrintParam(ParameterID id)
     if (_isStarted)
     {
         ParamIndexEvt* evt = Q_NEW(ParamIndexEvt, PrivateSignals::PRINT_PARAM_SIG);
-        evt->id            = id;
+        evt->id = id;
         POST(evt, this);
     }
 }
