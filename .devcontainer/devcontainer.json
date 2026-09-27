@@ -15,7 +15,9 @@
         "ms-vscode.cpptools-extension-pack",
         "ms-vscode.cmake-tools",
         "mcu-debug.debug-tracker-vscode",
-        "marus25.cortex-debug"
+        "marus25.cortex-debug",
+        "xaver.clang-format",
+        "CS128.cs128-clang-tidy"
       ]
     }
   }
