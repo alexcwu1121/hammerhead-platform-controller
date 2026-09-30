@@ -139,7 +139,7 @@
 			(mirror no)
 			(drillshape 0)
 			(scaleselection 1)
-			(outputdirectory "mfr_revC/")
+			(outputdirectory "build_9_13_26/")
 		)
 	)
 	(net 0 "")

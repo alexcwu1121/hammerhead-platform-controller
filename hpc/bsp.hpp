@@ -5,7 +5,6 @@
 #include "can.h"
 #include "dma.h"
 #include "gpio.h"
-#include "i2c.h"
 #include "main.h"
 #include "parameter.hpp"
 #include "qpcpp.hpp"
@@ -35,25 +34,7 @@ enum ADCChannels : uint8_t
 
 /// @brief VIN voltage divider R1
 constexpr float VIN_DIV_R1 = 100000.0f;
-/// @brief VIN voltage divider R2/// @brief Slave operation codes
-enum opcode : uint8_t
-{
-    NO_OP = 0U,
-    WRITE_MC1_MODE,
-    WRITE_MC2_MODE,
-    WRITE_MC1_RATE,
-    WRITE_MC2_RATE,
-    WRITE_MC1_DUTY,
-    WRITE_MC2_DUTY,
-    WRITE_MC1_DIR,
-    WRITE_MC2_DIR,
-    WRITE_MC1_RESET,
-    WRITE_MC2_RESET,
-    WRITE_IMU_RESET,
-    WRITE_IMU_COMP,
-    READ_IMU_DATA,
-    NUM_OPS
-};
+/// @brief VIN voltage divider R2
 constexpr float VIN_DIV_R2 = 10000.0f;
 /// @brief Motor driver output voltage divider R1
 constexpr float VMIN_DIV_R1 = 68000.0f;

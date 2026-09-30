@@ -382,6 +382,9 @@ Q_STATE_DEF(MissionAO, root)
                 SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
             }
 
+            // Automatically clear fault state on successful transmission
+            SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, false);
+
             status_ = Q_RET_HANDLED;
             break;
         }

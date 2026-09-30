@@ -17,18 +17,12 @@ int main(void)
     MX_GPIO_Init();
     MX_DMA_Init();
     MX_ADC1_Init();
-    // MX_I2C1_Init();
-    MX_I2C2_Init();
     MX_SPI1_Init();
     MX_SPI2_Init();
     MX_TIM2_Init();
     MX_TIM3_Init();
     MX_USART1_UART_Init();
     MX_CAN_Init();
-
-    /// TODO: Why do I need to do this to unstick the i2c peripheral
-    HAL_I2C_DeInit(&hi2c2);
-    HAL_I2C_Init(&hi2c2);
 
     // Init event pools
     static QF_MPOOL_EL(QP::QEvt) smlPoolSto[50];  // small (bare signals)

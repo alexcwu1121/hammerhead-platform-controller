@@ -14,8 +14,6 @@ To quick-run pre-commit, builds, tests:
 `podman-compose run --build build-debug`
 `podman-compose run --build build-release`
 
-TODO
-- Add unit tests
-- Add interrupt-driven IMU and parameter SPI transactions
-- Refactor IMU compensation sequence into a state machine
-- Add battery curve and battery life indicator
+CAN ID claims:
+- Pub: 0x100 - 0x1FF
+- Sub: 0x200 - 0x2FF

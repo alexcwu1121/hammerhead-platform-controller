@@ -1,5 +1,7 @@
 #include "cli_binding.hpp"
 
+#include <cstring>
+
 #include "cli_ao.hpp"
 #include "imu_ao.hpp"
 #include "mission_ao.hpp"

@@ -30,6 +30,7 @@ extern "C" void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 namespace mc
 {
+/// TODO: following probably deserves to be its own driver
 /// @brief Motor controller device properties
 struct MotorControllerDevice
 {

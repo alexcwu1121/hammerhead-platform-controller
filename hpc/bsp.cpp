@@ -178,6 +178,10 @@ void QF::onStartup()
 
     // Start ADC DMA
     HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adcBuf, bsp::NUM_ADC_CHANNELS * bsp::NUM_ADC_SAMPLES);
+
+    // CAN RX interrupt
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0U, 0U);
+    HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
 }
 
 /// @brief QF idle callback
@@ -217,6 +221,12 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
     QK_ISR_ENTRY();
     HAL_DMA_IRQHandler(&hdma_adc1);
     QK_ISR_EXIT();
+}
+
+/// @brief CAN interrupt handler
+extern "C" void USB_LP_CAN1_RX0_IRQHandler(void)
+{
+    HAL_CAN_IRQHandler(&hcan);
 }
 
 /// @brief System clock configuration
