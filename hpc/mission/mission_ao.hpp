@@ -133,7 +133,7 @@ private:
     /// @brief Watchdog timer period
     static constexpr uint32_t _watchdogTimerInterval = bsp::TICKS_PER_SEC / 1U;
     /// @brief Whether or not watchdog is enabled
-    bool _watchdogEnable = true;
+    bool _watchdogEnable = false;
 
     /// @brief Last Vin
     float _lastVin = 0.0f;

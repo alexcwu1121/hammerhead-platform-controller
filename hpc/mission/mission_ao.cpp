@@ -43,7 +43,9 @@ enum SubCANID : uint16_t
     SUB_WRITE_MC2_RESET,
     SUB_WRITE_IMU_RESET,
     SUB_WRITE_IMU_COMP,
-    SUB_WRITE_WATCHDOG,
+    SUB_POKE_WATCHDOG,
+    SUB_ENABLE_WATCHDOG,
+    SUB_DISABLE_WATCHDOG,
     MAX_SUB_ID
 };
 
@@ -145,9 +147,19 @@ extern "C"
                         imu::IMUAO::Inst().RunIMUCompensation();
                         break;
                     }
-                    case SubCANID::SUB_WRITE_WATCHDOG:
+                    case SubCANID::SUB_POKE_WATCHDOG:
                     {
                         mission::MissionAO::Inst().PokeWatchdog();
+                        break;
+                    }
+                    case SubCANID::SUB_ENABLE_WATCHDOG:
+                    {
+                        mission::MissionAO::Inst().EnableWatchdog();
+                        break;
+                    }
+                    case SubCANID::SUB_DISABLE_WATCHDOG:
+                    {
+                        mission::MissionAO::Inst().DisableWatchdog();
                         break;
                     }
                     default:
