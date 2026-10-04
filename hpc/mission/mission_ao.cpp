@@ -20,6 +20,7 @@ enum PubCANID : uint16_t
     PUB_IMU_DATA_ACC_Z_GYR_X,
     PUB_IMU_DATA_GYR_Y_GYR_Z,
     PUB_BATT_SOC,
+    PUB_FAULT_INDEX = 0x120,  // starting index for faults
     MAX_PUB_ID
 };
 
@@ -205,6 +206,26 @@ void MissionAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
             }
             if (is_fault) { HAL_GPIO_WritePin(P_FAULT_LED_GPIO_Port, P_FAULT_LED_Pin, GPIO_PIN_SET); }
             else { HAL_GPIO_WritePin(P_FAULT_LED_GPIO_Port, P_FAULT_LED_Pin, GPIO_PIN_RESET); }
+        }
+
+        // Also publish update over CAN
+        _canTxHeader.DLC = 1;
+
+        // Dynamically compute can id from fault table
+        // id = fault_idx + subsystem_id*BSP_MAX_FAULTS + fault_id
+        _canTxHeader.StdId = PubCANID::PUB_FAULT_INDEX + id * bsp::MAX_SUBSYSTEM_FAULTS + fault;
+
+        // make sure we haven't overflowed into the sub id region
+        if (_canTxHeader.StdId >= SubCANIDIdx)
+        {
+            // we could trap ourselves in a recursion here...
+            return;
+        }
+
+        _canTxData[0] = active;
+        if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
+        {
+            SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
         }
     }
 }
@@ -468,8 +489,6 @@ Q_STATE_DEF(MissionAO, root)
 
             // publish over can
             _canTxHeader.DLC = 8;
-
-            // Accelerometer x and y
             _canTxHeader.StdId = PubCANID::PUB_BATT_SOC;
             memcpy(_canTxData, &_lastSOC, sizeof(float));
             memcpy(_canTxData + 4, &_lastVin, sizeof(float));
