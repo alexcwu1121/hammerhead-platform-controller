@@ -408,6 +408,11 @@ void cli::onMission(EmbeddedCli* cli, char* args, void* context)
                 mission::MissionAO::Inst().PrintFault();
                 handled = true;
             }
+            else if (strcmp(cmd_str, "print_batt") == 0)
+            {
+                mission::MissionAO::Inst().PrintBatt();
+                handled = true;
+            }
             break;
         }
         default:

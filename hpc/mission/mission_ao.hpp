@@ -76,6 +76,9 @@ public:
     /// @brief Print system fault state
     inline void PrintFault();
 
+    /// @brief Print battery state
+    inline void PrintBatt();
+
 private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -97,6 +100,16 @@ private:
     /// @brief Latest faults from all subsystems, including mission subsystem
     bool _faultStates[bsp::SubsystemID::NUM_SUBSYSTEMS][bsp::MAX_SUBSYSTEM_FAULTS] = {0};
 
+    /// @brief Simple battery discharge curve linear interpolant model voltages
+    std::array<float, 4> _battV {0.0f};
+    /// @brief Simple battery discharge curve linear interpolant model SOCs
+    std::array<float, 4> _battS {0.0f};
+
+    /// @brief Last Vin
+    float _lastVin = 0.0f;
+    /// @brief Last computed SOC
+    float _lastSOC = 0.0f;
+
     /// @brief CAN TX header
     CAN_TxHeaderTypeDef _canTxHeader;
     /// @brief CAN TX data
@@ -113,6 +126,7 @@ private:  // NOLINT
         RESET_SIG,
         SUBS_FAULT_REQUEST_SIG,
         PRINT_FAULT_SIG,
+        PRINT_BATT_SIG,
         MAX_PRIV_SIG
     };
 
@@ -145,6 +159,15 @@ inline void MissionAO::PrintFault()
     if (_isStarted)
     {
         static QP::QEvt evt(PrivateSignals::PRINT_FAULT_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void MissionAO::PrintBatt()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::PRINT_BATT_SIG);
         POST(&evt, this);
     }
 }

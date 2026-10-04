@@ -19,6 +19,7 @@ enum PubCANID : uint16_t
     PUB_IMU_DATA_ACC_XY = PubCANIDIdx,
     PUB_IMU_DATA_ACC_Z_GYR_X,
     PUB_IMU_DATA_GYR_Y_GYR_Z,
+    PUB_BATT_SOC,
     MAX_PUB_ID
 };
 
@@ -214,6 +215,7 @@ Q_STATE_DEF(MissionAO, initial)
     subscribe(bsp::PublicSignals::FAULT_SIG);
     subscribe(bsp::PublicSignals::PARAMETER_UPDATE_SIG);
     subscribe(bsp::PublicSignals::IMU_SIG);
+    subscribe(bsp::PublicSignals::ADC_SIG);
 
     return tran(&initializing);
 }
@@ -328,30 +330,79 @@ Q_STATE_DEF(MissionAO, root)
             status_ = Q_RET_HANDLED;
             break;
         }
+        case PrivateSignals::PRINT_BATT_SIG:
+        {
+            cli::CLIAO::Inst().Printf(
+                ">>>>>>>>>>>>>>\n\r"
+                "Vin: %+7.4f V\n\r"
+                "SOC: %+7.4f %\n\r"
+                ">>>>>>>>>>>>>>\n\r",
+                _lastVin, _lastSOC);
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         case bsp::PublicSignals::PARAMETER_UPDATE_SIG:
         {
-            // param::ParameterID id  = Q_EVT_CAST(bsp::ParameterUpdateEvt)->id;
-            // param::Type        val = Q_EVT_CAST(bsp::ParameterUpdateEvt)->value;
+            param::ParameterID id = Q_EVT_CAST(bsp::ParameterUpdateEvt)->id;
+            param::Type val = Q_EVT_CAST(bsp::ParameterUpdateEvt)->value;
 
             // Update parameter value
-            // switch (id)
-            //{
-            // default:
-            //{
-            //    break;
-            //}
-            //}
+            switch (id)
+            {
+                case param::ParameterID::BATTERY_DISCHARGE_CURVE_V0:
+                {
+                    _battV[0] = val._float32;
+                    break;
+                }
+                case param::ParameterID::BATTERY_DISCHARGE_CURVE_S0:
+                {
+                    _battS[0] = val._float32;
+                    break;
+                }
+                case param::ParameterID::BATTERY_DISCHARGE_CURVE_V1:
+                {
+                    _battV[1] = val._float32;
+                    break;
+                }
+                case param::ParameterID::BATTERY_DISCHARGE_CURVE_S1:
+                {
+                    _battS[1] = val._float32;
+                    break;
+                }
+                case param::ParameterID::BATTERY_DISCHARGE_CURVE_V2:
+                {
+                    _battV[2] = val._float32;
+                    break;
+                }
+                case param::ParameterID::BATTERY_DISCHARGE_CURVE_S2:
+                {
+                    _battS[2] = val._float32;
+                    break;
+                }
+                case param::ParameterID::BATTERY_DISCHARGE_CURVE_V3:
+                {
+                    _battV[3] = val._float32;
+                    break;
+                }
+                case param::ParameterID::BATTERY_DISCHARGE_CURVE_S3:
+                {
+                    _battS[3] = val._float32;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
 
             status_ = Q_RET_HANDLED;
             break;
         }
         case bsp::PublicSignals::IMU_SIG:
         {
-            _canTxHeader.ExtId = 0x00;
-            _canTxHeader.IDE = CAN_ID_STD;
-            _canTxHeader.RTR = CAN_RTR_DATA;
+            // sending two floats each packet
             _canTxHeader.DLC = 8;
-            _canTxHeader.TransmitGlobalTime = DISABLE;
 
             // Fragment IMU data into 8 byte chunks and send
 
@@ -388,6 +439,48 @@ Q_STATE_DEF(MissionAO, root)
             status_ = Q_RET_HANDLED;
             break;
         }
+        case bsp::PublicSignals::ADC_SIG:
+        {
+            // Linearly interpolate SOC in percent from input voltage adc measurement
+
+            /// TODO: this platform has no true BMS, so I'm not going to spend more time on this
+
+            if (_battV.size() < 2)
+            {
+                // nothing to interpolate. report nothing.
+                status_ = Q_RET_HANDLED;
+                break;
+            }
+
+            _lastVin = Q_EVT_CAST(bsp::ADCEvt)->adcVoltages[bsp::ADCChannels::VIN];
+
+            // linear interpolation
+            // assumes both voltage and SOC sequences are monotonically increasing
+            for (uint8_t i = 1; i < _battV.size(); i++)
+            {
+                if (_lastVin < _battV[i] && _lastVin > _battV[i - 1])
+                {
+                    // interpolate
+                    _lastSOC = _battS[i - 1] +
+                               (_battS[i] - _battS[i - 1]) * (_lastVin - _battV[i - 1]) / (_battV[i] - _battV[i - 1]);
+                }
+            }
+
+            // publish over can
+            _canTxHeader.DLC = 8;
+
+            // Accelerometer x and y
+            _canTxHeader.StdId = PubCANID::PUB_BATT_SOC;
+            memcpy(_canTxData, &_lastSOC, sizeof(float));
+            memcpy(_canTxData + 4, &_lastVin, sizeof(float));
+            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
+            {
+                SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
+            }
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default:
         {
             status_ = super(&top);
@@ -405,7 +498,14 @@ Q_STATE_DEF(MissionAO, initializing)
         case Q_ENTRY_SIG:
         {
             // Request parameters
-            param::ParamAO::Inst().RequestUpdate(param::ParameterID::MM_I2C_ADDR);
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::BATTERY_DISCHARGE_CURVE_V0);
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::BATTERY_DISCHARGE_CURVE_S0);
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::BATTERY_DISCHARGE_CURVE_V1);
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::BATTERY_DISCHARGE_CURVE_S1);
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::BATTERY_DISCHARGE_CURVE_V2);
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::BATTERY_DISCHARGE_CURVE_S2);
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::BATTERY_DISCHARGE_CURVE_V3);
+            param::ParamAO::Inst().RequestUpdate(param::ParameterID::BATTERY_DISCHARGE_CURVE_S3);
 
             // Set up CAN filters
             CAN_FilterTypeDef can_filter;
@@ -418,6 +518,12 @@ Q_STATE_DEF(MissionAO, initializing)
             can_filter.FilterMaskIdLow = 0x0000;
             can_filter.FilterFIFOAssignment = CAN_RX_FIFO0;
             can_filter.FilterActivation = ENABLE;
+
+            // Initialize can tx header
+            _canTxHeader.ExtId = 0x00;
+            _canTxHeader.IDE = CAN_ID_STD;
+            _canTxHeader.RTR = CAN_RTR_DATA;
+            _canTxHeader.TransmitGlobalTime = DISABLE;
 
             if (HAL_CAN_ConfigFilter(&hcan, &can_filter) != HAL_OK)
             {

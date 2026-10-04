@@ -13,6 +13,6 @@ repos:
     hooks:
       - id: clang-format
         args: ["-i"]
-        exclude: 'hpc/hal/.*|kicad/.*'
+        exclude: 'hpc/hal/.*|kicad/.*|matlab/.*'
       #- id: clang-tidy
       #  args: ["--quiet"]
