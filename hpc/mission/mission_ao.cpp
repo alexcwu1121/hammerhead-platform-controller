@@ -20,6 +20,7 @@ enum PubCANID : uint16_t
     PUB_IMU_DATA_ACC_Z_GYR_X,
     PUB_IMU_DATA_GYR_Y_GYR_Z,
     PUB_BATT_SOC,
+    PUB_HEARTBEAT,
     PUB_FAULT_INDEX = 0x120,  // starting index for faults
     MAX_PUB_ID
 };
@@ -42,6 +43,7 @@ enum SubCANID : uint16_t
     SUB_WRITE_MC2_RESET,
     SUB_WRITE_IMU_RESET,
     SUB_WRITE_IMU_COMP,
+    SUB_WRITE_WATCHDOG,
     MAX_SUB_ID
 };
 
@@ -143,6 +145,11 @@ extern "C"
                         imu::IMUAO::Inst().RunIMUCompensation();
                         break;
                     }
+                    case SubCANID::SUB_WRITE_WATCHDOG:
+                    {
+                        mission::MissionAO::Inst().PokeWatchdog();
+                        break;
+                    }
                     default:
                     {
                         break;
@@ -158,7 +165,10 @@ namespace mission
 MissionAO::MissionAO() :
     QP::QActive(&initial),
     _faultRecoveryTimer(this, PrivateSignals::RESET_SIG, 0U),
-    _faultRequestTimer(this, PrivateSignals::SUBS_FAULT_REQUEST_SIG, 0U)
+    _faultRequestTimer(this, PrivateSignals::SUBS_FAULT_REQUEST_SIG, 0U),
+    _battPubTimer(this, PrivateSignals::CAN_PUB_BATT_SIG, 0U),
+    _heartbeatTimer(this, PrivateSignals::HEARTBEAT_SIG, 0U),
+    _watchdogTimer(this, PrivateSignals::WATCHDOG_EXPIRED_SIG, 0U)
 {}
 
 void MissionAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
@@ -487,15 +497,51 @@ Q_STATE_DEF(MissionAO, root)
                 }
             }
 
-            // publish over can
-            _canTxHeader.DLC = 8;
-            _canTxHeader.StdId = PubCANID::PUB_BATT_SOC;
-            memcpy(_canTxData, &_lastSOC, sizeof(float));
-            memcpy(_canTxData + 4, &_lastVin, sizeof(float));
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::HEARTBEAT_SIG:
+        {
+            _canTxHeader.DLC = 0;
+            _canTxHeader.StdId = PubCANID::PUB_HEARTBEAT;
             if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
             {
                 SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
             }
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::POKE_WATCHDOG_SIG:
+        {
+            // rearm the watchdog timer
+            _watchdogTimer.rearm(_watchdogTimerInterval);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::WATCHDOG_EXPIRED_SIG:
+        {
+            SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::WATCHDOG_FAULT, true);
+            status_ = tran(&selfprotect);
+            break;
+        }
+        case PrivateSignals::ENABLE_WATCHDOG_SIG:
+        {
+            // enable and rearm watchdog
+            /// TODO: you could hack this and use this like a poke... probably not a problem?
+            _watchdogEnable = true;
+            _watchdogTimer.rearm(_watchdogTimerInterval);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::DISABLE_WATCHDOG_SIG:
+        {
+            // disable watchdog timer
+            _watchdogEnable = false;
+            _watchdogTimer.disarm();
+
+            // clear fault if applicable (should never be)
+            SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::WATCHDOG_FAULT, false);
 
             status_ = Q_RET_HANDLED;
             break;
@@ -554,9 +600,13 @@ Q_STATE_DEF(MissionAO, initializing)
             // Start CAN peripheral
             if (HAL_CAN_Start(&hcan) != HAL_OK)
             {
-                MissionAO::SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_INIT_FAILED, true);
-                status_ = tran(&error);
-                break;
+                // error code should be HAL_CAN_ERROR_NOT_READY if CAN is already started
+                if (hcan.ErrorCode != HAL_CAN_ERROR_NOT_READY)
+                {
+                    MissionAO::SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_INIT_FAILED, true);
+                    status_ = tran(&error);
+                    break;
+                }
             }
 
             // Enable recieve interrupt
@@ -567,7 +617,21 @@ Q_STATE_DEF(MissionAO, initializing)
                 break;
             }
 
+            if (!_hasFirstTimeInit)
+            {
+                // Arm heartbeat timer asap (and never disarm)
+                _heartbeatTimer.armX(_heartbeatTimerInterval, _heartbeatTimerInterval);
+                // Arm fault request timer
+                _faultRequestTimer.armX(_faultRequestTimerInterval, _faultRequestTimerInterval);
+                // Arm battery state CAN pub timer
+                _battPubTimer.armX(_battPubTimerInterval, _battPubTimerInterval);
+            }
+
+            // Arm watchdog timer
+            if (_watchdogEnable) { _watchdogTimer.armX(_watchdogTimerInterval, 0U); }
+
             // Finish initialization
+            _hasFirstTimeInit = true;
             static QP::QEvt evt(PrivateSignals::INITIALIZED_SIG);
             POST(&evt, this);
 
@@ -593,16 +657,18 @@ Q_STATE_DEF(MissionAO, active)
     QP::QState status_;
     switch (e->sig)
     {
-        case Q_ENTRY_SIG:
+        case PrivateSignals::CAN_PUB_BATT_SIG:
         {
-            // Arm subsystem fault heartbeat timer
-            _faultRequestTimer.armX(_faultRequestTimerInterval, _faultRequestTimerInterval);
+            // publish over can
+            _canTxHeader.DLC = 8;
+            _canTxHeader.StdId = PubCANID::PUB_BATT_SOC;
+            memcpy(_canTxData, &_lastSOC, sizeof(float));
+            memcpy(_canTxData + 4, &_lastVin, sizeof(float));
+            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
+            {
+                SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
+            }
 
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        case Q_EXIT_SIG:
-        {
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -643,6 +709,55 @@ Q_STATE_DEF(MissionAO, error)
             for (uint8_t fault = 0U; fault < Fault::NUM_FAULTS; fault++) { SetFault(_id, fault, false); }
 
             status_ = Q_RET_HANDLED;
+            break;
+        }
+        default:
+        {
+            status_ = super(&root);
+            break;
+        }
+    }
+    return status_;
+}
+
+Q_STATE_DEF(MissionAO, selfprotect)
+{
+    QP::QState status_;
+    switch (e->sig)
+    {
+        case Q_ENTRY_SIG:
+        {
+            // Disable motors
+            mc::MotorControlAO::MC1Inst().SetWatchdogFault();
+            mc::MotorControlAO::MC2Inst().SetWatchdogFault();
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case Q_EXIT_SIG:
+        {
+            // Reenable motors
+            mc::MotorControlAO::MC1Inst().UnsetWatchdogFault();
+            mc::MotorControlAO::MC2Inst().UnsetWatchdogFault();
+
+            // Clear watchdog fault
+            SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::WATCHDOG_FAULT, false);
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::POKE_WATCHDOG_SIG:
+        {
+            // watchdog will be rearmed in initializing if enabled
+            status_ = tran(&initializing);
+            break;
+        }
+        case PrivateSignals::DISABLE_WATCHDOG_SIG:
+        {
+            // disabling watchdog will both disable timer and exit selfprotect mode
+            _watchdogEnable = false;
+            _watchdogTimer.disarm();
+            status_ = tran(&initializing);
             break;
         }
         default:

@@ -19,6 +19,7 @@ enum Fault : uint8_t
     UNDERVOLTAGE_FAULT = 0U,
     OVERVOLTAGE_FAULT,
     OVERCURRENT_THERMAL_FAULT,
+    WATCHDOG_FAULT,
     NUM_FAULTS
 };
 
@@ -40,6 +41,10 @@ constexpr const char* FaultToStr(Fault fault)
         case Fault::OVERCURRENT_THERMAL_FAULT:
         {
             return "OVERCURRENT_THERMAL_FAULT";
+        }
+        case Fault::WATCHDOG_FAULT:
+        {
+            return "WATCHDOG_FAULT";
         }
         default:
         {
@@ -106,6 +111,12 @@ public:
     /// @brief Set motor control mode
     /// @param mode
     inline void SetMode(Mode mode);
+
+    /// @brief Set watchdog fault
+    inline void SetWatchdogFault();
+
+    /// @brief Disable watchdog fault
+    inline void UnsetWatchdogFault();
 
     /// @brief Handle motor controller fault interrupt
     inline void FaultIT();
@@ -180,6 +191,8 @@ private:
         VM_UPDATED_SIG,
         FAULT_RECOVERY_SIG,
         RATE_CONTROL_UPDATE_SIG,
+        SET_WATCHDOG_FAULT_SIG,
+        UNSET_WATCHDOG_FAULT_SIG,
         MAX_PRIV_SIG
     };
 
@@ -283,6 +296,24 @@ inline void MotorControlAO::FaultIT()
     if (_isStarted)
     {
         static QP::QEvt evt(PrivateSignals::FAULT_IT_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void MotorControlAO::SetWatchdogFault()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::SET_WATCHDOG_FAULT_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void MotorControlAO::UnsetWatchdogFault()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::UNSET_WATCHDOG_FAULT_SIG);
         POST(&evt, this);
     }
 }

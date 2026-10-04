@@ -413,6 +413,16 @@ void cli::onMission(EmbeddedCli* cli, char* args, void* context)
                 mission::MissionAO::Inst().PrintBatt();
                 handled = true;
             }
+            else if (strcmp(cmd_str, "enable_watchdog") == 0)
+            {
+                mission::MissionAO::Inst().EnableWatchdog();
+                handled = true;
+            }
+            else if (strcmp(cmd_str, "disable_watchdog") == 0)
+            {
+                mission::MissionAO::Inst().DisableWatchdog();
+                handled = true;
+            }
             break;
         }
         default:
@@ -426,7 +436,10 @@ void cli::onMission(EmbeddedCli* cli, char* args, void* context)
         // Help dialogue
         cli::CLIAO::Inst().Printf(
             "Usage:\n\r"
-            "\tmission print_fault\n\r");
+            "\tmission print_fault\n\r"
+            "\tmission print_batt\n\r"
+            "\tmission enable_watchdog\n\r"
+            "\tmission disable_watchdog\n\r");
     }
 }
 

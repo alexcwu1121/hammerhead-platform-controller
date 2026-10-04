@@ -12,6 +12,7 @@ enum Fault : uint8_t
     BATT_LOW,
     BATT_CRITICAL,
     MISSION_CAN_TX_FAILED,
+    WATCHDOG_FAULT,
     NUM_FAULTS
 };
 
@@ -37,6 +38,10 @@ constexpr const char* FaultToStr(Fault fault)
         case Fault::MISSION_CAN_TX_FAILED:
         {
             return "MISSION_CAN_TX_FAILED";
+        }
+        case Fault::WATCHDOG_FAULT:
+        {
+            return "WATCHDOG_FAULT";
         }
         default:
         {
@@ -79,6 +84,15 @@ public:
     /// @brief Print battery state
     inline void PrintBatt();
 
+    /// @brief Poke watchdog
+    inline void PokeWatchdog();
+
+    /// @brief Enable watchdog
+    inline void EnableWatchdog();
+
+    /// @brief Disable watchdog
+    inline void DisableWatchdog();
+
 private:
     /// @brief Subsystem ID
     bsp::SubsystemID _id;
@@ -89,7 +103,7 @@ private:
     /// @brief Flag indicating if AO has executed initial transition
     bool _isStarted = false;
 
-    /// @brief Internal fault recovery timer
+    /// @brief Internal fault recovery timer/ reset the watchdog timer
     QP::QTimeEvt _faultRecoveryTimer;
     /// @brief Internal fault recovery timer period in ticks
     uint32_t _faultRecoveryTimerInterval = bsp::TICKS_PER_SEC / 100U;
@@ -100,10 +114,26 @@ private:
     /// @brief Latest faults from all subsystems, including mission subsystem
     bool _faultStates[bsp::SubsystemID::NUM_SUBSYSTEMS][bsp::MAX_SUBSYSTEM_FAULTS] = {0};
 
+    /// @brief Battery state CAN publish timer
+    QP::QTimeEvt _battPubTimer;
+    /// @brief Battery state CAN publish timer period
+    static constexpr uint32_t _battPubTimerInterval = bsp::TICKS_PER_SEC / 5U;
     /// @brief Simple battery discharge curve linear interpolant model voltages
     std::array<float, 4> _battV {0.0f};
     /// @brief Simple battery discharge curve linear interpolant model SOCs
     std::array<float, 4> _battS {0.0f};
+
+    /// @brief Heartbeat CAN publish timer
+    QP::QTimeEvt _heartbeatTimer;
+    /// @brief Heartbeat CAN publish timer period
+    static constexpr uint32_t _heartbeatTimerInterval = bsp::TICKS_PER_SEC / 5U;
+
+    /// @brief Watchdog timer
+    QP::QTimeEvt _watchdogTimer;
+    /// @brief Watchdog timer period
+    static constexpr uint32_t _watchdogTimerInterval = bsp::TICKS_PER_SEC / 1U;
+    /// @brief Whether or not watchdog is enabled
+    bool _watchdogEnable = true;
 
     /// @brief Last Vin
     float _lastVin = 0.0f;
@@ -117,6 +147,10 @@ private:
     /// @brief CAN TX mailbox
     uint32_t _canTxMailbox;
 
+    /// @brief Track if this AO has successfully initialized once. Certain steps in initialization should be skipped
+    /// after first time.
+    bool _hasFirstTimeInit = false;
+
 private:  // NOLINT
     /// @brief Private CLIAO signals
     enum PrivateSignals : QP::QSignal
@@ -127,6 +161,12 @@ private:  // NOLINT
         SUBS_FAULT_REQUEST_SIG,
         PRINT_FAULT_SIG,
         PRINT_BATT_SIG,
+        CAN_PUB_BATT_SIG,
+        HEARTBEAT_SIG,
+        POKE_WATCHDOG_SIG,
+        WATCHDOG_EXPIRED_SIG,
+        ENABLE_WATCHDOG_SIG,
+        DISABLE_WATCHDOG_SIG,
         MAX_PRIV_SIG
     };
 
@@ -143,6 +183,8 @@ private:  // NOLINT
     Q_STATE_DECL(active);
     /// @brief Fault
     Q_STATE_DECL(error);
+    /// @brief Protect the platform. Entered when watchdog expires.
+    Q_STATE_DECL(selfprotect);
 };  // class MissionAO
 
 inline void MissionAO::Reset()
@@ -168,6 +210,33 @@ inline void MissionAO::PrintBatt()
     if (_isStarted)
     {
         static QP::QEvt evt(PrivateSignals::PRINT_BATT_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void MissionAO::PokeWatchdog()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::POKE_WATCHDOG_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void MissionAO::EnableWatchdog()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::ENABLE_WATCHDOG_SIG);
+        POST(&evt, this);
+    }
+}
+
+inline void MissionAO::DisableWatchdog()
+{
+    if (_isStarted)
+    {
+        static QP::QEvt evt(PrivateSignals::DISABLE_WATCHDOG_SIG);
         POST(&evt, this);
     }
 }

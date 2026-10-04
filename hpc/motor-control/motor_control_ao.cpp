@@ -150,7 +150,7 @@ void mc::MotorControlAO::UpdateFaults()
             bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
             evt->id = _id;
             evt->fault = mc::Fault::UNDERVOLTAGE_FAULT;
-            evt->fault = undervoltage_fault;
+            evt->active = undervoltage_fault;
             PUBLISH(evt, this);
 
             _faultStates[mc::Fault::UNDERVOLTAGE_FAULT] = undervoltage_fault;
@@ -165,7 +165,7 @@ void mc::MotorControlAO::UpdateFaults()
             bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
             evt->id = _id;
             evt->fault = mc::Fault::OVERVOLTAGE_FAULT;
-            evt->fault = overvoltage_fault;
+            evt->active = overvoltage_fault;
             PUBLISH(evt, this);
 
             _faultStates[mc::Fault::OVERVOLTAGE_FAULT] = overvoltage_fault;
@@ -321,6 +321,32 @@ Q_STATE_DEF(mc::MotorControlAO, root)
                 evt->active = _faultStates[fault];
                 PUBLISH(evt, this);
             }
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::SET_WATCHDOG_FAULT_SIG:
+        {
+            _faultStates[Fault::WATCHDOG_FAULT] = true;
+
+            bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+            evt->id = _id;
+            evt->fault = mc::Fault::WATCHDOG_FAULT;
+            evt->active = true;
+            PUBLISH(evt, this);
+
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::UNSET_WATCHDOG_FAULT_SIG:
+        {
+            _faultStates[Fault::WATCHDOG_FAULT] = false;
+
+            bsp::FaultEvt* evt = Q_NEW(bsp::FaultEvt, bsp::PublicSignals::FAULT_SIG);
+            evt->id = _id;
+            evt->fault = mc::Fault::WATCHDOG_FAULT;
+            evt->active = false;
+            PUBLISH(evt, this);
+
             status_ = Q_RET_HANDLED;
             break;
         }
