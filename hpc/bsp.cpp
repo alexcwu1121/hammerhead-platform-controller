@@ -182,6 +182,10 @@ void QF::onStartup()
     // CAN RX interrupt
     HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0U, 0U);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
+
+    // CAN TX interrupt
+    HAL_NVIC_SetPriority(USB_HP_CAN1_TX_IRQn, 0U, 0U);
+    HAL_NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
 }
 
 /// @brief QF idle callback

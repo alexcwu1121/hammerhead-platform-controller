@@ -49,127 +49,174 @@ enum SubCANID : uint16_t
     MAX_SUB_ID
 };
 
-extern "C"
+/// @brief CAN receive fifo message callback
+/// @param hcan
+extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
 {
-    /// @brief CAN receive fifo message callback
-    /// @param hcan
-    void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
-    {
-        CAN_RxHeaderTypeDef header;
-        uint8_t data[8];
+    CAN_RxHeaderTypeDef header;
+    uint8_t data[8];
 
-        // Retrieve the pending message
-        if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &header, data) == HAL_OK)
+    // Retrieve the pending message
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &header, data) == HAL_OK)
+    {
+        /// TODO: Only standard IDs supported
+        if (header.IDE == CAN_ID_STD)
         {
-            /// TODO: Only standard IDs supported
-            if (header.IDE == CAN_ID_STD)
+            // Inject events
+            switch (header.StdId)
             {
-                // Inject events
-                switch (header.StdId)
+                case SubCANID::SUB_WRITE_MC1_MODE:
                 {
-                    case SubCANID::SUB_WRITE_MC1_MODE:
+                    if (header.DLC == 1) { mc::MotorControlAO::MC1Inst().SetMode(static_cast<mc::Mode>(data[0])); }
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC2_MODE:
+                {
+                    if (header.DLC == 1) { mc::MotorControlAO::MC2Inst().SetMode(static_cast<mc::Mode>(data[0])); }
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC1_RATE:
+                {
+                    if (header.DLC == 4)
                     {
-                        if (header.DLC == 1) { mc::MotorControlAO::MC1Inst().SetMode(static_cast<mc::Mode>(data[0])); }
-                        break;
+                        float rate = 0.0f;
+                        memcpy(&rate, data, sizeof(float));
+                        mc::MotorControlAO::MC1Inst().SetRate(rate);
                     }
-                    case SubCANID::SUB_WRITE_MC2_MODE:
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC2_RATE:
+                {
+                    if (header.DLC == 4)
                     {
-                        if (header.DLC == 1) { mc::MotorControlAO::MC2Inst().SetMode(static_cast<mc::Mode>(data[0])); }
-                        break;
+                        float rate = 0.0f;
+                        memcpy(&rate, data, sizeof(float));
+                        mc::MotorControlAO::MC2Inst().SetRate(rate);
                     }
-                    case SubCANID::SUB_WRITE_MC1_RATE:
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC1_DUTY:
+                {
+                    if (header.DLC == 2)
                     {
-                        if (header.DLC == 4)
-                        {
-                            float rate = 0.0f;
-                            memcpy(&rate, data, sizeof(float));
-                            mc::MotorControlAO::MC1Inst().SetRate(rate);
-                        }
-                        break;
+                        uint16_t duty = 0u;
+                        memcpy(&duty, data, sizeof(uint16_t));
+                        mc::MotorControlAO::MC1Inst().SetDuty(duty);
                     }
-                    case SubCANID::SUB_WRITE_MC2_RATE:
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC2_DUTY:
+                {
+                    if (header.DLC == 2)
                     {
-                        if (header.DLC == 4)
-                        {
-                            float rate = 0.0f;
-                            memcpy(&rate, data, sizeof(float));
-                            mc::MotorControlAO::MC2Inst().SetRate(rate);
-                        }
-                        break;
+                        uint16_t duty = 0u;
+                        memcpy(&duty, data, sizeof(uint16_t));
+                        mc::MotorControlAO::MC2Inst().SetDuty(duty);
                     }
-                    case SubCANID::SUB_WRITE_MC1_DUTY:
-                    {
-                        if (header.DLC == 2)
-                        {
-                            uint16_t duty = 0u;
-                            memcpy(&duty, data, sizeof(uint16_t));
-                            mc::MotorControlAO::MC1Inst().SetDuty(duty);
-                        }
-                        break;
-                    }
-                    case SubCANID::SUB_WRITE_MC2_DUTY:
-                    {
-                        if (header.DLC == 2)
-                        {
-                            uint16_t duty = 0u;
-                            memcpy(&duty, data, sizeof(uint16_t));
-                            mc::MotorControlAO::MC2Inst().SetDuty(duty);
-                        }
-                        break;
-                    }
-                    case SubCANID::SUB_WRITE_MC1_DIR:
-                    {
-                        if (header.DLC == 1) { mc::MotorControlAO::MC1Inst().SetDir(static_cast<mc::Dir>(data[0])); }
-                        break;
-                    }
-                    case SubCANID::SUB_WRITE_MC2_DIR:
-                    {
-                        if (header.DLC == 1) { mc::MotorControlAO::MC2Inst().SetDir(static_cast<mc::Dir>(data[0])); }
-                        break;
-                    }
-                    case SubCANID::SUB_WRITE_MC1_RESET:
-                    {
-                        mc::MotorControlAO::MC1Inst().Reset();
-                        break;
-                    }
-                    case SubCANID::SUB_WRITE_MC2_RESET:
-                    {
-                        mc::MotorControlAO::MC2Inst().Reset();
-                        break;
-                    }
-                    case SubCANID::SUB_WRITE_IMU_RESET:
-                    {
-                        imu::IMUAO::Inst().Reset();
-                        break;
-                    }
-                    case SubCANID::SUB_WRITE_IMU_COMP:
-                    {
-                        imu::IMUAO::Inst().RunIMUCompensation();
-                        break;
-                    }
-                    case SubCANID::SUB_POKE_WATCHDOG:
-                    {
-                        mission::MissionAO::Inst().PokeWatchdog();
-                        break;
-                    }
-                    case SubCANID::SUB_ENABLE_WATCHDOG:
-                    {
-                        mission::MissionAO::Inst().EnableWatchdog();
-                        break;
-                    }
-                    case SubCANID::SUB_DISABLE_WATCHDOG:
-                    {
-                        mission::MissionAO::Inst().DisableWatchdog();
-                        break;
-                    }
-                    default:
-                    {
-                        break;
-                    }
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC1_DIR:
+                {
+                    if (header.DLC == 1) { mc::MotorControlAO::MC1Inst().SetDir(static_cast<mc::Dir>(data[0])); }
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC2_DIR:
+                {
+                    if (header.DLC == 1) { mc::MotorControlAO::MC2Inst().SetDir(static_cast<mc::Dir>(data[0])); }
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC1_RESET:
+                {
+                    mc::MotorControlAO::MC1Inst().Reset();
+                    break;
+                }
+                case SubCANID::SUB_WRITE_MC2_RESET:
+                {
+                    mc::MotorControlAO::MC2Inst().Reset();
+                    break;
+                }
+                case SubCANID::SUB_WRITE_IMU_RESET:
+                {
+                    imu::IMUAO::Inst().Reset();
+                    break;
+                }
+                case SubCANID::SUB_WRITE_IMU_COMP:
+                {
+                    imu::IMUAO::Inst().RunIMUCompensation();
+                    break;
+                }
+                case SubCANID::SUB_POKE_WATCHDOG:
+                {
+                    mission::MissionAO::Inst().PokeWatchdog();
+                    break;
+                }
+                case SubCANID::SUB_ENABLE_WATCHDOG:
+                {
+                    mission::MissionAO::Inst().EnableWatchdog();
+                    break;
+                }
+                case SubCANID::SUB_DISABLE_WATCHDOG:
+                {
+                    mission::MissionAO::Inst().DisableWatchdog();
+                    break;
+                }
+                default:
+                {
+                    break;
                 }
             }
         }
     }
+}
+
+/// @brief CAN TX mailbox 0 transmission complete callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef* hcan)
+{
+    mission::MissionAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 1 transmission complete callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef* hcan)
+{
+    mission::MissionAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 2 transmission complete callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef* hcan)
+{
+    mission::MissionAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 0 abort callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox0AbortCallback(CAN_HandleTypeDef* hcan)
+{
+    mission::MissionAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 1 abort callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox1AbortCallback(CAN_HandleTypeDef* hcan)
+{
+    mission::MissionAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN TX mailbox 2 abort callback
+/// @param hcan
+extern "C" void HAL_CAN_TxMailbox2AbortCallback(CAN_HandleTypeDef* hcan)
+{
+    mission::MissionAO::Inst().NotifyCANTxReady();
+}
+
+/// @brief CAN error callback. A failed transmission (arbitration lost or transmit error) releases its mailbox and
+/// is only reported here since automatic retransmission is disabled.
+/// @param hcan
+extern "C" void HAL_CAN_ErrorCallback(CAN_HandleTypeDef* hcan)
+{
+    mission::MissionAO::Inst().NotifyCANTxReady();
 }
 
 namespace mission
@@ -186,6 +233,7 @@ MissionAO::MissionAO() :
 void MissionAO::Start(const QP::QPrioSpec priority, bsp::SubsystemID id)
 {
     _id = id;
+    _canTxDeferQueue.init(_canTxDeferQueueSto, _canTxDeferQueueSize);
     _isStarted = true;
     this->start(priority,      // QP prio. of the AO
                 _queue,        // event queue storage
@@ -230,26 +278,68 @@ void MissionAO::SetFault(bsp::SubsystemID id, uint8_t fault, bool active)
             else { HAL_GPIO_WritePin(P_FAULT_LED_GPIO_Port, P_FAULT_LED_Pin, GPIO_PIN_RESET); }
         }
 
-        // Also publish update over CAN
-        _canTxHeader.DLC = 1;
-
-        // Dynamically compute can id from fault table
-        // id = fault_idx + subsystem_id*BSP_MAX_FAULTS + fault_id
-        _canTxHeader.StdId = PubCANID::PUB_FAULT_INDEX + id * bsp::MAX_SUBSYSTEM_FAULTS + fault;
-
         // make sure we haven't overflowed into the sub id region
-        if (_canTxHeader.StdId >= SubCANIDIdx)
+        auto stdid = PubCANID::PUB_FAULT_INDEX + id * bsp::MAX_SUBSYSTEM_FAULTS + fault;
+
+        if (stdid >= SubCANIDIdx)
         {
-            // we could trap ourselves in a recursion here...
+            // we could trap ourselves in a recursion here if the fault is can tx fault...
+            // just don't report this particular fault if address overflow has occurred
             return;
         }
 
-        _canTxData[0] = active;
-        if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-        {
-            SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
-        }
+        TransmitCAN(stdid, (uint8_t*)&active, 1);
     }
+}
+
+void MissionAO::TransmitCAN(uint16_t stdId, const uint8_t* data, uint8_t dlc)
+{
+    // Send immediately if nothing is waiting ahead of this frame and a mailbox is free
+    if (_canTxDeferQueue.isEmpty() && HAL_CAN_GetTxMailboxesFreeLevel(&hcan) > 0U)
+    {
+        SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, !AddCANTxMessage(stdId, data, dlc));
+        return;
+    }
+
+    // Otherwise defer until a mailbox is released. Drop the frame if there is no room to hold it.
+    CANTxEvt* evt = nullptr;
+    if (_canTxDeferQueue.getFree() > 0U) { evt = Q_NEW_X(CANTxEvt, _canTxPoolMargin, PrivateSignals::CAN_TX_SIG); }
+    if (evt == nullptr)
+    {
+        SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
+        return;
+    }
+    evt->stdId = stdId;
+    evt->dlc = dlc;
+    memcpy(evt->data, data, dlc);
+    defer(&_canTxDeferQueue, evt);
+
+    // Get notified when a mailbox is released
+    HAL_CAN_ActivateNotification(&hcan, CAN_IT_TX_MAILBOX_EMPTY);
+}
+
+bool MissionAO::AddCANTxMessage(uint16_t stdId, const uint8_t* data, uint8_t dlc)
+{
+    _canTxHeader.StdId = stdId;
+    _canTxHeader.DLC = dlc;
+    return HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, data, &_canTxMailbox) == HAL_OK;
+}
+
+void MissionAO::SendDeferredCANTx()
+{
+    // Send deferred frames in order while mailboxes are free
+    while (!_canTxDeferQueue.isEmpty() && HAL_CAN_GetTxMailboxesFreeLevel(&hcan) > 0U)
+    {
+        const CANTxEvt* tx = static_cast<const CANTxEvt*>(_canTxDeferQueue.get(getPrio()));
+        SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED,
+                 !AddCANTxMessage(tx->stdId, tx->data, tx->dlc));
+
+        // Frame was taken out of the queue directly rather than dispatched, so it must be released here
+        QP::QF::gc(tx);
+    }
+
+    // Nothing left to send, stop mailbox notifications
+    if (_canTxDeferQueue.isEmpty()) { HAL_CAN_DeactivateNotification(&hcan, CAN_IT_TX_MAILBOX_EMPTY); }
 }
 
 Q_STATE_DEF(MissionAO, initial)
@@ -444,40 +534,29 @@ Q_STATE_DEF(MissionAO, root)
         }
         case bsp::PublicSignals::IMU_SIG:
         {
-            // sending two floats each packet
-            _canTxHeader.DLC = 8;
-
-            // Fragment IMU data into 8 byte chunks and send
-
-            // Accelerometer x and y
-            _canTxHeader.StdId = PubCANID::PUB_IMU_DATA_ACC_XY;
-            memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.acc[0], sizeof(float));
-            memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.acc[1], sizeof(float));
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
+            if (_imuPubCounter * bsp::TICKS_PER_SEC / imu::IMUAO::imuTimerFreq > _imuPubPeriod) { _imuPubCounter++; }
+            else
             {
-                SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
-            }
+                // reset pub counter
+                _imuPubCounter = 0u;
 
-            // Accelerometer z and gyro x
-            _canTxHeader.StdId = PubCANID::PUB_IMU_DATA_ACC_Z_GYR_X;
-            memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.acc[2], sizeof(float));
-            memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[0], sizeof(float));
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-            {
-                SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
-            }
+                // Fragment IMU data into 8 byte chunks and send
 
-            // Gyro y and z
-            _canTxHeader.StdId = PubCANID::PUB_IMU_DATA_GYR_Y_GYR_Z;
-            memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[1], sizeof(float));
-            memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[2], sizeof(float));
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-            {
-                SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
-            }
+                // Accelerometer x and y
+                memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.acc[0], sizeof(float));
+                memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.acc[1], sizeof(float));
+                TransmitCAN(PubCANID::PUB_IMU_DATA_ACC_XY, _canTxData, 8U);
 
-            // Automatically clear fault state on successful transmission
-            SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, false);
+                // Accelerometer z and gyro x
+                memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.acc[2], sizeof(float));
+                memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[0], sizeof(float));
+                TransmitCAN(PubCANID::PUB_IMU_DATA_ACC_Z_GYR_X, _canTxData, 8U);
+
+                // Gyro y and z
+                memcpy(_canTxData, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[1], sizeof(float));
+                memcpy(_canTxData + 4, &Q_EVT_CAST(imu::IMUEvt)->data.gyr[2], sizeof(float));
+                TransmitCAN(PubCANID::PUB_IMU_DATA_GYR_Y_GYR_Z, _canTxData, 8U);
+            }
 
             status_ = Q_RET_HANDLED;
             break;
@@ -514,13 +593,14 @@ Q_STATE_DEF(MissionAO, root)
         }
         case PrivateSignals::HEARTBEAT_SIG:
         {
-            _canTxHeader.DLC = 0;
-            _canTxHeader.StdId = PubCANID::PUB_HEARTBEAT;
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-            {
-                SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
-            }
-
+            TransmitCAN(PubCANID::PUB_HEARTBEAT, _canTxData, 0U);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        case PrivateSignals::CAN_TX_READY_SIG:
+        {
+            // A mailbox was released
+            SendDeferredCANTx();
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -672,14 +752,9 @@ Q_STATE_DEF(MissionAO, active)
         case PrivateSignals::CAN_PUB_BATT_SIG:
         {
             // publish over can
-            _canTxHeader.DLC = 8;
-            _canTxHeader.StdId = PubCANID::PUB_BATT_SOC;
             memcpy(_canTxData, &_lastSOC, sizeof(float));
             memcpy(_canTxData + 4, &_lastVin, sizeof(float));
-            if (HAL_CAN_AddTxMessage(&hcan, &_canTxHeader, _canTxData, &_canTxMailbox) != HAL_OK)
-            {
-                SetFault(bsp::SubsystemID::MISSION_SUBSYSTEM, Fault::MISSION_CAN_TX_FAILED, true);
-            }
+            TransmitCAN(PubCANID::PUB_BATT_SOC, _canTxData, 8u);
 
             status_ = Q_RET_HANDLED;
             break;

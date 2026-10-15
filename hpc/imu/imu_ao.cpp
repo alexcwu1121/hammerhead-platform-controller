@@ -135,7 +135,7 @@ Q_STATE_DEF(IMUAO, active)
         case Q_ENTRY_SIG:
         {
             // Arm imu polling timer
-            _imuTimer.armX(_imuTimerInterval, _imuTimerInterval);
+            _imuTimer.armX(imuTimerInterval, imuTimerInterval);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -166,7 +166,7 @@ Q_STATE_DEF(IMUAO, active)
             // Run compensation
             imu::Fault fault = _imu.RunCompensation();
             // Reenable IMU polling timer
-            _imuTimer.armX(_imuTimerInterval, _imuTimerInterval);
+            _imuTimer.armX(imuTimerInterval, imuTimerInterval);
 
             if (fault != imu::Fault::NO_FAULT)
             {
